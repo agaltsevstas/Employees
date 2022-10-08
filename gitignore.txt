@@ -1,0 +1,14 @@
+# This file is used to ignore files which are generated
+# ----------------------------------------------------------------------------
+log/
+build/
+client/build
+client/bin
+server/build
+server/bin
+Makefile
+.qmake.stash
+.qtc_clangd
+*.pro.user
+*.DS_Store
+*.o
