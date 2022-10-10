@@ -27,19 +27,28 @@ namespace Server
 
         if (path.startsWith("/login"))
         {
-            Authorization(request, response);
+            authorization(request, response);
+        }
+        if (path.startsWith("/showDatabase"))
+        {
+            showDatabase(request, response);
+        }
+        if (path.startsWith("/updateData"))
+        {
+
         }
         // All other pathes are mapped to the static file controller.
         // In this case, a single instance is used for multiple requests.
         else
         {
-    //        staticFileController->service(request, response);
+            qDebug() << "error request";
+            response.setStatus(400, "Bad Request");
         }
 
         qDebug("RequestMapper: finished request");
     }
 
-    void RequestMapper::Authorization(HttpRequest &request, HttpResponse &response)
+    void RequestMapper::authorization(HttpRequest &request, HttpResponse &response)
     {
         QByteArray authentication = request.getHeader("Authorization");
         if (authentication.isNull())
@@ -51,18 +60,52 @@ namespace Server
         else
         {
 //            QByteArray decoded = QByteArray::fromBase64(authentication.mid(6)); // Skip the first 6 characters ("Basic ")
-            QList<QByteArray> parts = authentication.mid(6).split(':');
-            if (parts.size() == 2)
+            QByteArray token = authentication.mid(6);
+            if (token == _token)
             {
-                QByteArray userName = parts[0];
-                QByteArray password = parts[1];
-                QByteArray data;
-                if (_db.authentication(userName, password, data))
+                QList<QByteArray> parts = token.split(':');
+                if (parts.size() == 2)
                 {
-                    response.setHeader("Content-Type", "application/json");
-                    response.write(data, true);
+                    QByteArray userName = parts[0];
+                    QByteArray password = parts[1];
+                    QByteArray data;
+                    if (_db.authentication(userName, password, data))
+                    {
+                        response.setHeader("Content-Type", "application/json");
+                        response.write(data, true);
+                    }
                 }
             }
+            else
+            {
+                QList<QByteArray> parts = token.split(':');
+                if (parts.size() == 2)
+                {
+                    QByteArray userName = parts[0];
+                    QByteArray password = parts[1];
+                    QByteArray data;
+                    if (_db.authentication(userName, password, data))
+                    {
+                        response.setHeader("Content-Type", "application/json");
+                        response.write(data, true);
+                    }
+                }
+            }
+        }
+    }
+
+    void RequestMapper::showDatabase(HttpRequest &request, HttpResponse &response)
+    {
+        QByteArray data;
+        if (_db.sendRequest("select * from employee", data))
+        {
+            response.setHeader("Content-Type", "application/json");
+            response.write(data, true);
+        }
+        else
+        {
+            response.setStatus(401, "Unauthorized");
+            response.setHeader("WWW-Authenticate", "Basic realm=Please login with any name and password");
         }
     }
 }

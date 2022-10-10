@@ -15,6 +15,9 @@ namespace Client
     {
         Q_OBJECT
     public:
+
+        typedef std::function<void(bool)> HandleResponse;
+
         enum class Type
         {
             POST,
@@ -27,6 +30,7 @@ namespace Client
         ~Requester();
 
         void sendRequest(const QString &iApi,
+                         const HandleResponse &handleResponse = Q_NULLPTR,
                          Type iType = Type::GET,
                          const QVariantMap &iData = QVariantMap());
 
@@ -48,9 +52,7 @@ namespace Client
 
         QJsonDocument parseReply(QNetworkReply *iReply);
 
-        bool onFinishRequest(QNetworkReply *iReply);
-
-        void handleQtNetworkErrors(QNetworkReply *iReply);
+        bool checkFinishRequest(QNetworkReply *iReply);
 
     private:
         QString _pathTemplate;

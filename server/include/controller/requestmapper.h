@@ -42,11 +42,12 @@ namespace Server
         void service(HttpRequest& request, HttpResponse& response);
 
     private:
-        void Authorization(HttpRequest &request, HttpResponse &response);
+        void authorization(HttpRequest &request, HttpResponse &response);
+        void showDatabase(HttpRequest &request, HttpResponse &response);
 
     private:
         DataBase& _db;
-
+        QByteArray _token;
     };
 }
 

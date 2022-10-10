@@ -30,16 +30,19 @@ namespace Client
         QString url = _pathTemplate.arg(_host).arg(_port).arg(iApi);
         request.setUrl(QUrl(url));
         request.setRawHeader("Content-Type","application/json");
-        if (!_token.isEmpty())
-            request.setRawHeader("Authorization", QString("%1").arg(_token).toUtf8());
-        if (_sslConfig != nullptr)
-            request.setSslConfiguration(*_sslConfig);
 //        request.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml");
-
+        if (!_token.isEmpty())
+        {
+            auto del = QString("Basic %1").arg(_token).toLocal8Bit();
+            request.setRawHeader("Authorization", QString("Basic %1").arg(_token).toLocal8Bit());
+        }
+        if (_sslConfig != Q_NULLPTR)
+            request.setSslConfiguration(*_sslConfig);
         return request;
     }
 
     void Requester::sendRequest(const QString &iApi,
+                                const HandleResponse &handleResponse,
                                 Requester::Type iType,
                                 const QVariantMap &iData)
     {
@@ -49,8 +52,8 @@ namespace Client
         {
             case Type::POST:
             {
-                QByteArray postDataByteArray = variantMapToJson(iData);
-                reply = _manager->post(request, postDataByteArray);
+                QByteArray data = variantMapToJson(iData);
+                reply = _manager->post(request, data);
                 break;
             }
             case Type::GET:
@@ -72,21 +75,28 @@ namespace Client
                 break;
             }
             default:
-                reply = nullptr;
+                reply = Q_NULLPTR;
                 Q_ASSERT(false);
         }
 
-        connect(reply, &QNetworkReply::finished, this, [this, reply]()
+        connect(reply, &QNetworkReply::finished, this, [this, reply, handleResponse]()
         {
             _json = parseReply(reply);
 
-            if (onFinishRequest(reply))
+            if (checkFinishRequest(reply))
             {
-                emit response(true);
+                if (handleResponse)
+                        handleResponse(true);
+                else
+                    response(true);
             }
             else
             {
-                emit response(false);
+                qDebug() << reply->errorString();
+                if (handleResponse)
+                        handleResponse(false);
+                else
+                    response(false);
             }
 
             reply->close();
@@ -130,7 +140,7 @@ namespace Client
         return json;
     }
 
-    bool Requester::onFinishRequest(QNetworkReply *iReply)
+    bool Requester::checkFinishRequest(QNetworkReply *iReply)
     {
         auto replyError = iReply->error();
         if (replyError == QNetworkReply::NoError )
@@ -141,19 +151,7 @@ namespace Client
                 return true;
             }
         }
-        return false;
-    }
 
-    void Requester::handleQtNetworkErrors(QNetworkReply *iReply)
-    {
-        auto replyError = iReply->error();
-        if ((replyError == QNetworkReply::NoError ||
-              replyError == QNetworkReply::ContentNotFoundError ||
-              replyError == QNetworkReply::ContentAccessDenied ||
-              replyError == QNetworkReply::ProtocolInvalidOperationError) ||
-              replyError == QNetworkReply::ContentNotFoundError)
-        {
-            qDebug() << iReply->error();
-        }
+        return false;
     }
 }

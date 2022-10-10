@@ -17,7 +17,8 @@ namespace Server
         explicit DataBase(QWidget *parent = 0);
         ~DataBase();
         bool connectToDataBase(); // Подключение к базе данных
-        bool authentication(const QString &iUserName, const QString &iPassword, QByteArray &oData);
+        bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QByteArray &oData);
+        bool sendRequest(const QByteArray &iRequest, QByteArray &oData);
         QSqlTableModel* createTableModel();
 
     private:

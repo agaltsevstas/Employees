@@ -18,6 +18,8 @@
 #define DATABASE_PORT      5432           // Порт
 #define DATABASE_NAME     "employees"     // Название базы данных
 
+/// TODO: сделать методы update, get, where...
+
 namespace Server
 {
     DataBase::DataBase(QWidget *parent) : QWidget(parent)
@@ -53,7 +55,7 @@ namespace Server
         }
     }
 
-    bool DataBase::authentication(const QString &iUserName, const QString &iPassword, QByteArray &oData)
+    bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QByteArray &oData)
     {
         QString userName = iUserName;
         qsizetype index = userName.indexOf('@');
@@ -117,6 +119,32 @@ namespace Server
 //        }
 
         return false;
+    }
+
+    bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData)
+    {
+        QSqlQuery query(_db);
+        if (!query.exec(iRequest))
+        {
+            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            return false;
+        }
+
+        QJsonDocument json;
+        QJsonArray recordsArray;
+        QJsonObject recordObject;
+        while (query.next())
+        {
+            auto size = query.record().count();
+            for (decltype(size) i = 0; i < size; ++i)
+            {
+                recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+            }
+            recordsArray.push_back(recordObject);
+        }
+        json.setArray(recordsArray);
+        oData = json.toJson();
+        return true;
     }
 
     QSqlTableModel* DataBase::createTableModel()

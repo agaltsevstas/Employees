@@ -164,6 +164,7 @@ namespace Client
         }
     }
 
+
     void Dialog::authentication(bool iResult)
     {
         if (iResult)
@@ -171,8 +172,6 @@ namespace Client
             qDebug() << "Вход успешно выполнен!";
             _status->setStyleSheet("color: blue");
             _status->showMessage("Вход успешно выполнен!", 1000);
-
-            disconnect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
 
             _table = new Table(_requester);
             connect(_table, &Table::openDialog, this, &Dialog::showDialog);
@@ -190,7 +189,6 @@ namespace Client
 
     void Dialog::showDialog()
     {
-        connect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
         show();
     }
 
@@ -210,7 +208,7 @@ namespace Client
                 _cache.insert(login, password);
         }
 
-        QString token = "Basic " + login + ":" + password;
+        QString token = login + ":" + password;
         _requester->setToken(token);
         _requester->sendRequest("login");
     }

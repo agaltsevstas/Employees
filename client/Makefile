@@ -201,6 +201,7 @@ DIST          = /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/spec_pre.prf
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/qt_config.prf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/macx-clang/qmake.conf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/exclusive_builds.prf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/mac/sdk.prf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/toolchain.prf \
@@ -250,7 +251,7 @@ TARGET        = bin/Employees
 EXPORT_QMAKE_MAC_SDK = macosx
 EXPORT_QMAKE_MAC_SDK_VERSION = 12.3
 EXPORT_QMAKE_XCODE_DEVELOPER_PATH = /Applications/Xcode.app/Contents/Developer
-EXPORT__QMAKE_STASH_ = 
+EXPORT__QMAKE_STASH_ = /Users/agaltsevstas/Yandex.Disk-agaltsev.stas.localized/Компьютер SOSIMBA/Programming/Employees/client/.qmake.stash
 EXPORT_VALID_ARCHS = x86_64 arm64
 EXPORT_DEFAULT_ARCHS = arm64
 EXPORT_ARCHS = $(filter $(EXPORT_VALID_ARCHS), $(if $(ARCHS), $(ARCHS), $(if $(EXPORT_DEFAULT_ARCHS), $(EXPORT_DEFAULT_ARCHS), $(EXPORT_VALID_ARCHS))))
@@ -394,6 +395,7 @@ Makefile: Client.pro /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/macx-clang/qmake
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/qt_config.prf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/macx-clang/qmake.conf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/exclusive_builds.prf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/mac/sdk.prf \
 		/Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/toolchain.prf \
@@ -559,6 +561,7 @@ Makefile: Client.pro /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/macx-clang/qmake
 /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/qt_config.prf:
 /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/macx-clang/qmake.conf:
 /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/spec_post.prf:
+.qmake.stash:
 /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/exclusive_builds.prf:
 /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/mac/sdk.prf:
 /Users/agaltsevstas/Qt/6.3.1/macos/mkspecs/features/toolchain.prf:
@@ -622,6 +625,7 @@ clean: compiler_clean
 
 distclean: clean 
 	-$(DEL_FILE) $(TARGET) 
+	-$(DEL_FILE) .qmake.stash
 	-$(DEL_FILE) Makefile
 
 
@@ -823,7 +827,13 @@ build/table.o: src/table.cpp include/table.h \
 		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/QLabel \
 		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/qlabel.h \
 		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/QLineEdit \
-		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/qlineedit.h
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/qlineedit.h \
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/QPushButton \
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/QTableView \
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/qtableview.h \
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/QSplitter \
+		/Users/agaltsevstas/Qt/6.3.1/macos/lib/QtWidgets.framework/Headers/qsplitter.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/table.o src/table.cpp
 
 build/requester.o: requester/requester.cpp requester/requester.h \

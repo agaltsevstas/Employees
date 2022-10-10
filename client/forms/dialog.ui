@@ -32,36 +32,6 @@
       <set>Qt::AlignCenter</set>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="0" colspan="4">
-       <widget class="QPushButton" name="enter">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">width: 100%;
-height: 50px;
-margin-top: 7px;
-color: #fff;
-font-size: 18px;
-font-weight: bold;
-outline: none;
-border: 1px solid rgba(0, 0, 0, .49);
-
-background-color: #5466da;
-background-image: -webkit-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
-background-image: -moz-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
-background-image: -o-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
-background-image: -ms-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
-background-image: linear-gradient(bottom, #5466da 0%, #768ee4 100%);</string>
-        </property>
-        <property name="text">
-         <string>Войти</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0" colspan="2">
        <widget class="QCheckBox" name="rememberMe">
         <property name="sizePolicy">
@@ -72,19 +42,6 @@ background-image: linear-gradient(bottom, #5466da 0%, #768ee4 100%);</string>
         </property>
         <property name="text">
          <string>Запомнить меня</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="4">
-       <widget class="QPushButton" name="exit">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Выход</string>
         </property>
        </widget>
       </item>
@@ -217,6 +174,49 @@ background-image: -moz-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%);
 background-image: -o-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%);
 background-image: -ms-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%);
 background-image: linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%);</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="4">
+       <widget class="QPushButton" name="enter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">width: 100%;
+height: 50px;
+margin-top: 7px;
+color: #fff;
+font-size: 18px;
+font-weight: bold;
+outline: none;
+border: 1px solid rgba(0, 0, 0, .49);
+
+background-color: #5466da;
+background-image: -webkit-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
+background-image: -moz-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
+background-image: -o-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
+background-image: -ms-linear-gradient(bottom, #5466da 0%, #768ee4 100%);
+background-image: linear-gradient(bottom, #5466da 0%, #768ee4 100%);</string>
+        </property>
+        <property name="text">
+         <string>Войти</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="4">
+       <widget class="QPushButton" name="exit">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Выход</string>
         </property>
        </widget>
       </item>
