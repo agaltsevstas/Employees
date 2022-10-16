@@ -5,6 +5,7 @@ QT += core network # Для работы с сетевыми классами
 QT += widgets
 CONFIG += c++20
 CONFIG -= app_bundle
+CONFIG += debug
 
 # Build properties
 
@@ -39,16 +40,18 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
+    include/tableView.h \
     include/client.h \
     include/dialog.h \
     include/qjsontablemodel.h \
     include/user.h \
-    include/table.h
+    include/table.h \
 
 #HEADERS += \
 #/opt/homebrew/lib
 
 SOURCES += \
+    src/tableView.cpp \
     src/client.cpp \
     src/main.cpp \
     src/dialog.cpp \

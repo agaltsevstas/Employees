@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTableView>
+#include <QTableWidget>
 
 class QAbstractTableModel;
 
@@ -14,10 +15,12 @@ namespace Ui
 namespace Client
 {
     class Requester;
+    class TableView;
 
     class Table : public QWidget
     {
         Q_OBJECT
+
     public:
         Table(Requester* iRequester, QWidget *parent = nullptr);
         ~Table();
@@ -38,10 +41,10 @@ namespace Client
 
     private:
         Ui::Table *_ui = nullptr;
-        QAbstractTableModel* _personalDataModel = nullptr;
-        QAbstractTableModel* _databaseModel = nullptr;
-        QTableView *_tableView;
-        Requester* _requester = nullptr;
+        QAbstractTableModel *_personalDataModel = nullptr;
+        QAbstractTableModel *_databaseModel = nullptr;
+        TableView *_tableView;
+        Requester *_requester = nullptr;
     };
 }
 

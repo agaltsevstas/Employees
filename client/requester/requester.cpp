@@ -32,10 +32,7 @@ namespace Client
         request.setRawHeader("Content-Type","application/json");
 //        request.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml");
         if (!_token.isEmpty())
-        {
-            auto del = QString("Basic %1").arg(_token).toLocal8Bit();
             request.setRawHeader("Authorization", QString("Basic %1").arg(_token).toLocal8Bit());
-        }
         if (_sslConfig != Q_NULLPTR)
             request.setSslConfiguration(*_sslConfig);
         return request;

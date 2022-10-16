@@ -2,6 +2,7 @@
 #include "ui_table.h"
 #include "client.h"
 #include "requester.h"
+#include "tableView.h"
 
 #include <QSqlTableModel>
 #include <QSqlQueryModel>
@@ -12,9 +13,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QTableView>
 #include <QSplitter>
-#include <QHeaderView>
 
 
 namespace Client
@@ -33,7 +32,7 @@ namespace Client
 
         QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
         showDatabase->setSizePolicy(GetSizePolice());
-        connect(showDatabase, SIGNAL(clicked()), this ,SLOT(showDatabase()));
+        connect(showDatabase, SIGNAL(clicked()), this, SLOT(showDatabase()));
         _ui->gridLayout->addWidget(showDatabase, 1, 1, 1, 1);
     }
 
@@ -110,30 +109,16 @@ namespace Client
         if (iResult)
         {
             qDebug() << "Ответ на запрос получен!";
-            delete _tableView;
-            _tableView = new QTableView(this);
-            _tableView->setObjectName(QString::fromUtf8("tableView"));
-            auto sizePolicy = GetSizePolice();
-            sizePolicy.setHorizontalStretch(10);
-            _tableView->setSizePolicy(sizePolicy);
-            /* Устанавливаем названия колонок в таблице с сортировкой данных
-             * */
-//            for(int i = 0, j = 0; i < model->columnCount(); i++, j++)
-//            {
-//                _table.setHeaderData(i,Qt::Horizontal,headers[j]);
-//            }
+            if (!_tableView)
+            {
+                _tableView = new TableView(this);
+            }
 
-//                        _tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
             _databaseModel = new QJsonTableModel(_requester->getJson(), this);
             _tableView->setModel(_databaseModel);
-            _tableView->resizeColumnsToContents();
-            _tableView->adjustSize();
             _ui->splitter->addWidget(_tableView);
-            _ui->splitter->adjustSize();
-//                        resize(_ui->groupBox->size() + _tableView->geometry().size());
-//                        _ui->groupBox->adjustSize();
-//                        adjustSize();
-//            resize(_width, _height + addToHeight * 20); // Установка размеров для окна
+//            _tableView->horizontalHeader()->setSortIndicator(0, 0);
+//            _ui->splitter->adjustSize();
         }
         else
         {
@@ -171,9 +156,9 @@ namespace Client
 
         if (_tableView)
         {
-            auto del1 = _ui->groupBox->size();
-            auto del2 = _tableView->geometry().size();
-            auto del3 = del1 + del2;
+//            auto del1 = _ui->groupBox->size();
+//            auto del2 = _tableView->geometry().size();
+//            auto del3 = del1 + del2;
             int k = 0;
         }
 
