@@ -1,13 +1,17 @@
 #ifndef REQUESTER_H
 #define REQUESTER_H
 
-#include <QObject>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QJsonDocument>
-#include <functional>
+#include <QMutex>
+#include <QNetworkRequest>
+#include <QObject>
+#include <QVariantMap>
+
+
+class QProgressBar;
+class QNetworkAccessManager;
+class QSslConfiguration;
+class QNetworkReply;
 
 namespace Client
 {
@@ -37,31 +41,23 @@ namespace Client
         void setToken(const QString &iToken) { _token = iToken; }
         const QString getToken() const { return _token; }
         const QJsonDocument getJson() const { return _json; }
+        QProgressBar *getProgressBar() const { return _progress; }
 
     signals:
         void response(bool iResult); // Ответ на запрос
 
-    private:
-        QNetworkRequest createRequest(const QString &iApi);
-
-        QByteArray variantMapToJson(const QVariantMap &iData);
-
-        QNetworkReply *sendCustomRequest(QNetworkRequest &iRequest,
-                                         const QString &iType,
-                                         const QVariantMap &iData);
-
-        QJsonDocument parseReply(QNetworkReply *iReply);
-
-        bool checkFinishRequest(QNetworkReply *iReply);
+    private slots:
+        void printProgress(qint64 bytesReceived, qint64 bytesTotal);
 
     private:
-        QString _pathTemplate;
-        QString _host;
-        int _port;
         QString _token;
-        QSslConfiguration *_sslConfig;
         QNetworkAccessManager *_manager;
         QJsonDocument _json;
+        QProgressBar *_progress;
+        QMutex mutex;
+        class RequesterImpl;
+        RequesterImpl *_requester;
+        friend class RequesterImpl;
     };
 }
 

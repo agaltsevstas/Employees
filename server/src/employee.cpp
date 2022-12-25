@@ -53,7 +53,7 @@ bool operator >> (const QSqlQuery &iQuery, Employee &oObject)
             }
         }
 //        oObject._id = iQuery.value(0).toUInt();
-//        oObject._position = iQuery.value(1).toString().toStdString();
+//        oObject._role = iQuery.value(1).toString().toStdString();
 //        oObject._surname = iQuery.value(2).toString().toStdString();
 //        oObject._name = iQuery.value(3).toString().toStdString();
 //        oObject._patronymic = iQuery.value(4).toString().toStdString();
@@ -84,7 +84,7 @@ bool operator >> (const QSqlQuery &iQuery, Employee &oObject)
 std::ostream& operator << (std::ostream &ioOut, const Employee &object)
 {
     ioOut << "ID: "                      << object._id           << ", ";
-    ioOut << "Должность: "               << object._position     << ", ";
+    ioOut << "Должность: "               << object._role         << ", ";
     ioOut << "Фамилия: "                 << object._surname      << ", ";
     ioOut << "Имя: "                     << object._name         << ", ";
     ioOut << "Отчество: "                << object._patronymic   << ", ";
@@ -129,9 +129,9 @@ void Employee::SetId(const std::string &iID)
     _id = Get<uint>(iID, FIELD_ID);
 }
 
-void Employee::SetPosition(const std::string &iPosition)
+void Employee::SetRole(const std::string &iRole)
 {
-    _position = Get<std::string>(iPosition, FIELD_POSITION);
+    _role = Get<std::string>(iRole, FIELD_ROLE);
 }
 
 void Employee::SetSurname(const std::string &iSurname)
@@ -199,9 +199,9 @@ uint Employee::GetId() const
     return _id;
 }
 
-std::string Employee::GetPosition() const
+std::string Employee::GetRole() const
 {
-    return _position;
+    return _role;
 }
 
 std::string Employee::GetSurname() const
@@ -297,7 +297,7 @@ const Employee::Type Employee::CheckField(std::string iValue, const Field iField
                 return type;
             }
 
-            case FIELD_POSITION :
+            case FIELD_ROLE :
             {
                 Utils::ToUpperandtolower(iValue);
                 std::regex regular ("(Бухгалтер|Водитель|Главный_бухгалтер|Главный_юрист-консультант|Грузчик|Директор|Кассир|Логист|"
@@ -315,8 +315,8 @@ const Employee::Type Employee::CheckField(std::string iValue, const Field iField
                 else
                 {
                     type.status = ST_OK;
-//                    _position.empty() ? Logger::info << "Должность >> " << iValue << std::endl :
-//                                       (Logger::info << "Должность << " << _position << " >> изменена на >> " << iValue << std::endl,
+//                    _role.empty() ? Logger::info << "Должность >> " << iValue << std::endl :
+//                                       (Logger::info << "Должность << " << _role << " >> изменена на >> " << iValue << std::endl,
 //                                        std::cout << "Должность успешно изменена" << std::endl);
                 }
                 type.stringValue = iValue;
@@ -720,10 +720,10 @@ void Employee::CheckId(const std::string &iWarning)
     Recursion(FIELD_ID, &Employee::SetId, iWarning + message);
 }
 
-void Employee::CheckPosition(const std::string &iWarning)
+void Employee::CheckRole(const std::string &iWarning)
 {
     const std::string message = "Введите должность";
-    Recursion(FIELD_POSITION, &Employee::SetPosition, iWarning + message);
+    Recursion(FIELD_ROLE, &Employee::SetRole, iWarning + message);
 }
 
 void Employee::CheckSurname(const std::string &iWarning)
@@ -837,10 +837,10 @@ void Employee::CheckPassword(const std::string &iWarning)
     Recursion(FIELD_PASSWORD, &Employee::SetPassword, iWarning + message);
 }
 
-void Employee::ChangeStatusPosition()
+void Employee::ChangeStatusRole()
 {
-    _fieldStatus[FIELD_POSITION] = ST_OVERWRITEDATA;
-//    Logger::info << "Перезапись должности >> " << _position << std::endl;
+    _fieldStatus[FIELD_ROLE] = ST_OVERWRITEDATA;
+//    Logger::info << "Перезапись должности >> " << _role << std::endl;
 }
 
 void Employee::ChangeStatusSurname()

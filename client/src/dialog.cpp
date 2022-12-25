@@ -8,11 +8,13 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QScreen>
+#include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
+#include <QProgressBar>
 
-#define FILENAME  "data.txt"
-#define DIRECTORY "../cache/"
+#define FILENAME  "cache.txt"
+#define DIRECTORY "../settings/"
 
 
 namespace Client
@@ -20,53 +22,67 @@ namespace Client
     Dialog::Dialog(QWidget *parent) :
         QDialog(parent),
         _dialog(new Ui::Dialog),
-        _status(new QStatusBar(parent)),
+        _status(new QStatusBar(this)),
+        _settings(new QSettings(DIRECTORY + QString("settings.ini"), QSettings::IniFormat, this)),
         _requester(new Requester(this))
     {
-        QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        _status->setSizePolicy(sizePolicy);
-
         _dialog->setupUi(this);
-        _dialog->login->setPlaceholderText("Введите Логин/email");
-        _dialog->password->setPlaceholderText("Введите пароль");
-        _dialog->password->setEchoMode(QLineEdit::Password);
         _dialog->gridLayout->addWidget(_status, 5, 0, 1, 4);
-        _dialog->rememberMe->setChecked(true);
+        _dialog->gridLayout->addWidget(_requester->getProgressBar(), 6, 0, 1, 4);
 
-        QPixmap loginIcon(":/images/login.png");
-        QPixmap passwordIcon(":/images/password.png");
-        int width = _dialog->loginIcon->width();
-        int height = _dialog->loginIcon->height();
-//        _dialog->loginIcon->setPixmap(loginIcon.scaled(width, height, Qt::KeepAspectRatio));
-//        _dialog->passwordIcon->setPixmap(passwordIcon.scaled(width, height, Qt::KeepAspectRatio));
-
-        readFormCache();
-        QStringList list;
-        for(const auto& key : _cache.keys())
-            list.push_back(key);
-        QCompleter* completer = new QCompleter(list);
-        completer->setCaseSensitivity(Qt::CaseInsensitive);
-        _dialog->login->installEventFilter(this);
-        _dialog->login->setCompleter(completer);
         connect(_dialog->login, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
         connect(_dialog->password, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
-        connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iText)
-        {
-            if (auto login = _cache.constFind(iText); login != _cache.end())
-                _dialog->password->setText(login.value());
-        });
         connect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
-        move(qApp->primaryScreen()->availableGeometry().center()); // Установка главного окна по центру экрана
+
+        loadSettings();
     }
 
     Dialog::~Dialog()
     {
+        saveSettings();
+
         delete _dialog;
-        delete _status;
-        delete _requester;
+    }
+
+    void Dialog::loadSettings()
+    {
+        readFormCache();
+
+        QStringList list;
+        for (const auto& key : _cache.keys())
+            list.push_back(key);
+        QCompleter* completer = new QCompleter(list);
+        completer->setCaseSensitivity(Qt::CaseInsensitive);
+
+        _dialog->login->setCompleter(completer);
+        _dialog->login->installEventFilter(this);
+        _dialog->login->setPlaceholderText("Введите Логин/email");
+        _dialog->password->setPlaceholderText("Введите пароль");
+        _dialog->password->setEchoMode(QLineEdit::Password);
+        _dialog->rememberMe->setChecked(true);
+        _status->setSizePolicy(_dialog->authorization->sizePolicy());
+        // Установка главного окна по центру экрана по умолчанию
+        move(_settings->value("center", qApp->primaryScreen()->availableGeometry().center()).toPoint());
+
+//        QPixmap loginIcon(":/images/login.png");
+//        QPixmap passwordIcon(":/images/password.png");
+//        int width = _dialog->loginIcon->width();
+//        int height = _dialog->loginIcon->height();
+//        _dialog->loginIcon->setPixmap(loginIcon.scaled(width, height, Qt::KeepAspectRatio));
+//        _dialog->passwordIcon->setPixmap(passwordIcon.scaled(width, height, Qt::KeepAspectRatio));
+
+        connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iText)
+        {
+            if (const auto login = _cache.constFind(iText); login != _cache.end())
+                _dialog->password->setText(login.value());
+        });
+    }
+
+    void Dialog::saveSettings()
+    {
         addToCache();
+
+        _settings->setValue("center", geometry().center());
     }
 
     void Dialog::readFormCache()
@@ -189,6 +205,7 @@ namespace Client
 
     void Dialog::showDialog()
     {
+        _dialog->gridLayout->addWidget(_requester->getProgressBar(), 6, 0, 1, 4);
         show();
     }
 

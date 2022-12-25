@@ -30,7 +30,7 @@ bool QJsonTableModel::setJson( const QJsonArray &array)
 
     _array = array;
     _headers.append(Client::Employee::ID());
-    _headers.append(Client::Employee::Position());
+    _headers.append(Client::Employee::Role());
     _headers.append(Client::Employee::Surname());
     _headers.append(Client::Employee::Name());
     _headers.append(Client::Employee::Patronymic());

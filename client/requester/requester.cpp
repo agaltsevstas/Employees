@@ -1,41 +1,194 @@
 ﻿#include "requester.h"
 
 #include <QBuffer>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QProgressBar>
+#include <QNetworkCookie>
+#include <QNetworkCookieJar>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonObject>
+
 
 namespace Client
 {
-#define CLIENT_HTTP_TEMPLATE   "http://%1:%2//%3"
-#define CLIENT_HOSTNAME        "127.0.0.1"        // Хост
-#define CLIENT_PORT             5433              // Порт
+    #define CLIENT_HTTP_TEMPLATE   "http://%1:%2//%3"
+    #define CLIENT_HOSTNAME        "127.0.0.1"        // Хост
+    #define CLIENT_PORT             5433              // Порт
 
-    Requester::Requester(QObject *parent) :
-        QObject(parent),
-        _pathTemplate(CLIENT_HTTP_TEMPLATE),
-        _host(CLIENT_HOSTNAME),
-        _port(CLIENT_PORT),
-        _sslConfig(0),
-        _manager(new QNetworkAccessManager(this))
+    class NetworkCookieJar: public QNetworkCookieJar
     {
+    public:
+         explicit NetworkCookieJar(QObject *parent = nullptr) :
+            QNetworkCookieJar(parent)
+         {
 
+         }
+
+         virtual ~NetworkCookieJar()
+         {
+
+         }
+
+         QList<QNetworkCookie> getAllCookies() const
+         {
+             return allCookies();
+         }
+
+         void setAllCookies(const QList<QNetworkCookie>& cookies)
+         {
+             QNetworkCookieJar::setAllCookies(cookies);
+         }
+
+         bool isEmpty()
+         {
+             return allCookies().isEmpty();
+         }
+    };
+
+    class Requester::RequesterImpl
+    {
+    public:
+        RequesterImpl(Requester *iRequester) :
+          _pathTemplate(CLIENT_HTTP_TEMPLATE),
+          _host(CLIENT_HOSTNAME),
+          _port(CLIENT_PORT),
+          _sslConfig(0),
+          _requester(*iRequester)
+        {}
+
+        QNetworkRequest createRequest(const QString &iApi);
+
+        [[nodiscard]] QJsonDocument parseReply(QNetworkReply *iReply);
+
+        [[nodiscard]] QNetworkReply *sendCustomRequest(QNetworkRequest &iRequest,
+                                         const QString &iType,
+                                         const QVariantMap &iData);
+
+        QByteArray variantMapToJson(const QVariantMap &iData);
+
+        bool checkFinishRequest(QNetworkReply *iReply);
+
+        NetworkCookieJar* getCookie() { return &_cookie; };
+
+    private:
+        QString _pathTemplate;
+        QString _host;
+        int _port;
+        QSslConfiguration *_sslConfig;
+        NetworkCookieJar _cookie;
+        Requester &_requester;
+    };
+
+    QJsonDocument Requester::RequesterImpl::parseReply(QNetworkReply *iReply)
+    {
+        QByteArray replyData = iReply->readAll();
+        qInfo() << replyData;
+
+        QJsonArray records;
+        while (!replyData.isEmpty())
+        {
+            QJsonParseError parseError;
+            auto index = replyData.indexOf("}\n") + 4;
+            QJsonDocument json = QJsonDocument::fromJson(replyData.left(index), &parseError);
+            if (parseError.error != QJsonParseError::NoError)
+            {
+                qWarning() << "Json parse error: " << parseError.errorString();
+            }
+            if (json.isObject())
+            {
+                records.push_back(json.object());
+            }
+
+            replyData = replyData.mid(index);
+        }
+
+        return QJsonDocument(records);
     }
 
-    Requester::~Requester()
-    {
-        delete _manager;
-    }
-
-    QNetworkRequest Requester::createRequest(const QString &iApi)
+    QNetworkRequest Requester::RequesterImpl::createRequest(const QString &iApi)
     {
         QNetworkRequest request;
         QString url = _pathTemplate.arg(_host).arg(_port).arg(iApi);
         request.setUrl(QUrl(url));
         request.setRawHeader("Content-Type","application/json");
-//        request.setHeader(QNetworkRequest::ContentTypeHeader, "text/xml");
-        if (!_token.isEmpty())
-            request.setRawHeader("Authorization", QString("Basic %1").arg(_token).toLocal8Bit());
+        if (!_cookie.isEmpty())
+            request.setRawHeader("Authorization", QString("Bearer %1").arg(_requester._token.toUtf8().toBase64()).toLocal8Bit());
+//          request.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(_requester._requester->_cookie));
+        else if (!_requester._token.isEmpty())
+            request.setRawHeader("Authorization", QString("Basic %1").arg(_requester._token.toUtf8().toBase64()).toLocal8Bit());
         if (_sslConfig != Q_NULLPTR)
             request.setSslConfiguration(*_sslConfig);
         return request;
+    }
+
+    QByteArray Requester::RequesterImpl::variantMapToJson(const QVariantMap& iData)
+    {
+        QJsonDocument jsonDoc = QJsonDocument::fromVariant(iData);
+        QByteArray data = jsonDoc.toJson();
+
+        return data;
+    }
+
+    QNetworkReply* Requester::RequesterImpl::sendCustomRequest(QNetworkRequest &iRequest,
+                                                const QString &iType,
+                                                const QVariantMap &iData)
+    {
+        iRequest.setRawHeader("HTTP", iType.toUtf8());
+        QByteArray postDataByteArray = variantMapToJson(iData);
+        QBuffer *buff = new QBuffer;
+        buff->setData(postDataByteArray);
+        buff->open(QIODevice::ReadOnly);
+        QNetworkReply* reply = _requester._manager->sendCustomRequest(iRequest, iType.toUtf8(), buff);
+        buff->setParent(reply);
+        return reply;
+    }
+
+    bool Requester::RequesterImpl::checkFinishRequest(QNetworkReply *iReply)
+    {
+        auto replyError = iReply->error();
+        if (replyError == QNetworkReply::NoError)
+        {
+            int code = iReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if ((code >= 200) && (code < 300))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    Requester::Requester(QObject *parent) :
+        QObject(parent),
+        _manager(new QNetworkAccessManager(this)),
+        _progress(new QProgressBar()),
+        _requester(new RequesterImpl(this))
+    {
+        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setHorizontalStretch(10);
+        _progress->setRange(0, 100);
+        _progress->setSizePolicy(sizePolicy);
+    }
+
+    Requester::~Requester()
+    {
+        delete _manager;
+        delete _requester;
+        delete _progress;
+    }
+
+    void Requester::printProgress(qint64 bytesReceived, qint64 bytesTotal)
+    {
+//        QMutexLocker locker(&mutex);
+        if (bytesTotal > 0 && bytesReceived > 0)
+        {
+            qDebug() << "Получено байт" << bytesReceived << " из " << bytesTotal;
+            _progress->setValue((int)(bytesReceived * 100 / bytesTotal));
+        }
     }
 
     void Requester::sendRequest(const QString &iApi,
@@ -43,13 +196,17 @@ namespace Client
                                 Requester::Type iType,
                                 const QVariantMap &iData)
     {
-        QNetworkRequest request = createRequest(iApi);
+        _progress->setHidden(false);
+        _progress->setValue(0);
+        _manager->setCookieJar(_requester->getCookie());
+
+        QNetworkRequest request = _requester->createRequest(iApi);
         QNetworkReply *reply;
         switch (iType)
         {
             case Type::POST:
             {
-                QByteArray data = variantMapToJson(iData);
+                QByteArray data = _requester->variantMapToJson(iData);
                 reply = _manager->post(request, data);
                 break;
             }
@@ -63,12 +220,12 @@ namespace Client
                 if (iData.isEmpty())
                     reply = _manager->deleteResource(request);
                 else
-                    reply = sendCustomRequest(request, "DELETE", iData);
+                    reply = _requester->sendCustomRequest(request, "DELETE", iData);
                 break;
             }
             case Type::PATCH:
             {
-                reply = sendCustomRequest(request, "PATCH", iData);
+                reply = _requester->sendCustomRequest(request, "PATCH", iData);
                 break;
             }
             default:
@@ -76,11 +233,30 @@ namespace Client
                 Q_ASSERT(false);
         }
 
+        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(printProgress(qint64, qint64)));
         connect(reply, &QNetworkReply::finished, this, [this, reply, handleResponse]()
         {
-            _json = parseReply(reply);
+//            QMutexLocker locker(&mutex);
+            _progress->setHidden(true);
+            _json = _requester->parseReply(reply);
+            _token.clear();
 
-            if (checkFinishRequest(reply))
+            QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
+            if (!variantCookies.isNull())
+            {
+                QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
+                for (const auto& cookie : cookies)
+                {
+                    if (cookie.name() == "refreshToken")
+                    {
+                        _token = cookie.value();
+                        _requester->getCookie()->setAllCookies({cookie});
+                        break;
+                    }
+                }
+            }
+
+            if (_requester->checkFinishRequest(reply))
             {
                 if (handleResponse)
                         handleResponse(true);
@@ -98,57 +274,7 @@ namespace Client
 
             reply->close();
             reply->deleteLater();
+            delete reply;
         });
-    }
-
-    QByteArray Requester::variantMapToJson(const QVariantMap& iData)
-    {
-        QJsonDocument jsonDoc = QJsonDocument::fromVariant(iData);
-        QByteArray data = jsonDoc.toJson();
-
-        return data;
-    }
-
-    QNetworkReply* Requester::sendCustomRequest(QNetworkRequest &iRequest,
-                                                const QString &iType,
-                                                const QVariantMap &iData)
-    {
-        iRequest.setRawHeader("HTTP", iType.toUtf8());
-        QByteArray postDataByteArray = variantMapToJson(iData);
-        QBuffer *buff = new QBuffer;
-        buff->setData(postDataByteArray);
-        buff->open(QIODevice::ReadOnly);
-        QNetworkReply* reply = _manager->sendCustomRequest(iRequest, iType.toUtf8(), buff);
-        buff->setParent(reply);
-        return reply;
-    }
-
-    QJsonDocument Requester::parseReply(QNetworkReply *iReply)
-    {
-        QJsonParseError parseError;
-        QByteArray replyText = iReply->readAll();
-        QJsonDocument json = QJsonDocument::fromJson(replyText, &parseError);
-        if (parseError.error != QJsonParseError::NoError)
-        {
-            qDebug() << replyText;
-            qWarning() << "Json parse error: " << parseError.errorString();
-        }
-
-        return json;
-    }
-
-    bool Requester::checkFinishRequest(QNetworkReply *iReply)
-    {
-        auto replyError = iReply->error();
-        if (replyError == QNetworkReply::NoError )
-        {
-            int code = iReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            if ((code >=200) && (code < 300))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

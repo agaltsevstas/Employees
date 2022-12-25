@@ -14,6 +14,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSplitter>
+#include <QProgressBar>
 
 
 namespace Client
@@ -24,16 +25,19 @@ namespace Client
         _requester(iRequester)
     {
         _ui->setupUi(this);
-        setPersonalData(_requester->getJson());
         _personalDataModel = new QJsonTableModel(_requester->getJson(), this);
 
-        _ui->gridLayout->removeWidget(_ui->update);
-        _ui->gridLayout->addWidget(_ui->update, 1, 0, 1, 1);
+        _ui->gridLayout_6->removeWidget(_ui->update);
+        _ui->gridLayout_6->removeWidget(_ui->exit);
+        _ui->gridLayout_6->addWidget(_ui->update, 0, 0, 1, 1);
+        _ui->gridLayout_6->addWidget(_ui->exit, 1, 0, 1, 2);
+        _ui->gridLayout_6->addWidget(_requester->getProgressBar(), 2, 0, 1, 2);
 
         QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
         showDatabase->setSizePolicy(GetSizePolice());
         connect(showDatabase, SIGNAL(clicked()), this, SLOT(showDatabase()));
-        _ui->gridLayout->addWidget(showDatabase, 1, 1, 1, 1);
+        _ui->gridLayout_6->addWidget(showDatabase, 0, 1, 1, 1);
+        setPersonalData(_requester->getJson());
     }
 
     void Table::resizeEvent(QResizeEvent *event)
@@ -47,40 +51,89 @@ namespace Client
         while (auto item = _ui->gridLayout_2->takeAt(0))
             delete item;
 
-        for (const auto &array: json.array())
-        {
-            const QJsonObject object = array.toObject();
-            auto fields = Employee::getFileds();
-            auto fieldSize = fields.size();
-            for (decltype(fieldSize) i = 0; i < fieldSize; ++i)
-            {
-                const auto& [field, name] = fields[i];
-                if (auto it = object.find(field); it != object.end())
-                {
-                    QLabel *label = new QLabel(field + "Label", _ui->PersonalData);
-                    label->setSizePolicy(GetSizePolice());
-                    label->setText(name);
-                    _ui->gridLayout_2->addWidget(label, i + 2, 0, 1, 1);
+        _ui->PersonalData->adjustSize();
+        _ui->gridLayout_2->update();
 
-                    QLineEdit *lineEdit = new QLineEdit(field, _ui->PersonalData);
-                    if (it->isString())
+        auto del = json.array();
+        auto findTable = [&json](const QString& iTable)->int
+        {
+            for (decltype(json.array().size()) i = 0, I = json.array().size(); i < I; ++i)
+            {
+                if (json.array()[i].isObject())
+                {
+                    const QJsonObject subobject = json.array()[i].toObject();
+                    if (subobject.contains(iTable))
                     {
-                        lineEdit->setText(it.value().toString());
+                        return i;
                     }
-                    else if (it->isDouble())
+                }
+            }
+
+            return -1;
+        };
+
+        auto index_data = findTable("employee");
+        auto index_permissions = findTable("personal_data_permission");
+        if (index_data != -1 && index_permissions != -1)
+        {
+            const QJsonValue data = json.array()[index_data].toObject().value("employee");
+            const QJsonValue permissions = json.array()[index_permissions].toObject().value("personal_data_permission");
+            if (data.isObject() && permissions.isObject())
+            {
+                const auto fields = Employee::getFileds();
+                for (decltype(fields.size()) i = 0, I = fields.size(); i < I; ++i)
+                {
+                    const auto& [field, name] = fields[i];
+                    const QJsonObject subobject_data = data.toObject(); // обязательно нужно определить
+                    const QJsonObject subobject_permissions = permissions.toObject(); // обязательно нужно определить
+
+                    auto itData = subobject_data.find(field);
+                    auto itPermissions = subobject_permissions.find(field);
+                    if (itData != subobject_data.end() && itPermissions != subobject_permissions.end())
                     {
-                        lineEdit->setText(QString::number(it.value().toInteger()));
+                        QLabel *label = new QLabel(field + "Label", _ui->PersonalData);
+                        label->setSizePolicy(GetSizePolice());
+                        label->setText(name);
+
+                        _ui->gridLayout_2->addWidget(label, i, 0, 1, 1);
+
+                        QLineEdit *lineEdit = new QLineEdit(field, _ui->PersonalData);
+
+                        if (itData->isString())
+                        {
+                            lineEdit->setText(itData.value().toString());
+                        }
+                        else if (itData->isDouble())
+                        {
+                            lineEdit->setText(QString::number(itData.value().toInteger()));
+                        }
+                        else
+                        {
+                            Q_ASSERT(false);
+                        }
+
+                        if (itPermissions->isString())
+                        {
+                            lineEdit->setEnabled(itPermissions->toString() == "write");
+                        }
+                        else
+                        {
+                            Q_ASSERT(false);
+                        }
+    //                    sizePolicy.setHeightForWidth(lineEdit->sizePolicy().hasHeightForWidth());
+                        lineEdit->setSizePolicy(GetSizePolice());
+                        _ui->gridLayout_2->addWidget(lineEdit, i, 1, 1, 1);
                     }
-                    else
-                    {
-                        Q_ASSERT(false);
-                    }
-//                    sizePolicy.setHeightForWidth(lineEdit->sizePolicy().hasHeightForWidth());
-                    lineEdit->setSizePolicy(GetSizePolice());
-                    _ui->gridLayout_2->addWidget(lineEdit, i + 2, 1, 1, 1);
                 }
             }
         }
+        else
+        {
+            Q_ASSERT(false);
+        }
+
+        _ui->PersonalData->adjustSize();
+        _ui->gridLayout_2->update();
     }
 
     QSizePolicy Table::GetSizePolice()
@@ -94,8 +147,6 @@ namespace Client
     Table::~Table()
     {
         delete _ui;
-        delete _personalDataModel;
-        delete _databaseModel;
     }
 
     void Table::on_exit_clicked()

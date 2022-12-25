@@ -7,12 +7,13 @@
 #define REQUESTMAPPER_H
 
 #include "httprequesthandler.h"
-#include "database.h"
 
 using namespace stefanfrings;
 
 namespace Server
 {
+    class AuthorizationController;
+
     /**
       The request mapper dispatches incoming HTTP requests to controller classes
       depending on the requested path.
@@ -27,7 +28,7 @@ namespace Server
           Constructor.
           @param parent Parent object
         */
-        RequestMapper(DataBase &iDB, QObject* parent=0);
+        RequestMapper(QObject* parent=0);
 
         /**
           Destructor.
@@ -42,12 +43,7 @@ namespace Server
         void service(HttpRequest& request, HttpResponse& response);
 
     private:
-        void authorization(HttpRequest &request, HttpResponse &response);
-        void showDatabase(HttpRequest &request, HttpResponse &response);
-
-    private:
-        DataBase& _db;
-        QByteArray _token;
+        AuthorizationController* _authorizationController;
     };
 }
 

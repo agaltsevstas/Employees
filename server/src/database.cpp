@@ -55,16 +55,29 @@ namespace Server
         }
     }
 
-    bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QByteArray &oData)
+    bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData)
     {
         QString userName = iUserName;
         qsizetype index = userName.indexOf('@');
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
 
-        const QString str = "select * from " + QString::fromStdString(Employee::TableName()) + " where " +
-                                               QString::fromStdString(Employee::Email()) + " = '" + userName + "@tradingcompany.ru' and " +
-                                               QString::fromStdString(Employee::Password()) + " = '" + iPassword +"';";
+        const QString str = "SELECT role.code, "
+                            "role.name as role, "
+                            "employee.surname, "
+                            "employee.name, "
+                            "employee.patronymic, "
+                            "employee.sex, "
+                            "employee.date_of_birth, "
+                            "employee.passport, "
+                            "employee.phone, "
+                            "employee.email, "
+                            "employee.date_of_hiring, "
+                            "employee.working_hours, "
+                            "employee.salary, "
+                            "employee.password "
+                            "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                            "WHERE employee.email = '" + userName + "@tradingcompany.ru' AND employee.password = '" + iPassword +"';";
 
         QSqlQuery query(_db);
         if (!query.exec(str))
@@ -73,21 +86,29 @@ namespace Server
             return false;
         }
 
-        QJsonDocument json;
-        QJsonArray recordsArray;
-        QJsonObject recordObject;
+        QJsonObject record;
+
         while (query.next())
         {
             query >> _employee;
+
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
             {
-                recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+                if (query.record().fieldName(i) == "code")
+                {
+                    oRole = query.value(i).toString();
+                    continue;
+                }
+                else if (query.record().fieldName(i) == QString::fromStdString(Employee::ID()))
+                {
+                    oID = query.value(i).toString();
+                }
+                record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
             }
-            recordsArray.push_back(recordObject);
         }
-        json.setArray(recordsArray);
-        oData = json.toJson();
+
+        oData = QJsonDocument(QJsonObject{{QString::fromStdString(Employee::TableName()), record}}).toJson();
         return true;
 
 //        try
@@ -121,29 +142,37 @@ namespace Server
         return false;
     }
 
-    bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData)
+    bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable)
     {
         QSqlQuery query(_db);
         if (!query.exec(iRequest))
         {
-            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            qWarning() << "Ошибка: " << query.lastError().text() << "запроса";
             return false;
         }
 
-        QJsonDocument json;
-        QJsonArray recordsArray;
         QJsonObject recordObject;
+
         while (query.next())
         {
-            auto size = query.record().count();
-            for (decltype(size) i = 0; i < size; ++i)
+            for (decltype(query.record().count()) i = 0, I = query.record().count(); i < I; ++i)
             {
                 recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
             }
-            recordsArray.push_back(recordObject);
         }
-        json.setArray(recordsArray);
-        oData = json.toJson();
+
+        if (!recordObject.empty())
+        {
+            if (!iTable.isEmpty())
+            {
+                oData = QJsonDocument(QJsonObject{{iTable, recordObject}}).toJson();
+            }
+            else
+            {
+                oData = QJsonDocument(recordObject).toJson();
+            }
+        }
+
         return true;
     }
 
@@ -204,7 +233,7 @@ namespace Server
     bool DataBase::createTable()
     {
         QSqlQuery query;
-        const QString table = "create table if not exists employee(id serial primary key, "
+        const QString table = "CREATE TABLE IF NOT EXISTS employee(id serial primary key, "
                               "position text NOT NULL, "
                               "surname text NOT NULL, "
                               "name text NOT NULL, "

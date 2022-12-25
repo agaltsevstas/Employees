@@ -4,8 +4,10 @@ log/
 build/
 client/build
 client/bin
+client/Makefile
 server/build
 server/bin
+server/Makefile
 Makefile
 .qmake.stash
 .qtc_clangd

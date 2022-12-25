@@ -39,16 +39,20 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
-    include/controller/requestmapper.h \
+    include/controller/authenticationservice.h \
     include/database.h \
     include/employee.h \
-    include/utils.h
+    include/utils.h \
+    include/controller/authorizationcontroller.h \
+    include/controller/requestmapper.h
 
 SOURCES += \
+    src/controller/authenticationservice.cpp \
     src/database.cpp \
     src/employee.cpp \
     src/main.cpp \
     src/utils.cpp \
+    src/controller/authorizationcontroller.cpp \
     src/controller/requestmapper.cpp
 
 # PostgreSql
@@ -68,6 +72,7 @@ DISTFILES += ../CHANGELOG.txt ../LICENSE.txt ../README.txt \
 include(QtWebApp/logging/logging.pri)
 include(QtWebApp/httpserver/httpserver.pri)
 include(QtWebApp/templateengine/templateengine.pri)
+include(qjsonwebtoken/qjsonwebtoken.pri)
 
 
 # Default rules for deployment.

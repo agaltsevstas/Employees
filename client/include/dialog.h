@@ -3,7 +3,6 @@
 
 #include <QDialog>
 #include <QMap>
-#include <QCompleter>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -13,6 +12,7 @@ namespace Ui
 QT_END_NAMESPACE
 
 class QStatusBar;
+class QSettings;
 
 namespace Client
 {
@@ -28,6 +28,8 @@ namespace Client
         ~Dialog();
 
     private:
+        void loadSettings();
+        void saveSettings();
         void readFormCache();
         void addToCache();
 
@@ -41,11 +43,12 @@ namespace Client
         void on_exit_clicked();
 
     private:
-        Ui::Dialog* _dialog = nullptr;
-        Table* _table = nullptr;
-        QStatusBar* _status = nullptr;
+        Ui::Dialog *_dialog = nullptr;
+        Table *_table = nullptr;
+        QStatusBar *_status = nullptr;
         QMap<QString, QString> _cache;
-        Requester* _requester = nullptr;
+        QSettings *_settings = nullptr;
+        Requester *_requester = nullptr;
     };
 }
 #endif // DIALOG_H

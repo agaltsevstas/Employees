@@ -5,6 +5,7 @@
 
 #include <QWidget>
 #include <QSqlDatabase>
+#include <QJsonArray>
 
 class QSqlTableModel;
 
@@ -14,11 +15,12 @@ namespace Server
     {
         Q_OBJECT
     public:
+
         explicit DataBase(QWidget *parent = 0);
         ~DataBase();
         bool connectToDataBase(); // Подключение к базе данных
-        bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QByteArray &oData);
-        bool sendRequest(const QByteArray &iRequest, QByteArray &oData);
+        bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData);
+        bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {});
         QSqlTableModel* createTableModel();
 
     private:
@@ -35,9 +37,9 @@ namespace Server
         bool removeRecord(const int id); // Удаление записи из таблицы по её id
 
     private:
+        QJsonArray _records;
         QSqlDatabase _db; // Объект базы данных
         Employee _employee;
-        QString _role;
     };
 }
 

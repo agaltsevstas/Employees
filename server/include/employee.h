@@ -14,7 +14,7 @@
 enum Field
 {
     FIELD_ID = 0,
-    FIELD_POSITION,
+    FIELD_ROLE,
     FIELD_SURNAME,
     FIELD_NAME,
     FIELD_PATRONYMIC,
@@ -54,21 +54,76 @@ enum Status
 class Employee
 {
 public:
-    static std::string TableName()    { return "employee"; }
+
+    /// Уровень доступа
+    enum Access
+    {
+        /// Блокировка
+        LOCK = 0,
+
+        /// Чтение
+        READ,
+
+        /// Запись
+        WRITE
+    };
+
+    /// Карта полей с их доступом
+    std::map<Field, Access> _fieldAccess
+    {
+        {FIELD_ID,             WRITE},
+        {FIELD_ROLE,           WRITE},
+        {FIELD_SURNAME,        WRITE},
+        {FIELD_NAME,           WRITE},
+        {FIELD_PATRONYMIC,     WRITE},
+        {FIELD_SEX,            WRITE},
+        {FIELD_DATE_OF_BIRTH,  WRITE},
+        {FIELD_PASSPORT,       WRITE},
+        {FIELD_PHONE,          WRITE},
+        {FIELD_EMAIL,          WRITE},
+        {FIELD_DATE_OF_HIRING, WRITE},
+        {FIELD_WORKING_HOURS,  WRITE},
+        {FIELD_SALARY,         WRITE},
+        {FIELD_PASSWORD,       WRITE},
+    };
+
+    static std::string TableName() { return "employee"; }
+    static std::string PermissionTable()    { return "permission"; }
+    static std::string PersonalDataPermissionTable()    { return "personal_data_permission"; }
+    static std::string DatabasePermissionTable()    { return "database_permission"; }
     static std::string ID()           { return "id"; }
-    static std::string Position()     { return "position"; }
+    static std::string Role()         { return "role"; }
     static std::string Surname()      { return "surname"; }
     static std::string Name()         { return "name"; }
     static std::string Patronymic()   { return "patronymic"; }
     static std::string Sex()          { return "sex"; }
-    static std::string DateOfBirth()  { return "dateofbirth"; }
+    static std::string DateOfBirth()  { return "date_of_birth"; }
     static std::string Passport()     { return "passport"; }
     static std::string Phone()        { return "phone"; }
     static std::string Email()        { return "email"; }
-    static std::string DateOfHiring() { return "dateofhiring"; }
-    static std::string WorkingHours() { return "workinghours"; }
+    static std::string DateOfHiring() { return "date_of_hiring"; }
+    static std::string WorkingHours() { return "working_hours"; }
     static std::string Salary()       { return "salary"; }
     static std::string Password()     { return "password"; }
+
+    /// Карта доступа
+    const std::map<std::string, std::map<Field, Access>> accessControl =
+    {
+        {"Бухгалтер", _fieldAccess},
+        {"Водитель", _fieldAccess},
+        {"Главный_бухгалтер", _fieldAccess},
+        {"Главный_юрист-консультант", _fieldAccess},
+        {"Грузчик", _fieldAccess},
+        {"Директор", _fieldAccess},
+        {"Логист", _fieldAccess},
+        {"Менеджер_по_закупкам", _fieldAccess},
+        {"Менеджер_по_продажам", _fieldAccess},
+        {"Кассир", _fieldAccess},
+        {"Начальник_отдела_закупок", _fieldAccess},
+        {"Начальник_склада", _fieldAccess},
+        {"Менеджер_по_персоналу", _fieldAccess},
+        {"Юрист", _fieldAccess}
+    };
 
 private:
     /*!
@@ -97,7 +152,7 @@ private:
     const std::map<std::string, std::function<void(Employee&, const std::string&)>> _setParameters =
     {
         {ID(),           nullptr},
-        {Position(),     &Employee::SetPosition},
+        {Role(),         &Employee::SetRole},
         {Surname(),      &Employee::SetSurname},
         {Name(),         &Employee::SetName},
         {Patronymic(),   &Employee::SetPatronymic},
@@ -116,7 +171,7 @@ private:
     std::map<Field, Status> _fieldStatus
     {
         {FIELD_ID,             ST_EMPTY},
-        {FIELD_POSITION,       ST_EMPTY},
+        {FIELD_ROLE,           ST_EMPTY},
         {FIELD_SURNAME,        ST_EMPTY},
         {FIELD_NAME,           ST_EMPTY},
         {FIELD_PATRONYMIC,     ST_EMPTY},
@@ -172,7 +227,7 @@ public:
      * @brief Получение значений полей
      * @return Значение поля
      */
-    std::string GetPosition() const;
+    std::string GetRole() const;
     std::string GetSurname() const;
     std::string GetName() const;
     std::string GetPatronymic() const;
@@ -195,7 +250,7 @@ protected:
 
 private:
     uint32_t    _id = 0;       /// ID
-    std::string _position;     /// Должность
+    std::string _role;         /// Должность
     std::string _surname;      /// Фамилия
     std::string _name;         /// Имя
     std::string _patronymic;   /// Отчество
@@ -214,7 +269,7 @@ private:
      * @param Значение поля
      */
     void SetId(const std::string &iID);
-    void SetPosition(const std::string &iPosition);
+    void SetRole(const std::string &iRole);
     void SetSurname(const std::string &iSurname);
     void SetName(const std::string &iName);
     void SetPatronymic(const std::string &iPatronymic);
@@ -233,7 +288,7 @@ private:
      * @param iWarning - Предупреждение о невалидности данных поля
      */
     void CheckId(const std::string &iWarning = {}); /// Не используется!
-    void CheckPosition(const std::string &iWarning = {});
+    void CheckRole(const std::string &iWarning = {});
     void CheckSurname(const std::string &iWarning = {});
     void CheckName(const std::string &iWarning = {});
     void CheckPatronymic(const std::string &iWarning = {});
@@ -250,7 +305,7 @@ private:
     /*!
      * @brief Изменение статуса полей на перезапись/дублирование данных
      */
-    void ChangeStatusPosition();
+    void ChangeStatusRole();
     void ChangeStatusSurname();
     void ChangeStatusName();
     void ChangeStatusPatronymic();
