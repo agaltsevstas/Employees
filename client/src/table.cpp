@@ -30,14 +30,11 @@ namespace Client
         _ui->gridLayout_6->removeWidget(_ui->update);
         _ui->gridLayout_6->removeWidget(_ui->exit);
         _ui->gridLayout_6->addWidget(_ui->update, 0, 0, 1, 1);
-        _ui->gridLayout_6->addWidget(_ui->exit, 1, 0, 1, 2);
-        _ui->gridLayout_6->addWidget(_requester->getProgressBar(), 2, 0, 1, 2);
 
-        QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
-        showDatabase->setSizePolicy(GetSizePolice());
-        connect(showDatabase, SIGNAL(clicked()), this, SLOT(showDatabase()));
-        _ui->gridLayout_6->addWidget(showDatabase, 0, 1, 1, 1);
         setPersonalData(_requester->getJson());
+
+        _ui->gridLayout_6->addWidget(_ui->exit, 1, 0, 1, _ui->gridLayout_6->columnCount());
+        _ui->gridLayout_6->addWidget(new QProgressBar(_requester->getProgressBar()), 2, 0, 1, _ui->gridLayout_6->columnCount());
     }
 
     void Table::resizeEvent(QResizeEvent *event)
@@ -54,7 +51,6 @@ namespace Client
         _ui->PersonalData->adjustSize();
         _ui->gridLayout_2->update();
 
-        auto del = json.array();
         auto findTable = [&json](const QString& iTable)->int
         {
             for (decltype(json.array().size()) i = 0, I = json.array().size(); i < I; ++i)
@@ -73,48 +69,57 @@ namespace Client
         };
 
         auto index_data = findTable("employee");
-        auto index_permissions = findTable("personal_data_permission");
-        if (index_data != -1 && index_permissions != -1)
+        auto index_personal_permissions = findTable("personal_data_permission");
+        auto index_permissions = findTable("permission");
+        if (index_data != -1 &&
+            index_personal_permissions != -1 &&
+            index_permissions != -1)
         {
             const QJsonValue data = json.array()[index_data].toObject().value("employee");
-            const QJsonValue permissions = json.array()[index_permissions].toObject().value("personal_data_permission");
-            if (data.isObject() && permissions.isObject())
+            const QJsonValue personal_permissions = json.array()[index_personal_permissions].toObject().value("personal_data_permission");
+            const QJsonValue permissions = json.array()[index_permissions].toObject().value("permission");
+            if (data.isObject() &&
+                personal_permissions.isObject() &&
+                permissions.isObject())
             {
                 const auto fields = Employee::getFileds();
                 for (decltype(fields.size()) i = 0, I = fields.size(); i < I; ++i)
                 {
                     const auto& [field, name] = fields[i];
                     const QJsonObject subobject_data = data.toObject(); // обязательно нужно определить
-                    const QJsonObject subobject_permissions = permissions.toObject(); // обязательно нужно определить
+                    const QJsonObject subobject_permissions = personal_permissions.toObject(); // обязательно нужно определить
 
-                    auto itData = subobject_data.find(field);
-                    auto itPermissions = subobject_permissions.find(field);
-                    if (itData != subobject_data.end() && itPermissions != subobject_permissions.end())
+                    auto it_Data = subobject_data.find(field);
+                    auto it_Permissions = subobject_permissions.find(field);
+                    if (it_Data != subobject_data.end() && it_Permissions != subobject_permissions.end())
                     {
                         QLabel *label = new QLabel(field + "Label", _ui->PersonalData);
                         label->setSizePolicy(GetSizePolice());
                         label->setText(name);
-
                         _ui->gridLayout_2->addWidget(label, i, 0, 1, 1);
 
                         QLineEdit *lineEdit = new QLineEdit(field, _ui->PersonalData);
-
-                        if (itData->isString())
+                        if (field == "password")
                         {
-                            lineEdit->setText(itData.value().toString());
+                            lineEdit->setEchoMode(QLineEdit::Password);
                         }
-                        else if (itData->isDouble())
+
+                        if (it_Data->isString())
                         {
-                            lineEdit->setText(QString::number(itData.value().toInteger()));
+                            lineEdit->setText(it_Data.value().toString());
+                        }
+                        else if (it_Data->isDouble())
+                        {
+                            lineEdit->setText(QString::number(it_Data.value().toInteger()));
                         }
                         else
                         {
                             Q_ASSERT(false);
                         }
 
-                        if (itPermissions->isString())
+                        if (it_Permissions->isString())
                         {
-                            lineEdit->setEnabled(itPermissions->toString() == "write");
+                            lineEdit->setEnabled(it_Permissions->toString() == "write");
                         }
                         else
                         {
@@ -124,6 +129,38 @@ namespace Client
                         lineEdit->setSizePolicy(GetSizePolice());
                         _ui->gridLayout_2->addWidget(lineEdit, i, 1, 1, 1);
                     }
+                }
+
+                const QJsonObject subobject_permissions = permissions.toObject(); // обязательно нужно определить
+                auto show_db = subobject_permissions.find("show_db");
+                auto create_user = subobject_permissions.find("create_user");
+                auto delete_user = subobject_permissions.find("delete_user");
+                if (show_db != subobject_permissions.end() &&
+                    create_user != subobject_permissions.end() &&
+                    delete_user != subobject_permissions.end())
+                {
+                    if (show_db->isBool() && show_db->toBool())
+                    {
+                        QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
+                        showDatabase->setSizePolicy(GetSizePolice());
+                        connect(showDatabase, SIGNAL(clicked()), this, SLOT(showDatabase()));
+                        _ui->gridLayout_6->addWidget(showDatabase, 0, 1, 1, 1);
+                    }
+
+                    if (create_user->isBool() && create_user->toBool())
+                    {
+                        QPushButton *createUser = new QPushButton("Создать пользователя", this);
+                        createUser->setSizePolicy(GetSizePolice());
+                        _ui->gridLayout_6->addWidget(createUser, 0, 2, 1, 1);
+                    }
+
+                    if (delete_user->isBool() && delete_user->toBool())
+                    {
+                        QPushButton *deleteUser = new QPushButton("Удалить пользователя", this);
+                        deleteUser->setSizePolicy(GetSizePolice());
+                        _ui->gridLayout_6->addWidget(deleteUser, 0, 3, 1, 1);
+                    }
+
                 }
             }
         }
@@ -210,7 +247,6 @@ namespace Client
 //            auto del1 = _ui->groupBox->size();
 //            auto del2 = _tableView->geometry().size();
 //            auto del3 = del1 + del2;
-            int k = 0;
         }
 
         showDatabase->setCheckable(!isCheckable);
@@ -227,8 +263,7 @@ namespace Client
                 setPersonalData(_requester->getJson());
                 if (_databaseModel)
                 {
-                    Requester::HandleResponse handleResponse;
-                    handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1);
+                    Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1);
                     _requester->sendRequest("showDatabase", handleResponse);
                 }
             }

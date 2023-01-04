@@ -12,6 +12,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QCryptographicHash>
 
 #define DATABASE_POSTGRES "QPSQL"         // Тип базы данных
 #define DATABASE_HOSTNAME "127.0.0.1"     // Хост
@@ -58,6 +59,7 @@ namespace Server
     bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData)
     {
         QString userName = iUserName;
+        QString password = QString(QCryptographicHash::hash(iPassword, QCryptographicHash::Md5).toHex());
         qsizetype index = userName.indexOf('@');
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
@@ -77,7 +79,7 @@ namespace Server
                             "employee.salary, "
                             "employee.password "
                             "FROM employee LEFT JOIN role ON employee.role_id = role.id "
-                            "WHERE employee.email = '" + userName + "@tradingcompany.ru' AND employee.password = '" + iPassword +"';";
+                            "WHERE employee.email = '" + userName + "@tradingcompany.ru' AND employee.password = '" + password +"';";
 
         QSqlQuery query(_db);
         if (!query.exec(str))

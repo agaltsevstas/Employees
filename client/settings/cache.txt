@@ -1,0 +1,2 @@
+Login: "anisimova.marija.borisovna@tradingcompany.ru" Password: "1HRmanager"
+Login: "stas.agaltsev.sergeevich@tradingcompany.ru" Password: "1Director"

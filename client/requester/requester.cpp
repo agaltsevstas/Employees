@@ -43,7 +43,15 @@ namespace Client
 
          bool isEmpty()
          {
+
              return allCookies().isEmpty();
+         }
+
+         void clear()
+         {
+             auto cookies = allCookies();
+             cookies.clear();
+             setAllCookies(cookies);
          }
     };
 
@@ -240,6 +248,7 @@ namespace Client
             _progress->setHidden(true);
             _json = _requester->parseReply(reply);
             _token.clear();
+            _requester->getCookie()->clear();
 
             QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
             if (!variantCookies.isNull())
@@ -250,7 +259,8 @@ namespace Client
                     if (cookie.name() == "refreshToken")
                     {
                         _token = cookie.value();
-                        _requester->getCookie()->setAllCookies({cookie});
+                        if (!_token.isEmpty())
+                            _requester->getCookie()->setAllCookies({cookie});
                         break;
                     }
                 }

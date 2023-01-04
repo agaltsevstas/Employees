@@ -1,0 +1,1 @@
+id: "400" position: "Менеджер_по_персоналу" surname: "Анисимова" name: "Мария" patronymic: "Борисовна" sex: "Жен" dateOfBirth: "12.01.1990" passport: "8810024816" phone: "9032661077" email: "anisimova.marija.borisovna@tradingcompany.ru" dateOfHiring: "01.04.2020" workingHours: "Понедельник-Пятница=09:00-18:00" salary: "70000" password: "1HRmanager"

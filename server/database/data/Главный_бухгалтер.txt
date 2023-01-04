@@ -1,0 +1,1 @@
+id: "200" position: "Главный_бухгалтер" surname: "Смежнова" name: "Ирина" patronymic: "Владимировна" sex: "Жен" dateOfBirth: "30.06.1986" passport: "5371863331" phone: "9150056750" email: "smezhnova.irina.vladimirovna@tradingcompany.ru" dateOfHiring: "02.01.2018" workingHours: "Понедельник-Пятница=09:00-18:00" salary: "100000" password: "1Chiefaccountant"

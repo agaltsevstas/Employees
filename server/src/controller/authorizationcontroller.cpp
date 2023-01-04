@@ -114,23 +114,55 @@ namespace Server
 
     void AuthorizationController::login(HttpResponse &iResponse)
     {
-        for (const auto& table : {Employee::PermissionTable(), Employee::PersonalDataPermissionTable()})
+        for (const auto& request: QList<QByteArray>{
+                                   "DROP TABLE IF EXISTS tmp;",
+                                   "SELECT * INTO tmp FROM " + QByteArray::fromStdString(Employee::PermissionTable()) + ";",
+                                   "DELETE FROM tmp WHERE tmp.role_id NOT IN (SELECT id FROM role WHERE role.code = '" + _authenticationService->getRole().toUtf8() +"'); ",
+                                   "ALTER TABLE tmp DROP COLUMN id, DROP COLUMN role_id; ",
+                                   "SELECT * FROM tmp;"})
         {
-            for (const auto& request: QList<QByteArray>{
-                                       "DROP TABLE IF EXISTS tmp;",
-                                       "SELECT * INTO tmp FROM " + QByteArray::fromStdString(table) + ";",
-                                       "DELETE FROM tmp WHERE tmp.role_id NOT IN (SELECT id FROM role WHERE role.code = 'director'); ",
-                                       "ALTER TABLE tmp DROP COLUMN id, DROP COLUMN role_id; ",
-                                       "SELECT * FROM tmp;"})
-            {
-                QByteArray data;
-                if (!db->sendRequest(request, data, QByteArray::fromStdString(table)))
-                    return;
 
-                if (!data.isEmpty())
-                   iResponse.write(data, table == Employee::DatabasePermissionTable() ? true : false);
-            }
+
+            QByteArray data;
+            if (!db->sendRequest(request, data, QByteArray::fromStdString(Employee::PermissionTable())))
+                return;
+
+            iResponse.write(data);
         }
+
+        QByteArray data;
+        if (!db->sendRequest("SELECT "
+                             "role.code AS role, "
+                             "surname.code AS surname, "
+                             "name.code AS name, "
+                             "patronymic.code AS patronymic, "
+                             "sex.code AS sex, "
+                             "date_of_birth.code AS date_of_birth, "
+                             "passport.code AS passport, "
+                             "phone.code AS phone, "
+                             "email.code AS email, "
+                             "date_of_hiring.code AS date_of_hiring, "
+                             "working_hours.code AS working_hours, "
+                             "salary.code AS salary, "
+                             "password.code AS password "
+                             "FROM " + QByteArray::fromStdString(Employee::PersonalDataPermissionTable()) + " AS p "
+                             "JOIN action AS role ON p.role = role.id "
+                             "JOIN action AS surname ON p.surname = surname.id "
+                             "JOIN action AS name ON p.name = name.id "
+                             "JOIN action AS patronymic ON p.patronymic = patronymic.id "
+                             "JOIN action AS sex ON p.sex = sex.id "
+                             "JOIN action AS date_of_birth ON p.date_of_birth = date_of_birth.id "
+                             "JOIN action AS passport ON p.passport = passport.id "
+                             "JOIN action AS phone ON p.phone = phone.id "
+                             "JOIN action AS email ON p.email = email.id "
+                             "JOIN action AS date_of_hiring ON p.date_of_hiring = date_of_hiring.id "
+                             "JOIN action AS working_hours ON p.working_hours = working_hours.id "
+                             "JOIN action AS salary ON p.salary = salary.id "
+                             "JOIN action AS password ON p.password = password.id "
+                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole().toUtf8() + "';", data, QByteArray::fromStdString(Employee::PersonalDataPermissionTable())))
+            return;
+
+        iResponse.write(data);
     }
 
     void AuthorizationController::logout(HttpResponse &iResponse)

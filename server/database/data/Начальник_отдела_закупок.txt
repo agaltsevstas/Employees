@@ -1,0 +1,1 @@
+id: "500" position: "Начальник_отдела_закупок" surname: "Тимофеев" name: "Андрей" patronymic: "Васильевич" sex: "Муж" dateOfBirth: "23.11.1985" passport: "5698423591" phone: "4951162773" email: "timofeev.andrej.vasilevich@tradingcompany.ru" dateOfHiring: "09.01.2018" workingHours: "Понедельник-Пятница=09:00-18:00" salary: "90000" password: "1Headofprocurement"

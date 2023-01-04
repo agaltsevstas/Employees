@@ -1,0 +1,1 @@
+id: "300" position: "Главный_юрист-консультант" surname: "Тимошин" name: "Виктор" patronymic: "Васильевич" sex: "Муж" dateOfBirth: "13.06.1991" passport: "5491443561" phone: "9151156783" email: "timoshin.viktor.vasilevich@tradingcompany.ru" dateOfHiring: "10.01.2018" workingHours: "Понедельник-Пятница=09:00-18:00" salary: "80000" password: "1Chieflegalcounsel"

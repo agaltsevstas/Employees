@@ -13,6 +13,7 @@
 #include <QTimer>
 #include <QProgressBar>
 
+
 #define FILENAME  "cache.txt"
 #define DIRECTORY "../settings/"
 
@@ -32,7 +33,6 @@ namespace Client
 
         connect(_dialog->login, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
         connect(_dialog->password, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
-        connect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
 
         loadSettings();
     }
@@ -205,6 +205,9 @@ namespace Client
 
     void Dialog::showDialog()
     {
+        delete _table;
+        disconnect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
+        _requester->sendRequest("logout");
         _dialog->gridLayout->addWidget(_requester->getProgressBar(), 6, 0, 1, 4);
         show();
     }
@@ -226,6 +229,7 @@ namespace Client
         }
 
         QString token = login + ":" + password;
+        connect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
         _requester->setToken(token);
         _requester->sendRequest("login");
     }

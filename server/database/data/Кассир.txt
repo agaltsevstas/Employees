@@ -1,0 +1,1 @@
+id: "800" position: "Кассир" surname: "Шумихина" name: "Эмилия" patronymic: "Васильевна" sex: "Жен" dateOfBirth: "01.12.1993" passport: "5058742950" phone: "9153366503" email: "shumihina.emilija.vasilevna@tradingcompany.ru" dateOfHiring: "23.01.2018" workingHours: "Понедельник-Пятница=09:00-18:00" salary: "40000" password: "1Cashier"
