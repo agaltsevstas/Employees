@@ -87,7 +87,7 @@ public:
         {FIELD_PASSWORD,       WRITE},
     };
 
-    static std::string TableName() { return "employee"; }
+    static std::string EmployeeTable() { return "employee"; }
     static std::string PermissionTable()    { return "permission"; }
     static std::string PersonalDataPermissionTable()    { return "personal_data_permission"; }
     static std::string DatabasePermissionTable()    { return "database_permission"; }

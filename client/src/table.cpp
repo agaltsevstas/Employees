@@ -15,10 +15,30 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QProgressBar>
+#include <QMessageBox>
+#include <QTimer>
 
 
 namespace Client
 {
+
+    auto findTableInJson(const QJsonDocument &iJson, const QString& iTable)->int
+    {
+        for (decltype(iJson.array().size()) i = 0, I = iJson.array().size(); i < I; ++i)
+        {
+            if (iJson.array()[i].isObject())
+            {
+                const QJsonObject subobject = iJson.array()[i].toObject();
+                if (subobject.contains(iTable))
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    };
+
     Table::Table(Requester* iRequester, QWidget *parent) :
         QWidget(parent),
         _ui(new Ui::Table),
@@ -51,27 +71,11 @@ namespace Client
         _ui->PersonalData->adjustSize();
         _ui->gridLayout_2->update();
 
-        auto findTable = [&json](const QString& iTable)->int
-        {
-            for (decltype(json.array().size()) i = 0, I = json.array().size(); i < I; ++i)
-            {
-                if (json.array()[i].isObject())
-                {
-                    const QJsonObject subobject = json.array()[i].toObject();
-                    if (subobject.contains(iTable))
-                    {
-                        return i;
-                    }
-                }
-            }
-
-            return -1;
-        };
-
-        auto index_data = findTable("employee");
-        auto index_personal_permissions = findTable("personal_data_permission");
-        auto index_permissions = findTable("permission");
-        if (index_data != -1 &&
+        auto index_data = findTableInJson(json, "employee");
+        auto index_personal_permissions = findTableInJson(json, "personal_data_permission");
+        auto index_permissions = findTableInJson(json, "permission");
+        if (json.isArray() &&
+            index_data != -1 &&
             index_personal_permissions != -1 &&
             index_permissions != -1)
         {
@@ -89,9 +93,9 @@ namespace Client
                     const QJsonObject subobject_data = data.toObject(); // обязательно нужно определить
                     const QJsonObject subobject_permissions = personal_permissions.toObject(); // обязательно нужно определить
 
-                    auto it_Data = subobject_data.find(field);
-                    auto it_Permissions = subobject_permissions.find(field);
-                    if (it_Data != subobject_data.end() && it_Permissions != subobject_permissions.end())
+                    auto it_data = subobject_data.find(field);
+                    auto it_permissions = subobject_permissions.find(field);
+                    if (it_data != subobject_data.end() && it_permissions != subobject_permissions.end())
                     {
                         QLabel *label = new QLabel(field + "Label", _ui->PersonalData);
                         label->setSizePolicy(GetSizePolice());
@@ -104,22 +108,22 @@ namespace Client
                             lineEdit->setEchoMode(QLineEdit::Password);
                         }
 
-                        if (it_Data->isString())
+                        if (it_data->isString())
                         {
-                            lineEdit->setText(it_Data.value().toString());
+                            lineEdit->setText(it_data.value().toString());
                         }
-                        else if (it_Data->isDouble())
+                        else if (it_data->isDouble())
                         {
-                            lineEdit->setText(QString::number(it_Data.value().toInteger()));
+                            lineEdit->setText(QString::number(it_data.value().toInteger()));
                         }
                         else
                         {
                             Q_ASSERT(false);
                         }
 
-                        if (it_Permissions->isString())
+                        if (it_permissions->isString())
                         {
-                            lineEdit->setEnabled(it_Permissions->toString() == "write");
+                            lineEdit->setEnabled(it_permissions->toString() == "write");
                         }
                         else
                         {
@@ -192,25 +196,44 @@ namespace Client
         emit openDialog(); // Вызов главного окна
     }
 
-    void Table::showDB(bool iResult)
+    void Table::showDB(bool iResult, const QString &error)
     {
         if (iResult)
         {
             qDebug() << "Ответ на запрос получен!";
+
             if (!_tableView)
-            {
                 _tableView = new TableView(this);
+
+            const QJsonDocument json = _requester->getJson();
+            auto index_database = findTableInJson(json, "employee");
+            auto index_database_permissions = findTableInJson(json, "database_permission");
+            if (_requester->getJson().isArray() &&
+                index_database != -1 &&
+                index_database_permissions != -1)
+            {
+                const QJsonValue database = json.array()[index_database].toObject().value("employee");
+                const QJsonValue database_permissions = json.array()[index_database_permissions].toObject().value("database_permission");
+                if (database.isArray() &&
+                    database_permissions.isObject())
+                {
+                    _databaseModel = new QJsonTableModel(QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()), this);
+                    _tableView->setModel(_databaseModel);
+                    _ui->splitter->addWidget(_tableView);
+        //            _tableView->horizontalHeader()->setSortIndicator(0, 0);
+        //            _ui->splitter->adjustSize();
+                    return;
+                }
             }
 
-            _databaseModel = new QJsonTableModel(_requester->getJson(), this);
-            _tableView->setModel(_databaseModel);
-            _ui->splitter->addWidget(_tableView);
-//            _tableView->horizontalHeader()->setSortIndicator(0, 0);
-//            _ui->splitter->adjustSize();
+            qDebug() << "База данных сотрудников не найдена!";
         }
         else
         {
-            qDebug() << "Ответ на запрос не получен!";
+            QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+            QTimer::singleShot(1000, &warning, &QMessageBox::close);
+            warning.exec();
+            qDebug() << "Ошибка: " << error;
         }
     }
 
@@ -229,7 +252,7 @@ namespace Client
             else
             {
                 Requester::HandleResponse handleResponse;
-                handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1);
+                handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
                 _requester->sendRequest("showDatabase", handleResponse);
             }
 
@@ -255,7 +278,7 @@ namespace Client
     void Table::on_update_clicked()
     {
         Requester::HandleResponse handleResponse;
-        handleResponse = [this](bool iResult)
+        handleResponse = [this](bool iResult, const QString &error)
         {
             if (iResult)
             {
@@ -263,16 +286,16 @@ namespace Client
                 setPersonalData(_requester->getJson());
                 if (_databaseModel)
                 {
-                    Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1);
+                    Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
                     _requester->sendRequest("showDatabase", handleResponse);
                 }
             }
             else
             {
-                qDebug() << "Ошибка обновления!";
+                qDebug() << "Ошибка: " << error;
             }
         };
 
-        _requester->sendRequest("login", handleResponse);
+        _requester->sendRequest("updatePersnalData", handleResponse);
     }
 }

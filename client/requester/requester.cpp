@@ -43,15 +43,12 @@ namespace Client
 
          bool isEmpty()
          {
-
              return allCookies().isEmpty();
          }
 
          void clear()
          {
-             auto cookies = allCookies();
-             cookies.clear();
-             setAllCookies(cookies);
+             setAllCookies({});
          }
     };
 
@@ -92,27 +89,35 @@ namespace Client
     QJsonDocument Requester::RequesterImpl::parseReply(QNetworkReply *iReply)
     {
         QByteArray replyData = iReply->readAll();
-        qInfo() << replyData;
+        qInfo() << (replyData.isEmpty() ? "Пустые данные" : "Получены данные: " + replyData);
 
-        QJsonArray records;
-        while (!replyData.isEmpty())
+        QJsonDocument jsonDocument = QJsonDocument::fromJson(replyData);
+        if (jsonDocument.isEmpty())
         {
-            QJsonParseError parseError;
-            auto index = replyData.indexOf("}\n") + 4;
-            QJsonDocument json = QJsonDocument::fromJson(replyData.left(index), &parseError);
-            if (parseError.error != QJsonParseError::NoError)
+            QJsonArray records;
+
+            while (!replyData.isEmpty())
             {
-                qWarning() << "Json parse error: " << parseError.errorString();
-            }
-            if (json.isObject())
-            {
-                records.push_back(json.object());
+                QJsonParseError parseError;
+                auto index = replyData.indexOf("\n}\n") + 3;
+                QJsonDocument json = QJsonDocument::fromJson(replyData.left(index), &parseError);
+                if (parseError.error != QJsonParseError::NoError)
+                {
+                    qWarning() << "Json parse error: " << parseError.errorString();
+                    continue;
+                }
+                if (json.isObject())
+                {
+                    records.push_back(json.object());
+                }
+
+                replyData = replyData.mid(index);
             }
 
-            replyData = replyData.mid(index);
+            return QJsonDocument(records);
         }
 
-        return QJsonDocument(records);
+        return jsonDocument;
     }
 
     QNetworkRequest Requester::RequesterImpl::createRequest(const QString &iApi)
@@ -215,6 +220,7 @@ namespace Client
             case Type::POST:
             {
                 QByteArray data = _requester->variantMapToJson(iData);
+                request.setRawHeader("Content-Length", QByteArray::number(data.size()));
                 reply = _manager->post(request, data);
                 break;
             }
@@ -269,15 +275,14 @@ namespace Client
             if (_requester->checkFinishRequest(reply))
             {
                 if (handleResponse)
-                        handleResponse(true);
+                        handleResponse(true, reply->errorString());
                 else
                     response(true);
             }
             else
             {
-                qDebug() << reply->errorString();
                 if (handleResponse)
-                        handleResponse(false);
+                        handleResponse(false, reply->errorString());
                 else
                     response(false);
             }

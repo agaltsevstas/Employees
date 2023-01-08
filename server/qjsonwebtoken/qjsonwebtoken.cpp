@@ -330,6 +330,16 @@ QString QJsonWebToken::claim(const QString &strClaimType)
     return jObj[strClaimType].toString();
 }
 
+qint64 QJsonWebToken::getID() const
+{
+    return _payload["id"].toString().toLongLong();
+}
+
+QString QJsonWebToken::getUserName() const
+{
+    return _payload["username"].toString();
+}
+
 QString QJsonWebToken::getRole() const
 {
     return _payload["role"].toString();
@@ -337,7 +347,7 @@ QString QJsonWebToken::getRole() const
 
 qint64 QJsonWebToken::getExp() const
 {
-    return _payload["exp"].toInteger();
+    return _payload["exp"].toString().toLongLong();
 }
 
 bool QJsonWebToken::isAlgorithmSupported(const QString &strAlgorithm)

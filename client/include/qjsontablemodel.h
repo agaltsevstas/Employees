@@ -3,6 +3,7 @@
 
 #include <QAbstractTableModel>
 #include <QJsonArray>
+#include <QPair>
 
 
 class QJsonTableModel final : public QAbstractTableModel
@@ -10,10 +11,19 @@ class QJsonTableModel final : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    QJsonTableModel(const QJsonDocument &json, QObject *parent = nullptr);
+    QJsonTableModel(const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent = nullptr);
+    QJsonTableModel(const QJsonDocument &iDatabase, QObject *parent = nullptr);
 
-    bool setJson(const QJsonDocument &json);
-    bool setJson(const QJsonArray &array);
+    enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
+
+    void setEditStrategy(EditStrategy iStrategy) { _strategy = iStrategy; }
+    EditStrategy editStrategy() const { return _strategy; }
+
+    bool setDatabase(const QJsonDocument &iDatabase);
+    bool setDatabase(const QJsonArray &iDatabase);
+
+    bool setPermissions(const QJsonDocument &iPermissions);
+    bool setPermissions(const QJsonObject &iPermissions);
 
     void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);
     QJsonObject getJsonObject(const QModelIndex &index) const;
@@ -33,7 +43,8 @@ private:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 private:
-    QStringList _headers;
+    EditStrategy _strategy = EditStrategy::OnFieldChange;
+    QList<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
 };
 

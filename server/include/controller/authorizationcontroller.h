@@ -28,6 +28,7 @@ namespace Server
         bool authorization(HttpRequest &iRequest, HttpResponse &iResponse);
         void login(HttpResponse &iResponse);
         void logout(HttpResponse &iResponse);
+        void updatePersonalData(HttpResponse &iResponse);
         void showDatabase(HttpResponse &iResponse);
 
     private:

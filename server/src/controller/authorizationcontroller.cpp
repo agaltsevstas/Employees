@@ -30,30 +30,31 @@ namespace Server
             else
             {
                 qDebug() << "permission denied";
-                _response.setStatus(400, "permission denied");
+                _response.setStatus(403, "Forbidden Error");
             }
         }
 
     private:
         bool _check(const QString &iTable)
         {
-            QByteArray request = "SELECT * FROM " + iTable.toUtf8() +
-                                 " LEFT JOIN role ON " + iTable.toUtf8() + ".id = role.id "
-                                 "WHERE role.code = '" + _controller._authenticationService->getRole().toUtf8() + "'";
+            QByteArray request;
+
+            if (iTable == "database_permission")
+            {
+                request = "SELECT show_db FROM " + QByteArray::fromStdString(Employee::PermissionTable()) +
+                          " LEFT JOIN role ON " + QByteArray::fromStdString(Employee::PermissionTable()) + ".id = role.id "
+                          "WHERE role.code = '" + _controller._authenticationService->getRole().toUtf8() + "' AND show_db = true;";
+            }
+            else
+            {
+                qDebug() << "...";
+            }
+
             QByteArray data;
             if (!db->sendRequest(request, data))
             {
                 qWarning() << "Ошибка прав доступа";
                 return false;
-            }
-
-            if (iTable == "database_permission")
-            {
-
-            }
-            else
-            {
-                qDebug() << "...";
             }
 
             return true;
@@ -90,7 +91,19 @@ namespace Server
                     QByteArray data;
                     if (db->authentication(userName, password, id, role, data))
                     {
-                        iResponse.setCookie(_authenticationService->authentication(id, userName, role));
+                        QByteArray token;
+                        qint64 exp;
+                        _authenticationService->authentication(id, userName, role, token, exp);
+                        iResponse.setCookie(stefanfrings::HttpCookie("refreshToken",
+                                                                     token,
+                                                                     exp / 1000,
+                                                                     "/",
+                                                                     "jwt",
+                                                                     "",
+                                                                     true,
+                                                                     false,
+                                                                     "Lax"));
+
                         iResponse.setHeader("Content-Type", "application/json");
                         iResponse.write(data);
                         return true;
@@ -100,8 +113,21 @@ namespace Server
             else if (authentication.startsWith("Bearer"))
             {
                 QByteArray token = QByteArray::fromBase64(authentication.mid(7));
-                if (_authenticationService->checkAuthentication(token))
+                qint64 exp;
+                if (_authenticationService->checkAuthentication(token, exp))
+                {
+                    iResponse.setCookie(stefanfrings::HttpCookie("refreshToken",
+                                                                 token,
+                                                                 exp / 1000,
+                                                                 "/",
+                                                                 "jwt",
+                                                                 "",
+                                                                 true,
+                                                                 false,
+                                                                 "Lax"));
+
                     return true;
+                }
             }
         }
 
@@ -123,14 +149,21 @@ namespace Server
         {
 
 
-            QByteArray data;
-            if (!db->sendRequest(request, data, QByteArray::fromStdString(Employee::PermissionTable())))
+            if (!db->sendRequest(request))
+            {
+                iResponse.setStatus(401, "Bad Request");
                 return;
-
-            iResponse.write(data);
+            }
         }
 
         QByteArray data;
+        if (!db->sendRequest("SELECT * FROM tmp;", data, QByteArray::fromStdString(Employee::PermissionTable())))
+        {
+            iResponse.setStatus(401, "Bad Request");
+            return;
+        }
+
+        iResponse.write(data);
         if (!db->sendRequest("SELECT "
                              "role.code AS role, "
                              "surname.code AS surname, "
@@ -160,7 +193,10 @@ namespace Server
                              "JOIN action AS salary ON p.salary = salary.id "
                              "JOIN action AS password ON p.password = password.id "
                              "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole().toUtf8() + "';", data, QByteArray::fromStdString(Employee::PersonalDataPermissionTable())))
+        {
+            iResponse.setStatus(401, "Bad Request");
             return;
+        }
 
         iResponse.write(data);
     }
@@ -179,10 +215,27 @@ namespace Server
                                                     "Lax"));
     }
 
+    void AuthorizationController::updatePersonalData(HttpResponse &iResponse)
+    {
+        const qint64 id = _authenticationService->getID();
+        const QString username = _authenticationService->getUserName();
+        const QString role = _authenticationService->getRole();
+
+        QByteArray data;
+        if (!db->getPeronalData(id, role, username, data))
+        {
+            iResponse.setStatus(401, "Bad Request");
+            return;
+        }
+
+        iResponse.setHeader("Content-Type", "application/json");
+        iResponse.write(data);
+    }
+
     void AuthorizationController::showDatabase(HttpResponse &iResponse)
     {
         QByteArray data;
-        if (db->sendRequest("SELECT employee.id, "
+        if (!db->sendRequest("SELECT employee.id, "
                             "role.name as role, "
                             "employee.surname, "
                             "employee.name, "
@@ -196,18 +249,52 @@ namespace Server
                             "employee.working_hours, "
                             "employee.salary, "
                             "employee.password "
-                            "FROM employee LEFT JOIN role ON employee.role_id = role.id;", data))
-        {
-            iResponse.setHeader("Content-Type", "application/json");
-            iResponse.write(data, true);
-        }
-        else
+                            "FROM employee LEFT JOIN role ON employee.role_id = role.id;", data, QByteArray::fromStdString(Employee::EmployeeTable())))
         {
             iResponse.setStatus(401, "Bad Request");
+            return;
         }
+
+        iResponse.setHeader("Content-Type", "application/json");
+        iResponse.write(data);
+        if (!db->sendRequest("SELECT "
+                             "role.code AS role, "
+                             "surname.code AS surname, "
+                             "name.code AS name, "
+                             "patronymic.code AS patronymic, "
+                             "sex.code AS sex, "
+                             "date_of_birth.code AS date_of_birth, "
+                             "passport.code AS passport, "
+                             "phone.code AS phone, "
+                             "email.code AS email, "
+                             "date_of_hiring.code AS date_of_hiring, "
+                             "working_hours.code AS working_hours, "
+                             "salary.code AS salary, "
+                             "password.code AS password "
+                             "FROM " + QByteArray::fromStdString(Employee::DatabasePermissionTable()) + " AS p "
+                             "JOIN action AS role ON p.role = role.id "
+                             "JOIN action AS surname ON p.surname = surname.id "
+                             "JOIN action AS name ON p.name = name.id "
+                             "JOIN action AS patronymic ON p.patronymic = patronymic.id "
+                             "JOIN action AS sex ON p.sex = sex.id "
+                             "JOIN action AS date_of_birth ON p.date_of_birth = date_of_birth.id "
+                             "JOIN action AS passport ON p.passport = passport.id "
+                             "JOIN action AS phone ON p.phone = phone.id "
+                             "JOIN action AS email ON p.email = email.id "
+                             "JOIN action AS date_of_hiring ON p.date_of_hiring = date_of_hiring.id "
+                             "JOIN action AS working_hours ON p.working_hours = working_hours.id "
+                             "JOIN action AS salary ON p.salary = salary.id "
+                             "JOIN action AS password ON p.password = password.id "
+                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole().toUtf8() + "';", data, QByteArray::fromStdString(Employee::DatabasePermissionTable())))
+        {
+            iResponse.setStatus(401, "Bad Request");
+            return;
+        }
+
+        iResponse.write(data, true);
     }
 
-    void AuthorizationController::service(HttpRequest& iRequest, HttpResponse& iResponse)
+    void AuthorizationController::service(HttpRequest &iRequest, HttpResponse &iResponse)
     {
         QByteArray path = iRequest.getPath();
         qDebug("RequestMapper: path=%s", path.data());
@@ -222,13 +309,14 @@ namespace Server
             {
                 logout(iResponse);
             }
+            else if (path.startsWith("/updatePersonalData"))
+            {
+                login(iResponse);
+                updatePersonalData(iResponse);
+            }
             else if (path.startsWith("/showDatabase"))
             {
                 Permission(*this, iResponse, &AuthorizationController::showDatabase).check("database_permission");
-            }
-            else if (path.startsWith("/updateData"))
-            {
-
             }
             else
             {

@@ -12,37 +12,56 @@ inline void swap(QJsonValueRef first, QJsonValueRef second)
     second = temp;
 }
 
-QJsonTableModel::QJsonTableModel(const QJsonDocument &json, QObject *parent) :
+QJsonTableModel::QJsonTableModel(const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent) :
     QAbstractTableModel(parent)
 {
-    setJson(json);
+    setDatabase(iDatabase);
+    setPermissions(iPermissions);
 }
 
-bool QJsonTableModel::setJson(const QJsonDocument &json)
+QJsonTableModel::QJsonTableModel(const QJsonDocument &iDatabase, QObject *parent) :
+    QAbstractTableModel(parent)
 {
-    return setJson(json.array());
+    setDatabase(iDatabase);
 }
 
-bool QJsonTableModel::setJson( const QJsonArray &array)
+bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase)
 {
-    if (array.size() == 0)
+    return setDatabase(iDatabase.array());
+}
+
+bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase)
+{
+    if (iDatabase.isEmpty())
         return false;
 
-    _array = array;
-    _headers.append(Client::Employee::ID());
-    _headers.append(Client::Employee::Role());
-    _headers.append(Client::Employee::Surname());
-    _headers.append(Client::Employee::Name());
-    _headers.append(Client::Employee::Patronymic());
-    _headers.append(Client::Employee::Sex());
-    _headers.append(Client::Employee::DateOfBirth());
-    _headers.append(Client::Employee::Passport());
-    _headers.append(Client::Employee::Phone());
-    _headers.append(Client::Employee::Email());
-    _headers.append(Client::Employee::DateOfHiring());
-    _headers.append(Client::Employee::WorkingHours());
-    _headers.append(Client::Employee::Salary());
-    _headers.append(Client::Employee::Password());
+    _array = iDatabase;
+    return true;
+}
+
+bool QJsonTableModel::setPermissions(const QJsonDocument &iPermissions)
+{
+    return setPermissions(iPermissions.object());
+}
+
+bool QJsonTableModel::setPermissions(const QJsonObject &iPermissions)
+{
+    if (iPermissions.isEmpty())
+        return false;
+
+    const auto fields = Client::Employee::getFileds();
+    _headers.append({{fields.front().first, fields.front().second}, false});
+    for (decltype(fields.size()) i = 1, I = fields.size(); i < I; ++i)
+    {
+        const auto& [field, name] = fields[i];
+
+        auto it_permissions = iPermissions.find(field);
+        if (it_permissions != iPermissions.end())
+        {
+            _headers.append({{field, name }, it_permissions->toString() == "write"});
+        }
+    }
+
     return true;
 }
 
@@ -54,7 +73,7 @@ QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, i
     switch (orientation)
     {
         case Qt::Horizontal:
-            return _headers.value(section);
+            return _headers.value(section).first.second;
         case Qt::Vertical:
             //return section + 1;
             return {};
@@ -88,7 +107,7 @@ bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, i
 {
     if (index.isValid() && !value.toString().isEmpty() && role == Qt::EditRole)
     {
-        const QString& key = _headers[index.column()];
+        const QString& key = _headers[index.column()].first.first;
         QJsonObject jsonObject = getJsonObject(index);
         jsonObject[key] = value.toJsonValue();
         setJsonObject(index, jsonObject);
@@ -107,10 +126,10 @@ QVariant QJsonTableModel::data(const QModelIndex &index, int role) const
         case Qt::EditRole:
         {
             const QJsonObject obj = getJsonObject(index);
-            const QString& key = _headers[index.column()];
-            if (obj.contains(key))
+            const auto& [field, name] = _headers[index.column()].first;
+            if (obj.contains(field))
             {
-                QJsonValue value = obj[key];
+                QJsonValue value = obj[field];
 
                 if (value.isString())
                 {
@@ -134,7 +153,7 @@ QVariant QJsonTableModel::data(const QModelIndex &index, int role) const
 
 Qt::ItemFlags QJsonTableModel::flags(const QModelIndex &index) const
 {
-    if (index.column() > 0)
+    if (_headers[index.column()].second)
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
     else
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
@@ -142,8 +161,8 @@ Qt::ItemFlags QJsonTableModel::flags(const QModelIndex &index) const
 
 bool QJsonTableModel::sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order)
 {
-    auto value_1 = first.toObject()[_headers[column]];
-    auto value_2 = second.toObject()[_headers[column]];
+    auto value_1 = first.toObject()[_headers[column].first.first];
+    auto value_2 = second.toObject()[_headers[column].first.first];
     if (value_1.isString())
     {
         if (order == Qt::SortOrder::AscendingOrder)

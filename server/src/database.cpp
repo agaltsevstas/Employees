@@ -64,25 +64,27 @@ namespace Server
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
 
-        const QString str = "SELECT role.code, "
-                            "role.name as role, "
-                            "employee.surname, "
-                            "employee.name, "
-                            "employee.patronymic, "
-                            "employee.sex, "
-                            "employee.date_of_birth, "
-                            "employee.passport, "
-                            "employee.phone, "
-                            "employee.email, "
-                            "employee.date_of_hiring, "
-                            "employee.working_hours, "
-                            "employee.salary, "
-                            "employee.password "
-                            "FROM employee LEFT JOIN role ON employee.role_id = role.id "
-                            "WHERE employee.email = '" + userName + "@tradingcompany.ru' AND employee.password = '" + password +"';";
+        const QString request = "SELECT "
+                                "employee.id, "
+                                "role.code, "
+                                "role.name as role, "
+                                "employee.surname, "
+                                "employee.name, "
+                                "employee.patronymic, "
+                                "employee.sex, "
+                                "employee.date_of_birth, "
+                                "employee.passport, "
+                                "employee.phone, "
+                                "employee.email, "
+                                "employee.date_of_hiring, "
+                                "employee.working_hours, "
+                                "employee.salary, "
+                                "employee.password "
+                                "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                                "WHERE employee.email = '" + userName + "@tradingcompany.ru' AND employee.password = '" + password +"';";
 
         QSqlQuery query(_db);
-        if (!query.exec(str))
+        if (!query.exec(request))
         {
             qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
             return false;
@@ -90,7 +92,7 @@ namespace Server
 
         QJsonObject record;
 
-        while (query.next())
+        if (query.next())
         {
             query >> _employee;
 
@@ -105,12 +107,13 @@ namespace Server
                 else if (query.record().fieldName(i) == QString::fromStdString(Employee::ID()))
                 {
                     oID = query.value(i).toString();
+                    continue;
                 }
                 record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
             }
         }
 
-        oData = QJsonDocument(QJsonObject{{QString::fromStdString(Employee::TableName()), record}}).toJson();
+        oData = QJsonDocument(QJsonObject{{QString::fromStdString(Employee::EmployeeTable()), record}}).toJson();
         return true;
 
 //        try
@@ -144,6 +147,65 @@ namespace Server
         return false;
     }
 
+    bool DataBase::getPeronalData(const qint64 &iID, const QString &iRole, const QString &iUserName, QByteArray& oData)
+    {
+        QString userName = iUserName;
+        qsizetype index = userName.indexOf('@');
+        if (index > -1)
+            userName.remove(index, userName.size()); // Получение логина от почты
+
+        const QString request = "SELECT role.name as role, "
+                                "employee.surname, "
+                                "employee.name, "
+                                "employee.patronymic, "
+                                "employee.sex, "
+                                "employee.date_of_birth, "
+                                "employee.passport, "
+                                "employee.phone, "
+                                "employee.email, "
+                                "employee.date_of_hiring, "
+                                "employee.working_hours, "
+                                "employee.salary, "
+                                "employee.password "
+                                "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                                "WHERE employee.id = " + QString::number(iID) + " AND role.code = '" + iRole + "' AND employee.email = '" + userName + "@tradingcompany.ru';";
+
+        QSqlQuery query(_db);
+        if (!query.exec(request))
+        {
+            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            return false;
+        }
+
+        QJsonObject record;
+
+        if (query.next())
+        {
+            query >> _employee;
+
+            auto size = query.record().count();
+            for (decltype(size) i = 0; i < size; ++i)
+            {
+                record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+            }
+        }
+
+        oData = QJsonDocument(QJsonObject{{QString::fromStdString(Employee::EmployeeTable()), record}}).toJson();
+        return true;
+    }
+
+    bool DataBase::sendRequest(const QByteArray &iRequest)
+    {
+        QSqlQuery query(_db);
+        if (!query.exec(iRequest))
+        {
+            qWarning() << "Ошибка: " << query.lastError().text() << "запроса";
+            return false;
+        }
+
+        return true;
+    }
+
     bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable)
     {
         QSqlQuery query(_db);
@@ -153,29 +215,58 @@ namespace Server
             return false;
         }
 
-        QJsonObject recordObject;
-
-        while (query.next())
+        oData.clear();
+        if (query.size() > 1)
         {
-            for (decltype(query.record().count()) i = 0, I = query.record().count(); i < I; ++i)
+            QJsonArray recordsArray;
+            while (query.next())
             {
-                recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+                QJsonObject recordObject;
+                for (decltype(query.record().count()) i = 0, I = query.record().count(); i < I; ++i)
+                {
+                    recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+                }
+
+                recordsArray.push_back(recordObject);
+            }
+
+            if (!recordsArray.empty())
+            {
+                if (!iTable.isEmpty())
+                {
+                    oData = QJsonDocument(QJsonObject{{iTable, recordsArray}}).toJson();
+                }
+                else
+                {
+                    oData = QJsonDocument(recordsArray).toJson();
+                }
+            }
+        }
+        else if (query.size() == 1)
+        {
+            QJsonObject recordObject;
+            while (query.next())
+            {
+                for (decltype(query.record().count()) i = 0, I = query.record().count(); i < I; ++i)
+                {
+                    recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+                }
+            }
+
+            if (!recordObject.empty())
+            {
+                if (!iTable.isEmpty())
+                {
+                    oData = QJsonDocument(QJsonObject{{iTable, recordObject}}).toJson();
+                }
+                else
+                {
+                    oData = QJsonDocument(recordObject).toJson();
+                }
             }
         }
 
-        if (!recordObject.empty())
-        {
-            if (!iTable.isEmpty())
-            {
-                oData = QJsonDocument(QJsonObject{{iTable, recordObject}}).toJson();
-            }
-            else
-            {
-                oData = QJsonDocument(recordObject).toJson();
-            }
-        }
-
-        return true;
+        return !oData.isEmpty();
     }
 
     QSqlTableModel* DataBase::createTableModel()

@@ -20,7 +20,7 @@ namespace Client
         Q_OBJECT
     public:
 
-        typedef std::function<void(bool)> HandleResponse;
+        typedef std::function<void(bool, const QString&)> HandleResponse;
 
         enum class Type
         {

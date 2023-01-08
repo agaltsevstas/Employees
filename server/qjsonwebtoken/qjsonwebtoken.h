@@ -387,6 +387,10 @@ public:
 	*/
 	QString claim(const QString &strClaimType);
 
+    qint64 getID() const;
+
+    QString getUserName() const;
+
     QString getRole() const;
 
     qint64 getExp() const;

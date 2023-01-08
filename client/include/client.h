@@ -33,7 +33,7 @@ namespace Client
                     "database_permission"};
         }
 
-        static QList<QPair<QString, QString> > getFileds()
+        static QList<QPair<QString, QString>> getFileds()
         {
             return
             {

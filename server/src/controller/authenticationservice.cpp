@@ -11,18 +11,11 @@ namespace Server
 
     }
 
-    stefanfrings::HttpCookie AuthenticationService::authentication(const QString& iID, const QString& iUserName, const QString& iRole)
+    void AuthenticationService::authentication(const QString &iID, const QString &iUserName, const QString &iRole, QByteArray &oToken, qint64& oExp)
     {
-        QJsonWebToken newToken = createToken(iID, iUserName, iRole);
-        return stefanfrings::HttpCookie("refreshToken",
-                                        newToken.getToken(),
-                                        newToken.getExp() / 1000,
-                                        "/",
-                                        "jwt",
-                                        "",
-                                        true,
-                                        false,
-                                        "Lax");
+        QJsonWebToken token = createToken(iID, iUserName, iRole);
+        oToken = token.getToken();
+        oExp = token.getExp();
     }
 
     void AuthenticationService::logout()
@@ -30,7 +23,23 @@ namespace Server
         removeToken();
     }
 
-    QString AuthenticationService::getRole()
+    qint64 AuthenticationService::getID() const
+    {
+        if (_selectedIndex < 0)
+            return {};
+
+        return _tokens[_selectedIndex].getID();
+    }
+
+    const QString AuthenticationService::getUserName() const
+    {
+        if (_selectedIndex < 0)
+            return {};
+
+        return _tokens[_selectedIndex].getUserName();
+    }
+
+    const QString AuthenticationService::getRole() const
     {
         if (_selectedIndex < 0)
             return {};
@@ -38,12 +47,13 @@ namespace Server
         return _tokens[_selectedIndex].getRole();
     }
 
-    bool AuthenticationService::checkAuthentication(const QByteArray &iToken)
+    bool AuthenticationService::checkAuthentication(QByteArray &ioToken, qint64& oExp)
     {
         for (decltype(_tokens.size()) i = 0; i < _tokens.size(); ++i)
         {
-            if (_tokens[i].getToken() == iToken)
+            if (_tokens[i].getToken() == ioToken)
             {
+                oExp = _tokens[i].getExp();
                 _selectedIndex = i;
                 return true;
             }
@@ -52,7 +62,7 @@ namespace Server
         return false;
     }
 
-    QJsonWebToken AuthenticationService::createToken(const QString& iID, const QString& iUserName, const QString& iRole)
+    QJsonWebToken AuthenticationService::createToken(const QString &iID, const QString &iUserName, const QString &iRole)
     {
         QJsonWebToken newToken;
         newToken.appendClaim("id", iID);

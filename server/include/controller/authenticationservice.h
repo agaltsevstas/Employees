@@ -2,7 +2,6 @@
 #define AUTHENTICATIONSERVICE_H
 
 #include "httprequest.h"
-#include "httpresponse.h"
 #include "qjsonwebtoken.h"
 
 #include <QSet>
@@ -17,14 +16,16 @@ namespace Server
 
         AuthenticationService(QObject* parent);
 
-        stefanfrings::HttpCookie authentication(const QString& iID, const QString& iUserName, const QString& iRole);
-
+        void authentication(const QString &iID, const QString &iUserName, const QString &iRole, QByteArray &oToken, qint64& oExp);
         void logout();
-        QString getRole();
-        bool checkAuthentication(const QByteArray& iToken);
+
+        qint64 getID() const;
+        const QString getUserName() const;
+        const QString getRole() const;
+        bool checkAuthentication(QByteArray &ioToken, qint64& oExp);
 
     private:
-        QJsonWebToken createToken(const QString& iID, const QString& iUserName, const QString& iRole);
+        QJsonWebToken createToken(const QString &iID, const QString &iUserName, const QString &iRole);
         void removeToken();
 
     private:

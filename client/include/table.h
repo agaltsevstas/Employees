@@ -29,7 +29,7 @@ namespace Client
         void openDialog(); /// Открытие главного окна.
 
     private slots:
-        void showDB(bool iResult);
+        void showDB(bool iResult, const QString &error);
         void showDatabase();
         void on_exit_clicked();
         void on_update_clicked();
