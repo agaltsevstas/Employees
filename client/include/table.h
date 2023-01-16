@@ -25,12 +25,13 @@ namespace Client
         Table(Requester* iRequester, QWidget *parent = nullptr);
         ~Table();
 
-    signals:
+    Q_SIGNALS:
         void openDialog(); /// Открытие главного окна.
 
-    private slots:
+    private Q_SLOTS:
         void showDB(bool iResult, const QString &error);
         void showDatabase();
+        void updateData(const QByteArray &iData);
         void on_exit_clicked();
         void on_update_clicked();
 
@@ -41,7 +42,6 @@ namespace Client
 
     private:
         Ui::Table *_ui = nullptr;
-        QAbstractTableModel *_personalDataModel = nullptr;
         QAbstractTableModel *_databaseModel = nullptr;
         TableView *_tableView;
         Requester *_requester = nullptr;

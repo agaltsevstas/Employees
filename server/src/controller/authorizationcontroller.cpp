@@ -4,28 +4,96 @@
 
 #include "database.h"
 
+#include <QTextCodec>
+
 extern Server::DataBase* db;
 
 namespace Server
 {
-    template <class TFunction>
-    class Permission
+    struct Tree
     {
-        typedef std::function<void()> CallFunction;
+        QByteArray table;
+        QByteArray id;
+        QByteArray column;
+        QByteArray value;
+    };
 
+    template <class Arg, class ... Args>
+    constexpr int countArgs(const Arg& x, const Args& ... args)
+    {
+        return countArgs(args...) + 1;
+    }
+
+    template <typename R, typename T, typename ... Types>
+    constexpr std::integral_constant<unsigned, sizeof ...(Types)> GetArgsCount(R(T::*)(Types ...))
+    {
+        return static_cast<int>(std::integral_constant<unsigned, sizeof ...(Types)>{});
+    }
+
+    class ICallback
+    {
     public:
-        Permission(AuthorizationController &iController, HttpResponse &iResponse, TFunction iFunction) :
-            _controller(iController),
-            _response(iResponse)
+        virtual void operator()() = 0;
+    };
+
+    template<class TClass, class TCallBack, typename TArgs> struct AbstractCallback : public ICallback
+    {
+    public:
+        AbstractCallback(TClass& iClass, TCallBack& iCallback, TArgs iArgs) :
+        _class(iClass),
+        _callback(iCallback),
+        _args(iArgs)
         {
-            _callFunction = std::bind(iFunction, &_controller, std::ref(_response));
+
+        }
+        virtual void operator()() override { (_class.*(_callback))(_args); }
+    protected:
+        TClass _class;
+        TCallBack _callback;
+        TArgs _args;
+    };
+
+    template <class TClass, class TCallBack, class... TArgs> class Callback : public ICallback
+    {
+        typedef std::function<void()> _CallBack;
+    public:
+        Callback(TClass& iClass, const TCallBack& iCallback, const TArgs&... iArgs)
+        {
+            _callback = std::bind(iCallback, &iClass, iArgs...);
         }
 
-        void check(const QString &iTable)
+        void operator()() override
+        {
+            _callback();
+        }
+
+    private:
+        _CallBack _callback;
+    };
+
+    template <class TCallBack> class Permission
+    {
+    public:
+        Permission(AuthorizationController &iController, HttpRequest &iRequest, HttpResponse &iResponse, const TCallBack& iCallback) :
+            _controller(iController),
+            _request(iRequest),
+            _response(iResponse)
+        {
+            if constexpr (std::is_same_v<void(AuthorizationController::*)(HttpResponse&), TCallBack>)
+            {
+                 _callback.reset(new Callback(iController, iCallback, std::ref(_response)));
+            }
+            else if constexpr (std::is_same_v<void(AuthorizationController::*)(HttpResponse&, const Tree&), TCallBack>)
+            {
+                _callback.reset(new Callback(iController, iCallback, std::ref(_response), std::ref(_tree)));
+            }
+        }
+
+        void check(const QByteArray &iTable)
         {
             if (_check(iTable))
             {
-                _callFunction();
+                (*_callback)();
             }
             else
             {
@@ -35,15 +103,71 @@ namespace Server
         }
 
     private:
-        bool _check(const QString &iTable)
+
+        bool parseData()
         {
+            if (_request.getMethod() == "GET")
+            {
+                return true;
+            }
+            else if (_request.getMethod() == "PATCH")
+            {
+                if (_request.getBody().isEmpty())
+                    return false;
+
+                QJsonParseError parseError;
+                QJsonDocument json = QJsonDocument::fromJson(_request.getBody(), &parseError);
+                if (parseError.error != QJsonParseError::NoError)
+                {
+                    qWarning() << "Json parse error: " << parseError.errorString();
+                    _response.setStatus(403, parseError.errorString().toUtf8());
+                }
+
+                if (json.isObject())
+                {
+                    const QJsonObject object = json.object();
+                    if (auto table = object.constFind("employee"); table != object.constEnd())
+                    {
+                        if (table->isObject())
+                        {
+                            const QJsonObject subobject = table->toObject();
+                            auto id = subobject.constFind("id");
+                            auto column = subobject.constFind("column");
+                            auto value = subobject.constFind("value");
+                            if (id != object.constEnd() && value != object.constEnd() && column != object.constEnd())
+                            {
+                                _tree.table = "employee";
+                                _tree.id = QByteArray::number(id->toInteger());
+                                _tree.column = column->toString().toUtf8();
+                                _tree.value = value->toString().toUtf8();
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        bool _check(const QByteArray &iTable)
+        {
+            if (!parseData())
+                return false;
+
             QByteArray request;
 
-            if (iTable == "database_permission")
+            if (iTable == "permission")
             {
-                request = "SELECT show_db FROM " + QByteArray::fromStdString(Employee::PermissionTable()) +
-                          " LEFT JOIN role ON " + QByteArray::fromStdString(Employee::PermissionTable()) + ".id = role.id "
-                          "WHERE role.code = '" + _controller._authenticationService->getRole().toUtf8() + "' AND show_db = true;";
+                request = "SELECT show_db FROM " + iTable +
+                          " JOIN role ON " + iTable + ".id = role.id "
+                          "WHERE role.code = '" + _controller._authenticationService->getRole() + "' AND show_db = true;";
+            }
+            else if (iTable == "personal_data_permission" || iTable == "database_permission")
+            {
+                request = "SELECT " + _tree.column + " FROM " + iTable +
+                          " JOIN action ON " + _tree.column + " = action.id"
+                          " JOIN role ON role_id = role.id WHERE role.code = '" + _controller._authenticationService->getRole() + "' AND action.code = 'write'";
             }
             else
             {
@@ -61,10 +185,11 @@ namespace Server
         }
 
     private:
-        CallFunction _callFunction;
-
+        std::unique_ptr<ICallback> _callback;
         AuthorizationController &_controller;
+        HttpRequest &_request;
         HttpResponse &_response;
+        Tree _tree;
     };
 
     AuthorizationController::AuthorizationController(QObject *parent) :
@@ -143,7 +268,7 @@ namespace Server
         for (const auto& request: QList<QByteArray>{
                                    "DROP TABLE IF EXISTS tmp;",
                                    "SELECT * INTO tmp FROM " + QByteArray::fromStdString(Employee::PermissionTable()) + ";",
-                                   "DELETE FROM tmp WHERE tmp.role_id NOT IN (SELECT id FROM role WHERE role.code = '" + _authenticationService->getRole().toUtf8() +"'); ",
+                                   "DELETE FROM tmp WHERE tmp.role_id NOT IN (SELECT id FROM role WHERE role.code = '" + _authenticationService->getRole() +"'); ",
                                    "ALTER TABLE tmp DROP COLUMN id, DROP COLUMN role_id; ",
                                    "SELECT * FROM tmp;"})
         {
@@ -192,7 +317,7 @@ namespace Server
                              "JOIN action AS working_hours ON p.working_hours = working_hours.id "
                              "JOIN action AS salary ON p.salary = salary.id "
                              "JOIN action AS password ON p.password = password.id "
-                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole().toUtf8() + "';", data, QByteArray::fromStdString(Employee::PersonalDataPermissionTable())))
+                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole() + "';", data, QByteArray::fromStdString(Employee::PersonalDataPermissionTable())))
         {
             iResponse.setStatus(401, "Bad Request");
             return;
@@ -215,7 +340,7 @@ namespace Server
                                                     "Lax"));
     }
 
-    void AuthorizationController::updatePersonalData(HttpResponse &iResponse)
+    void AuthorizationController::showPersonalData(HttpResponse &iResponse)
     {
         const qint64 id = _authenticationService->getID();
         const QString username = _authenticationService->getUserName();
@@ -285,13 +410,41 @@ namespace Server
                              "JOIN action AS working_hours ON p.working_hours = working_hours.id "
                              "JOIN action AS salary ON p.salary = salary.id "
                              "JOIN action AS password ON p.password = password.id "
-                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole().toUtf8() + "';", data, QByteArray::fromStdString(Employee::DatabasePermissionTable())))
+                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole() + "';", data, QByteArray::fromStdString(Employee::DatabasePermissionTable())))
         {
             iResponse.setStatus(401, "Bad Request");
             return;
         }
 
         iResponse.write(data, true);
+    }
+
+    void AuthorizationController::updatePersonalData(HttpResponse &iResponse, const Tree& iTree)
+    {
+        QByteArray data;
+        if (!db->sendRequest("UPDATE " + iTree.table + " SET " + iTree.column + " = '" + iTree.value +  "' "
+                             "FROM role WHERE employee.role_id = role.id "
+                             "AND employee.id = " + iTree.id + " "
+                             "AND employee.email = '" + _authenticationService->getUserName() + "@tradingcompany.ru' "
+                             "AND role.code = '" + _authenticationService->getRole() + "';", data, QByteArray::fromStdString(Employee::EmployeeTable())))
+        {
+            iResponse.setStatus(401, "Bad Request");
+            return;
+        }
+
+        iResponse.setHeader("Content-Type", "application/json");
+        iResponse.write(data, true);
+    }
+
+    void AuthorizationController::updateDatabase(HttpResponse &iResponse, const Tree& iTree)
+    {
+        if (!db->sendRequest("UPDATE " + iTree.table + " SET " + iTree.column + " = '" + iTree.value +  "' WHERE id = " + iTree.id +  ";"))
+        {
+            iResponse.setStatus(401, "Bad Request");
+            return;
+        }
+
+        iResponse.setStatus(200, "OK");
     }
 
     void AuthorizationController::service(HttpRequest &iRequest, HttpResponse &iResponse)
@@ -309,14 +462,22 @@ namespace Server
             {
                 logout(iResponse);
             }
-            else if (path.startsWith("/updatePersonalData"))
+            else if (path.startsWith("/showPersonalData"))
             {
                 login(iResponse);
-                updatePersonalData(iResponse);
+                showPersonalData(iResponse);
             }
             else if (path.startsWith("/showDatabase"))
             {
-                Permission(*this, iResponse, &AuthorizationController::showDatabase).check("database_permission");
+                Permission(*this, iRequest, iResponse, &AuthorizationController::showDatabase).check("permission");
+            }
+            else if (path.startsWith("/updatePersonalData"))
+            {
+                Permission(*this, iRequest, iResponse, &AuthorizationController::updatePersonalData).check("personal_data_permission");
+            }
+            else if (path.startsWith("/updateDatabase"))
+            {
+                Permission(*this, iRequest, iResponse, &AuthorizationController::updateDatabase).check("database_permission");
             }
             else
             {

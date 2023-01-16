@@ -3,6 +3,7 @@ QT += core gui
 QT += sql
 QT += core network # Для работы с сетевыми классами
 QT += widgets
+QT += core5compat
 CONFIG += c++20
 CONFIG -= app_bundle
 

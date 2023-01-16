@@ -36,7 +36,7 @@ namespace Client
         void sendRequest(const QString &iApi,
                          const HandleResponse &handleResponse = Q_NULLPTR,
                          Type iType = Type::GET,
-                         const QVariantMap &iData = QVariantMap());
+                         const QByteArray &iData = {});
 
         void setToken(const QString &iToken) { _token = iToken; }
         const QString getToken() const { return _token; }

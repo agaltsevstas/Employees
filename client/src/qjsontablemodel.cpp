@@ -1,5 +1,6 @@
 #include "qjsontablemodel.h"
 #include "client.h"
+#include "requester.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -12,15 +13,15 @@ inline void swap(QJsonValueRef first, QJsonValueRef second)
     second = temp;
 }
 
-QJsonTableModel::QJsonTableModel(const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent) :
-    QAbstractTableModel(parent)
+QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent) :
+    QAbstractTableModel(parent), _name(iName)
 {
     setDatabase(iDatabase);
     setPermissions(iPermissions);
 }
 
-QJsonTableModel::QJsonTableModel(const QJsonDocument &iDatabase, QObject *parent) :
-    QAbstractTableModel(parent)
+QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, QObject *parent) :
+    QAbstractTableModel(parent), _name(iName)
 {
     setDatabase(iDatabase);
 }
@@ -112,6 +113,14 @@ bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, i
         jsonObject[key] = value.toJsonValue();
         setJsonObject(index, jsonObject);
         emit dataChanged(index, index);
+        if (_strategy == OnFieldChange)
+        {
+            QJsonObject record;
+            record.insert("id", jsonObject["id"].toInteger());
+            record.insert("column", key);
+            record.insert("value", value.toString());
+            sendRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
+        }
 //        emit dataChanged(createIndex(index.row(), index.column()), createIndex(index.row(), index.column()));
         return true;
     }

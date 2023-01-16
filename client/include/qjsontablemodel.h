@@ -11,8 +11,8 @@ class QJsonTableModel final : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    QJsonTableModel(const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent = nullptr);
-    QJsonTableModel(const QJsonDocument &iDatabase, QObject *parent = nullptr);
+    QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent = nullptr);
+    QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, QObject *parent = nullptr);
 
     enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
 
@@ -30,6 +30,9 @@ public:
 
     bool isSortColumn(int column);
 
+Q_SIGNALS:
+    void sendRequest(const QByteArray &iRequest);
+
 private:
     bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder);
 
@@ -43,7 +46,8 @@ private:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 private:
-    EditStrategy _strategy = EditStrategy::OnFieldChange;
+    QString _name;
+    EditStrategy _strategy = OnFieldChange;
     QList<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
 };

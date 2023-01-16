@@ -208,8 +208,9 @@ namespace Server
 
     bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable)
     {
+        const QString request = QString::fromUtf8(iRequest);
         QSqlQuery query(_db);
-        if (!query.exec(iRequest))
+        if (!query.exec(request))
         {
             qWarning() << "Ошибка: " << query.lastError().text() << "запроса";
             return false;

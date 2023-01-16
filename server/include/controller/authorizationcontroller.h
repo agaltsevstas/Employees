@@ -11,6 +11,7 @@ using namespace stefanfrings;
 namespace Server
 {
     class AuthenticationService;
+    struct Tree;
     class AuthorizationController : public HttpRequestHandler
     {
         Q_OBJECT
@@ -28,12 +29,14 @@ namespace Server
         bool authorization(HttpRequest &iRequest, HttpResponse &iResponse);
         void login(HttpResponse &iResponse);
         void logout(HttpResponse &iResponse);
-        void updatePersonalData(HttpResponse &iResponse);
+        void showPersonalData(HttpResponse &iResponse);
         void showDatabase(HttpResponse &iResponse);
+        void updatePersonalData(HttpResponse &iResponse, const Tree& iTree);
+        void updateDatabase(HttpResponse &iResponse, const Tree& iTree);
 
     private:
         AuthenticationService *_authenticationService;
-        template <class TFunction> friend class Permission;
+        template <class TCallBack> friend class Permission;
     };
 }
 

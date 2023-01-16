@@ -69,9 +69,7 @@ namespace Client
 
         [[nodiscard]] QNetworkReply *sendCustomRequest(QNetworkRequest &iRequest,
                                          const QString &iType,
-                                         const QVariantMap &iData);
-
-        QByteArray variantMapToJson(const QVariantMap &iData);
+                                         const QByteArray &iData);
 
         bool checkFinishRequest(QNetworkReply *iReply);
 
@@ -89,7 +87,7 @@ namespace Client
     QJsonDocument Requester::RequesterImpl::parseReply(QNetworkReply *iReply)
     {
         QByteArray replyData = iReply->readAll();
-        qInfo() << (replyData.isEmpty() ? "Пустые данные" : "Получены данные: " + replyData);
+        qInfo() << (replyData.isEmpty() ? "Пустые данные" : "Получены данные: " + QString::fromUtf8(replyData));
 
         QJsonDocument jsonDocument = QJsonDocument::fromJson(replyData);
         if (jsonDocument.isEmpty())
@@ -136,22 +134,13 @@ namespace Client
         return request;
     }
 
-    QByteArray Requester::RequesterImpl::variantMapToJson(const QVariantMap& iData)
-    {
-        QJsonDocument jsonDoc = QJsonDocument::fromVariant(iData);
-        QByteArray data = jsonDoc.toJson();
-
-        return data;
-    }
-
     QNetworkReply* Requester::RequesterImpl::sendCustomRequest(QNetworkRequest &iRequest,
                                                 const QString &iType,
-                                                const QVariantMap &iData)
+                                                const QByteArray &iData)
     {
         iRequest.setRawHeader("HTTP", iType.toUtf8());
-        QByteArray postDataByteArray = variantMapToJson(iData);
         QBuffer *buff = new QBuffer;
-        buff->setData(postDataByteArray);
+        buff->setData(iData);
         buff->open(QIODevice::ReadOnly);
         QNetworkReply* reply = _requester._manager->sendCustomRequest(iRequest, iType.toUtf8(), buff);
         buff->setParent(reply);
@@ -207,7 +196,7 @@ namespace Client
     void Requester::sendRequest(const QString &iApi,
                                 const HandleResponse &handleResponse,
                                 Requester::Type iType,
-                                const QVariantMap &iData)
+                                const QByteArray &iData)
     {
         _progress->setHidden(false);
         _progress->setValue(0);
@@ -219,9 +208,8 @@ namespace Client
         {
             case Type::POST:
             {
-                QByteArray data = _requester->variantMapToJson(iData);
-                request.setRawHeader("Content-Length", QByteArray::number(data.size()));
-                reply = _manager->post(request, data);
+                request.setRawHeader("Content-Length", QByteArray::number(iData.size()));
+                reply = _manager->post(request, iData);
                 break;
             }
             case Type::GET:

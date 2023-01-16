@@ -45,7 +45,6 @@ namespace Client
         _requester(iRequester)
     {
         _ui->setupUi(this);
-        _personalDataModel = new QJsonTableModel(_requester->getJson(), this);
 
         _ui->gridLayout_6->removeWidget(_ui->update);
         _ui->gridLayout_6->removeWidget(_ui->exit);
@@ -196,6 +195,30 @@ namespace Client
         emit openDialog(); // Вызов главного окна
     }
 
+    void Table::on_update_clicked()
+    {
+        Requester::HandleResponse handleResponse;
+        handleResponse = [this](bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                qDebug() << "Ваши данные успешно обновлены!";
+                setPersonalData(_requester->getJson());
+                if (_databaseModel)
+                {
+                    Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
+                    _requester->sendRequest("showDatabase", handleResponse);
+                }
+            }
+            else
+            {
+                qDebug() << "Ошибка: " << error;
+            }
+        };
+
+        _requester->sendRequest("showPersnalData", handleResponse);
+    }
+
     void Table::showDB(bool iResult, const QString &error)
     {
         if (iResult)
@@ -217,7 +240,8 @@ namespace Client
                 if (database.isArray() &&
                     database_permissions.isObject())
                 {
-                    _databaseModel = new QJsonTableModel(QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()), this);
+                    _databaseModel = new QJsonTableModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()), this);
+                    connect(_databaseModel, SIGNAL(sendRequest(const QByteArray&)), this, SLOT(updateData(const QByteArray&)));
                     _tableView->setModel(_databaseModel);
                     _ui->splitter->addWidget(_tableView);
         //            _tableView->horizontalHeader()->setSortIndicator(0, 0);
@@ -275,20 +299,14 @@ namespace Client
         showDatabase->setCheckable(!isCheckable);
     }
 
-    void Table::on_update_clicked()
+    void Table::updateData(const QByteArray &iData)
     {
         Requester::HandleResponse handleResponse;
-        handleResponse = [this](bool iResult, const QString &error)
+        handleResponse = [](bool iResult, const QString &error)
         {
             if (iResult)
             {
                 qDebug() << "Ваши данные успешно обновлены!";
-                setPersonalData(_requester->getJson());
-                if (_databaseModel)
-                {
-                    Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
-                    _requester->sendRequest("showDatabase", handleResponse);
-                }
             }
             else
             {
@@ -296,6 +314,6 @@ namespace Client
             }
         };
 
-        _requester->sendRequest("updatePersnalData", handleResponse);
+        _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
     }
 }

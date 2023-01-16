@@ -31,20 +31,20 @@ namespace Server
         return _tokens[_selectedIndex].getID();
     }
 
-    const QString AuthenticationService::getUserName() const
+    const QByteArray AuthenticationService::getUserName() const
     {
         if (_selectedIndex < 0)
             return {};
 
-        return _tokens[_selectedIndex].getUserName();
+        return _tokens[_selectedIndex].getUserName().toUtf8();
     }
 
-    const QString AuthenticationService::getRole() const
+    const QByteArray AuthenticationService::getRole() const
     {
         if (_selectedIndex < 0)
             return {};
 
-        return _tokens[_selectedIndex].getRole();
+        return _tokens[_selectedIndex].getRole().toUtf8();
     }
 
     bool AuthenticationService::checkAuthentication(QByteArray &ioToken, qint64& oExp)

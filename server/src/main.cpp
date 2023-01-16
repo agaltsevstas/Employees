@@ -5,6 +5,7 @@
 #include "controller/requestmapper.h"
 
 #include <QApplication>
+#include <QTextCodec>
 
 #define SERVER_HOSTNAME "127.0.0.1" // Хост
 #define SERVER_PORT      5433       // Порт
@@ -15,6 +16,9 @@ Server::DataBase* db;
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    QTextCodec *russian = QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(russian);
 
     db = new Server::DataBase();
     db->connectToDataBase();

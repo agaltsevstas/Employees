@@ -20,8 +20,8 @@ namespace Server
         void logout();
 
         qint64 getID() const;
-        const QString getUserName() const;
-        const QString getRole() const;
+        const QByteArray getUserName() const;
+        const QByteArray getRole() const;
         bool checkAuthentication(QByteArray &ioToken, qint64& oExp);
 
     private:
