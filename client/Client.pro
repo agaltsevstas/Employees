@@ -3,7 +3,7 @@ QT += core gui
 QT += sql
 QT += core network # Для работы с сетевыми классами
 QT += widgets
-#QT += core5compat
+QT += core5compat
 CONFIG += c++20
 CONFIG -= app_bundle
 #CONFIG += debug
@@ -41,6 +41,7 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
+    include/personaldatatable.h \
     include/tableView.h \
     include/client.h \
     include/dialog.h \
@@ -52,6 +53,7 @@ HEADERS += \
 #/opt/homebrew/lib
 
 SOURCES += \
+    src/personaldatatable.cpp \
     src/tableView.cpp \
     src/client.cpp \
     src/main.cpp \

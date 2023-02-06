@@ -20,7 +20,7 @@ namespace Client
         Q_OBJECT
     public:
 
-        typedef std::function<void(bool, const QString&)> HandleResponse;
+        typedef std::function<void(const bool, const QString&)> HandleResponse;
 
         enum class Type
         {
@@ -35,7 +35,7 @@ namespace Client
 
         void sendRequest(const QString &iApi,
                          const HandleResponse &handleResponse = Q_NULLPTR,
-                         Type iType = Type::GET,
+                         const Type iType = Type::GET,
                          const QByteArray &iData = {});
 
         void setToken(const QString &iToken) { _token = iToken; }

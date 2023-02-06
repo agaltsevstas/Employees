@@ -25,15 +25,14 @@ public:
     bool setPermissions(const QJsonDocument &iPermissions);
     bool setPermissions(const QJsonObject &iPermissions);
 
-    void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);
-    QJsonObject getJsonObject(const QModelIndex &index) const;
-
-    bool isSortColumn(int column);
-
 Q_SIGNALS:
     void sendRequest(const QByteArray &iRequest);
 
 private:
+    void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);
+    QJsonObject getJsonObject(const QModelIndex &index) const;
+
+    bool isSortColumn(int column);
     bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder);
 
 private:

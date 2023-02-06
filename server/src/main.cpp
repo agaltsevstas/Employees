@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QTextCodec *russian = QTextCodec::codecForName("UTF-8");
-    QTextCodec::setCodecForLocale(russian);
+    QTextCodec *utfCodec = QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(utfCodec);
 
     db = new Server::DataBase();
     db->connectToDataBase();

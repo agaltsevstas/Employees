@@ -31,8 +31,8 @@ namespace Server
         void logout(HttpResponse &iResponse);
         void showPersonalData(HttpResponse &iResponse);
         void showDatabase(HttpResponse &iResponse);
-        void updatePersonalData(HttpResponse &iResponse, const Tree& iTree);
-        void updateDatabase(HttpResponse &iResponse, const Tree& iTree);
+        void updatePersonalData(HttpResponse &iResponse, QQueue<Tree>& iTrees);
+        void updateDatabase(HttpResponse &iResponse, QQueue<Tree>& iTrees);
 
     private:
         AuthenticationService *_authenticationService;

@@ -3,35 +3,39 @@
 #include "client.h"
 #include "requester.h"
 #include "tableView.h"
+#include "personaldatatable.h"
 
 #include <QSqlTableModel>
 #include <QSqlQueryModel>
 #include <QJsonTableModel>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QSizePolicy>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QSplitter>
-#include <QProgressBar>
 #include <QMessageBox>
+#include <QProgressBar>
+#include <QSettings>
+#include <QSizePolicy>
+#include <QSplitter>
 #include <QTimer>
 
 
 namespace Client
 {
-
     auto findTableInJson(const QJsonDocument &iJson, const QString& iTable)->int
     {
-        for (decltype(iJson.array().size()) i = 0, I = iJson.array().size(); i < I; ++i)
+        if (iJson.isArray())
         {
-            if (iJson.array()[i].isObject())
+            for (decltype(iJson.array().size()) i = 0, I = iJson.array().size(); i < I; ++i)
             {
-                const QJsonObject subobject = iJson.array()[i].toObject();
-                if (subobject.contains(iTable))
+                if (iJson.array()[i].isObject())
                 {
-                    return i;
+                    const QJsonObject subobject = iJson.array()[i].toObject();
+                    if (subobject.contains(iTable))
+                    {
+                        return i;
+                    }
                 }
             }
         }
@@ -39,21 +43,47 @@ namespace Client
         return -1;
     };
 
-    Table::Table(Requester* iRequester, QWidget *parent) :
+    Table::Table(QSettings *iSettings, Requester* iRequester, QWidget *parent) :
         QWidget(parent),
         _ui(new Ui::Table),
+        _settings(iSettings),
         _requester(iRequester)
     {
         _ui->setupUi(this);
 
+        _ui->gridLayout_6->removeWidget(_ui->autoUpdate);
         _ui->gridLayout_6->removeWidget(_ui->update);
+        _ui->gridLayout_6->removeWidget(_ui->revert);
         _ui->gridLayout_6->removeWidget(_ui->exit);
-        _ui->gridLayout_6->addWidget(_ui->update, 0, 0, 1, 1);
+        _ui->gridLayout_6->addWidget(_ui->revert, 1, 0, 1, 1);
 
         setPersonalData(_requester->getJson());
 
-        _ui->gridLayout_6->addWidget(_ui->exit, 1, 0, 1, _ui->gridLayout_6->columnCount());
-        _ui->gridLayout_6->addWidget(new QProgressBar(_requester->getProgressBar()), 2, 0, 1, _ui->gridLayout_6->columnCount());
+        _ui->gridLayout_6->addWidget(_ui->autoUpdate, 0, 0, 1, _ui->gridLayout_6->columnCount() / 2);
+        _ui->gridLayout_6->addWidget(_ui->update, 0, 2, 1, _ui->gridLayout_6->columnCount() / 2);
+        _ui->gridLayout_6->addWidget(_ui->exit, 2, 0, 1, _ui->gridLayout_6->columnCount());
+        _ui->gridLayout_6->addWidget(new QProgressBar(_requester->getProgressBar()), 3, 0, 1, _ui->gridLayout_6->columnCount());
+
+        loadSettings();
+    }
+
+    Table::~Table()
+    {
+        saveSettings();
+
+        delete _ui;
+    }
+
+    void Table::loadSettings()
+    {
+        auto update = _settings->value("update");
+        _ui->autoUpdate->setChecked(update.isNull() ? true : update.toBool());
+        on_autoUpdate_clicked(_ui->autoUpdate->isChecked());
+    }
+
+    void Table::saveSettings()
+    {
+        _settings->setValue("update", _ui->update->isChecked());
     }
 
     void Table::resizeEvent(QResizeEvent *event)
@@ -61,78 +91,44 @@ namespace Client
         QWidget::resizeEvent(event);
     }
 
-    void Table::setPersonalData(const QJsonDocument &json)
+    void Table::setPersonalData(const QJsonDocument &iJson)
     {
+        if (!iJson.isArray())
+        {
+            Q_ASSERT(false);
+            return;
+        }
+
 //        sizePolicy.setHeightForWidth(_ui->PersonalData->hasHeightForWidth());
         while (auto item = _ui->gridLayout_2->takeAt(0))
             delete item;
 
-        _ui->PersonalData->adjustSize();
+        _ui->personalData->adjustSize();
         _ui->gridLayout_2->update();
 
-        auto index_data = findTableInJson(json, "employee");
-        auto index_personal_permissions = findTableInJson(json, "personal_data_permission");
-        auto index_permissions = findTableInJson(json, "permission");
-        if (json.isArray() &&
-            index_data != -1 &&
+        auto index_data = findTableInJson(iJson, "employee");
+        auto index_personal_permissions = findTableInJson(iJson, "personal_data_permission");
+        auto index_permissions = findTableInJson(iJson, "permission");
+        if (index_data != -1 &&
             index_personal_permissions != -1 &&
             index_permissions != -1)
         {
-            const QJsonValue data = json.array()[index_data].toObject().value("employee");
-            const QJsonValue personal_permissions = json.array()[index_personal_permissions].toObject().value("personal_data_permission");
-            const QJsonValue permissions = json.array()[index_permissions].toObject().value("permission");
+            const QJsonValue data = iJson.array()[index_data].toObject().value("employee");
+            const QJsonValue personal_permissions = iJson.array()[index_personal_permissions].toObject().value("personal_data_permission");
+            const QJsonValue permissions = iJson.array()[index_permissions].toObject().value("permission");
             if (data.isObject() &&
                 personal_permissions.isObject() &&
                 permissions.isObject())
             {
-                const auto fields = Employee::getFileds();
-                for (decltype(fields.size()) i = 0, I = fields.size(); i < I; ++i)
-                {
-                    const auto& [field, name] = fields[i];
-                    const QJsonObject subobject_data = data.toObject(); // обязательно нужно определить
-                    const QJsonObject subobject_permissions = personal_permissions.toObject(); // обязательно нужно определить
+                _personalData = new PersonalDataTable(Employee::employeeTable(),
+                                                      QJsonDocument(data.toObject()),
+                                                      QJsonDocument(personal_permissions.toObject()),
+                                                      _ui->gridLayout_2,
+                                                      _ui->personalData,
+                                                      this);
+                _personalData->setEditStrategy(_ui->autoUpdate->isChecked() ? PersonalDataTable::EditStrategy::OnFieldChange : PersonalDataTable::EditStrategy::OnManualSubmit);
 
-                    auto it_data = subobject_data.find(field);
-                    auto it_permissions = subobject_permissions.find(field);
-                    if (it_data != subobject_data.end() && it_permissions != subobject_permissions.end())
-                    {
-                        QLabel *label = new QLabel(field + "Label", _ui->PersonalData);
-                        label->setSizePolicy(GetSizePolice());
-                        label->setText(name);
-                        _ui->gridLayout_2->addWidget(label, i, 0, 1, 1);
-
-                        QLineEdit *lineEdit = new QLineEdit(field, _ui->PersonalData);
-                        if (field == "password")
-                        {
-                            lineEdit->setEchoMode(QLineEdit::Password);
-                        }
-
-                        if (it_data->isString())
-                        {
-                            lineEdit->setText(it_data.value().toString());
-                        }
-                        else if (it_data->isDouble())
-                        {
-                            lineEdit->setText(QString::number(it_data.value().toInteger()));
-                        }
-                        else
-                        {
-                            Q_ASSERT(false);
-                        }
-
-                        if (it_permissions->isString())
-                        {
-                            lineEdit->setEnabled(it_permissions->toString() == "write");
-                        }
-                        else
-                        {
-                            Q_ASSERT(false);
-                        }
-    //                    sizePolicy.setHeightForWidth(lineEdit->sizePolicy().hasHeightForWidth());
-                        lineEdit->setSizePolicy(GetSizePolice());
-                        _ui->gridLayout_2->addWidget(lineEdit, i, 1, 1, 1);
-                    }
-                }
+                connect(_personalData, SIGNAL(sendRequest(const QByteArray&)), this, SLOT(updatePersonalData(const QByteArray&)));
 
                 const QJsonObject subobject_permissions = permissions.toObject(); // обязательно нужно определить
                 auto show_db = subobject_permissions.find("show_db");
@@ -147,21 +143,21 @@ namespace Client
                         QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
                         showDatabase->setSizePolicy(GetSizePolice());
                         connect(showDatabase, SIGNAL(clicked()), this, SLOT(showDatabase()));
-                        _ui->gridLayout_6->addWidget(showDatabase, 0, 1, 1, 1);
+                        _ui->gridLayout_6->addWidget(showDatabase, 1, 1, 1, 1);
                     }
 
                     if (create_user->isBool() && create_user->toBool())
                     {
                         QPushButton *createUser = new QPushButton("Создать пользователя", this);
                         createUser->setSizePolicy(GetSizePolice());
-                        _ui->gridLayout_6->addWidget(createUser, 0, 2, 1, 1);
+                        _ui->gridLayout_6->addWidget(createUser, 1, 2, 1, 1);
                     }
 
                     if (delete_user->isBool() && delete_user->toBool())
                     {
                         QPushButton *deleteUser = new QPushButton("Удалить пользователя", this);
                         deleteUser->setSizePolicy(GetSizePolice());
-                        _ui->gridLayout_6->addWidget(deleteUser, 0, 3, 1, 1);
+                        _ui->gridLayout_6->addWidget(deleteUser, 1, 3, 1, 1);
                     }
 
                 }
@@ -172,7 +168,7 @@ namespace Client
             Q_ASSERT(false);
         }
 
-        _ui->PersonalData->adjustSize();
+        _ui->personalData->adjustSize();
         _ui->gridLayout_2->update();
     }
 
@@ -184,18 +180,30 @@ namespace Client
         return sizePolicy;
     }
 
-    Table::~Table()
-    {
-        delete _ui;
-    }
-
     void Table::on_exit_clicked()
     {
         close();           // Закрытие окна
         emit openDialog(); // Вызов главного окна
     }
 
+    void Table::on_autoUpdate_clicked(bool isChecked)
+    {
+        if (_personalData)
+            _personalData->setEditStrategy(isChecked ? PersonalDataTable::EditStrategy::OnFieldChange : PersonalDataTable::EditStrategy::OnManualSubmit);
+        if (_databaseModel)
+            _databaseModel->setEditStrategy(isChecked ? QJsonTableModel::EditStrategy::OnFieldChange : QJsonTableModel::EditStrategy::OnManualSubmit);
+
+        _ui->update->setVisible(!isChecked);
+        _ui->update->setEnabled(!isChecked);
+    }
+
     void Table::on_update_clicked()
+    {
+        if (_personalData)
+            _personalData->submitAll();
+    }
+
+    void Table::on_revert_clicked()
     {
         Requester::HandleResponse handleResponse;
         handleResponse = [this](bool iResult, const QString &error)
@@ -216,14 +224,20 @@ namespace Client
             }
         };
 
-        _requester->sendRequest("showPersnalData", handleResponse);
+        _requester->sendRequest("showPersonalData", handleResponse);
     }
 
-    void Table::showDB(bool iResult, const QString &error)
+    void Table::showDB(const bool iResult, const QString &error)
     {
         if (iResult)
         {
             qDebug() << "Ответ на запрос получен!";
+
+            if (!_requester->getJson().isArray())
+            {
+                Q_ASSERT(false);
+                return;
+            }
 
             if (!_tableView)
                 _tableView = new TableView(this);
@@ -231,8 +245,7 @@ namespace Client
             const QJsonDocument json = _requester->getJson();
             auto index_database = findTableInJson(json, "employee");
             auto index_database_permissions = findTableInJson(json, "database_permission");
-            if (_requester->getJson().isArray() &&
-                index_database != -1 &&
+            if (index_database != -1 &&
                 index_database_permissions != -1)
             {
                 const QJsonValue database = json.array()[index_database].toObject().value("employee");
@@ -241,6 +254,7 @@ namespace Client
                     database_permissions.isObject())
                 {
                     _databaseModel = new QJsonTableModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()), this);
+                    _databaseModel->setEditStrategy(_ui->autoUpdate->isChecked() ? QJsonTableModel::EditStrategy::OnFieldChange : QJsonTableModel::EditStrategy::OnManualSubmit);
                     connect(_databaseModel, SIGNAL(sendRequest(const QByteArray&)), this, SLOT(updateData(const QByteArray&)));
                     _tableView->setModel(_databaseModel);
                     _ui->splitter->addWidget(_tableView);
@@ -299,19 +313,23 @@ namespace Client
         showDatabase->setCheckable(!isCheckable);
     }
 
+    void Table::updatePersonalData(const QByteArray &iData)
+    {
+        Requester::HandleResponse handleResponse;
+        handleResponse = [](const bool iResult, const QString &error)
+        {
+            qDebug() << (iResult ? "Ваши данные успешно обновлены!" : ("Ошибка: " + error));
+        };
+
+        _requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
+    }
+
     void Table::updateData(const QByteArray &iData)
     {
         Requester::HandleResponse handleResponse;
-        handleResponse = [](bool iResult, const QString &error)
+        handleResponse = [](const bool iResult, const QString &error)
         {
-            if (iResult)
-            {
-                qDebug() << "Ваши данные успешно обновлены!";
-            }
-            else
-            {
-                qDebug() << "Ошибка: " << error;
-            }
+            qDebug() << (iResult ? "Поле базы данных успешно обновлено!" : ("Ошибка: " + error));
         };
 
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);

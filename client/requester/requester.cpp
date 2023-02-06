@@ -87,8 +87,13 @@ namespace Client
     QJsonDocument Requester::RequesterImpl::parseReply(QNetworkReply *iReply)
     {
         QByteArray replyData = iReply->readAll();
-        qInfo() << (replyData.isEmpty() ? "Пустые данные" : "Получены данные: " + QString::fromUtf8(replyData));
+        if (replyData.isEmpty())
+        {
+            qInfo() << "Пустые данные";
+            return {};
+        }
 
+        qInfo() << "Получены данные: " + QString::fromUtf8(replyData);
         QJsonDocument jsonDocument = QJsonDocument::fromJson(replyData);
         if (jsonDocument.isEmpty())
         {
@@ -178,7 +183,7 @@ namespace Client
 
     Requester::~Requester()
     {
-        delete _manager;
+//        delete _manager;
         delete _requester;
         delete _progress;
     }
@@ -195,14 +200,15 @@ namespace Client
 
     void Requester::sendRequest(const QString &iApi,
                                 const HandleResponse &handleResponse,
-                                Requester::Type iType,
+                                const Requester::Type iType,
                                 const QByteArray &iData)
     {
         _progress->setHidden(false);
         _progress->setValue(0);
-        _manager->setCookieJar(_requester->getCookie());
 
         QNetworkRequest request = _requester->createRequest(iApi);
+        _manager->setCookieJar(_requester->getCookie());
+
         QNetworkReply *reply;
         switch (iType)
         {
@@ -236,32 +242,34 @@ namespace Client
         }
 
         connect(reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(printProgress(qint64, qint64)));
-        connect(reply, &QNetworkReply::finished, this, [this, reply, handleResponse]()
+        connect(reply, &QNetworkReply::finished, this, [this, iApi, reply, handleResponse]()
         {
-//            QMutexLocker locker(&mutex);
-            _progress->setHidden(true);
-            _json = _requester->parseReply(reply);
-            _token.clear();
-            _requester->getCookie()->clear();
-
-            QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
-            if (!variantCookies.isNull())
-            {
-                QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
-                for (const auto& cookie : cookies)
-                {
-                    if (cookie.name() == "refreshToken")
-                    {
-                        _token = cookie.value();
-                        if (!_token.isEmpty())
-                            _requester->getCookie()->setAllCookies({cookie});
-                        break;
-                    }
-                }
-            }
-
             if (_requester->checkFinishRequest(reply))
             {
+//                QMutexLocker locker(&mutex);
+                _progress->setHidden(true);
+                _json = _requester->parseReply(reply);
+                _token.clear();
+                _requester->getCookie()->clear();
+
+                QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
+                if (!variantCookies.isNull())
+                {
+                    QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
+                    for (const auto& cookie : cookies)
+                    {
+                        if (cookie.name() == "refreshToken")
+                        {
+                            _token = cookie.value();
+                            if (!_token.isEmpty() && iApi != "logout")
+                                _requester->getCookie()->setAllCookies({cookie});
+                            else
+                                _requester->getCookie()->clear();
+                            break;
+                        }
+                    }
+                }
+
                 if (handleResponse)
                         handleResponse(true, reply->errorString());
                 else

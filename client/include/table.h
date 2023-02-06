@@ -5,7 +5,10 @@
 #include <QTableView>
 #include <QTableWidget>
 
-class QAbstractTableModel;
+class PersonalDataTable;
+class QJsonTableModel;
+class QPushButton;
+class QSettings;
 
 namespace Ui
 {
@@ -22,7 +25,7 @@ namespace Client
         Q_OBJECT
 
     public:
-        Table(Requester* iRequester, QWidget *parent = nullptr);
+        Table(QSettings *iSettings, Requester* iRequester, QWidget *parent = nullptr);
         ~Table();
 
     Q_SIGNALS:
@@ -31,19 +34,27 @@ namespace Client
     private Q_SLOTS:
         void showDB(bool iResult, const QString &error);
         void showDatabase();
+        void updatePersonalData(const QByteArray &iData);
         void updateData(const QByteArray &iData);
         void on_exit_clicked();
+        void on_revert_clicked();
+        void on_autoUpdate_clicked(bool isChecked);
+
         void on_update_clicked();
 
     private:
+        void loadSettings();
+        void saveSettings();
         void resizeEvent(QResizeEvent *event) override;
-        void setPersonalData(const QJsonDocument &json);
+        void setPersonalData(const QJsonDocument &iJson);
         static QSizePolicy GetSizePolice();
 
     private:
         Ui::Table *_ui = nullptr;
-        QAbstractTableModel *_databaseModel = nullptr;
+        PersonalDataTable *_personalData = nullptr;
+        QJsonTableModel *_databaseModel = nullptr;
         TableView *_tableView;
+        QSettings *_settings = nullptr;
         Requester *_requester = nullptr;
     };
 }

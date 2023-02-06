@@ -50,7 +50,7 @@
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
-         <widget class="QGroupBox" name="PersonalData">
+         <widget class="QGroupBox" name="personalData">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -65,6 +65,22 @@
          <widget class="QWidget" name="verticalLayoutWidget">
           <layout class="QGridLayout" name="gridLayout_6">
            <item row="0" column="0">
+            <widget class="QCheckBox" name="autoUpdate">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Автоматическое обновление</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
             <widget class="QPushButton" name="update">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -77,8 +93,24 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
+           <item row="1" column="0" colspan="2">
+            <widget class="QPushButton" name="revert">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Откатить</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
             <widget class="QPushButton" name="exit">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                <horstretch>0</horstretch>

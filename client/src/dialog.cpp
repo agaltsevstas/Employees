@@ -189,7 +189,7 @@ namespace Client
             _status->setStyleSheet("color: blue");
             _status->showMessage("Вход успешно выполнен!", 1000);
 
-            _table = new Table(_requester);
+            _table = new Table(_settings, _requester);
             connect(_table, &Table::openDialog, this, &Dialog::showDialog);
             QTimer::singleShot(1000, _table, SLOT(show()));
             QTimer::singleShot(1000, this, SLOT(close()));

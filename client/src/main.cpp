@@ -1,14 +1,14 @@
 #include "dialog.h"
 
 #include <QApplication>
-//#include <QTextCodec>
+#include <QTextCodec>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-//    QTextCodec *utfcodec = QTextCodec::codecForName("UTF-8");
-//    QTextCodec::setCodecForLocale(utfcodec);
+    QTextCodec *utfCodec = QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(utfCodec);
 
     Client::Dialog dialog;
     dialog.show();

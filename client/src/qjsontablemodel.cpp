@@ -1,6 +1,5 @@
 #include "qjsontablemodel.h"
 #include "client.h"
-#include "requester.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
