@@ -3,6 +3,7 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QColor>
 
 
 inline void swap(QJsonValueRef first, QJsonValueRef second)
@@ -23,6 +24,17 @@ QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDat
     QAbstractTableModel(parent), _name(iName)
 {
     setDatabase(iDatabase);
+}
+
+void QJsonTableModel::setEditStrategy(EditStrategy iStrategy)
+{
+    if (iStrategy != _strategy)
+    {
+        _strategy = iStrategy;
+
+        if (_strategy == OnFieldChange)
+            submitAll();
+    }
 }
 
 bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase)
@@ -65,6 +77,29 @@ bool QJsonTableModel::setPermissions(const QJsonObject &iPermissions)
     return true;
 }
 
+void QJsonTableModel::submitAll()
+{
+    if (!_recordsCache.empty())
+    {
+        sendRequest(QJsonDocument(QJsonObject{{_name, _recordsCache}}).toJson());
+
+        while(_recordsCache.count())
+             _recordsCache.pop_back();
+    }
+    else
+        qInfo() << "Пустые данные!";
+}
+
+bool QJsonTableModel::createUser()
+{
+    return true;
+}
+
+bool QJsonTableModel::deleteUser()
+{
+    return true;
+}
+
 QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole)
@@ -80,7 +115,6 @@ QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, i
         default:
             return {};
     }
-
 }
 
 int QJsonTableModel::rowCount(const QModelIndex &parent) const
@@ -111,15 +145,43 @@ bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, i
         QJsonObject jsonObject = getJsonObject(index);
         jsonObject[key] = value.toJsonValue();
         setJsonObject(index, jsonObject);
-        emit dataChanged(index, index);
+
+        QJsonObject record;
+        record.insert("id", jsonObject["id"].toInteger());
+        record.insert("column", key);
+        record.insert("value", value.toString());
         if (_strategy == OnFieldChange)
         {
-            QJsonObject record;
-            record.insert("id", jsonObject["id"].toInteger());
-            record.insert("column", key);
-            record.insert("value", value.toString());
             sendRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
         }
+        else if (_strategy == OnManualSubmit)
+        {
+            bool found = false;
+            for (decltype(_recordsCache.size()) i = 0, I = _recordsCache.size(); i < I; ++i)
+            {
+                if (_recordsCache.at(i).isObject())
+                {
+                    const QJsonObject object = _recordsCache.at(i).toObject();
+                    if (object.contains("column") && object.contains("value"))
+                    {
+                        if (object.value("column") == key)
+                        {
+                            found = true;
+                            if (object.value("value") != value.toString())
+                            {
+                                _recordsCache.replace(i, record);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!found)
+                _recordsCache.push_back(record);
+        }
+
+        emit dataChanged(index, index);
 //        emit dataChanged(createIndex(index.row(), index.column()), createIndex(index.row(), index.column()));
         return true;
     }
@@ -128,10 +190,19 @@ bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, i
 
 QVariant QJsonTableModel::data(const QModelIndex &index, int role) const
 {
+//    if(role == Qt::BackgroundRole)
+//    {
+//            return QColor(Qt::red);
+//    }
     switch (role)
     {
-        case Qt::DisplayRole:
+        case Qt::FontRole:
+//        case Qt::BackgroundRole:
+//        case Qt::ForegroundRole:
+            return QColor(Qt::red);
+        [[fallthrough]];
         case Qt::EditRole:
+        case Qt::DisplayRole:
         {
             const QJsonObject obj = getJsonObject(index);
             const auto& [field, name] = _headers[index.column()].first;

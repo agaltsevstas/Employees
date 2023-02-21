@@ -93,7 +93,8 @@ namespace Client
             return {};
         }
 
-        qInfo() << "Получены данные: " + QString::fromUtf8(replyData);
+        // TODO: Сделать вывод в отдельном потоке, иначе зависает из-за большого вывода информации
+//        qInfo() << "Получены данные: " + QString::fromUtf8(replyData);
         QJsonDocument jsonDocument = QJsonDocument::fromJson(replyData);
         if (jsonDocument.isEmpty())
         {

@@ -1,9 +1,9 @@
-#include "table.h"
-#include "ui_table.h"
 #include "client.h"
-#include "requester.h"
-#include "tableView.h"
 #include "personaldatatable.h"
+#include "requester.h"
+#include "table.h"
+#include "tableView.h"
+#include "ui_table.h"
 
 #include <QSqlTableModel>
 #include <QSqlQueryModel>
@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QProgressBar>
+#include <QScreen>
 #include <QSettings>
 #include <QSizePolicy>
 #include <QSplitter>
@@ -78,11 +79,13 @@ namespace Client
     {
         auto update = _settings->value("update");
         _ui->autoUpdate->setChecked(update.isNull() ? true : update.toBool());
+        move(_settings->value("centerTable", qApp->primaryScreen()->availableGeometry().center()).toPoint());
         on_autoUpdate_clicked(_ui->autoUpdate->isChecked());
     }
 
     void Table::saveSettings()
     {
+        _settings->setValue("centerTable", geometry().center());
         _settings->setValue("update", _ui->update->isChecked());
     }
 
@@ -149,6 +152,7 @@ namespace Client
                     if (create_user->isBool() && create_user->toBool())
                     {
                         QPushButton *createUser = new QPushButton("Создать пользователя", this);
+                        connect(createUser, SIGNAL(clicked()), this, SLOT(onCreateUserClicked()));
                         createUser->setSizePolicy(GetSizePolice());
                         _ui->gridLayout_6->addWidget(createUser, 1, 2, 1, 1);
                     }
@@ -156,6 +160,7 @@ namespace Client
                     if (delete_user->isBool() && delete_user->toBool())
                     {
                         QPushButton *deleteUser = new QPushButton("Удалить пользователя", this);
+                        connect(deleteUser, SIGNAL(clicked()), this, SLOT(onDeleteUserClicked()));
                         deleteUser->setSizePolicy(GetSizePolice());
                         _ui->gridLayout_6->addWidget(deleteUser, 1, 3, 1, 1);
                     }
@@ -201,6 +206,9 @@ namespace Client
     {
         if (_personalData)
             _personalData->submitAll();
+
+        if (_databaseModel)
+            _databaseModel->submitAll();
     }
 
     void Table::on_revert_clicked()
@@ -277,6 +285,14 @@ namespace Client
 
     void Table::showDatabase()
     {
+//        QTableView* table = new QTableView();
+//        table->setSelectionBehavior(QAbstractItemView::SelectRows);
+//        table->setSelectionMode(QAbstractItemView::SingleSelection);
+//        QItemSelectionModel *select = table->selectionModel();
+
+//        select->hasSelection();
+//        select->selectedRows();
+//        select->selectedColumns();
         QPushButton *showDatabase = qobject_cast<QPushButton*>(sender());
         const bool isCheckable = showDatabase->isCheckable();
         if (!isCheckable)
@@ -333,5 +349,23 @@ namespace Client
         };
 
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
+    }
+
+    void Table::onCreateUserClicked()
+    {
+        if (!_databaseModel->createUser())
+        {
+//            QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+//            QTimer::singleShot(1000, &warning, &QMessageBox::close);
+//            warning.exec();
+        }
+    }
+
+    void Table::onDeleteUserClicked()
+    {
+        if (!_databaseModel->createUser())
+        {
+
+        }
     }
 }

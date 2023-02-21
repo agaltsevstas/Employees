@@ -1,4 +1,5 @@
 #include "tableView.h"
+#include "delegate.h"
 
 #include <QObject>
 #include <QHeaderView>
@@ -19,8 +20,11 @@ namespace Client
 //        setSizeAdjustPolicy(SizeAdjustPolicy::AdjustToContents);
 //        setGeometry(QRect(0, 0, 1000, 1000));
         setMinimumSize(QSize(1000, 657));
-        setEditTriggers(QAbstractItemView::AllEditTriggers);
         setSortingEnabled(true);
+        setSelectionBehavior(QAbstractItemView::SelectRows);
+        setSelectionMode(QAbstractItemView::SingleSelection);
+        setItemDelegate(new Delegate(this));
+        setEditTriggers(QAbstractItemView::DoubleClicked);
 //        horizontalHeader()->setHighlightSections(false);
 
         /* Устанавливаем названия колонок в таблице с сортировкой данных
@@ -46,7 +50,6 @@ namespace Client
         QTableView::setModel(_model = model);
         resizeRowsToContents();
         resizeColumnsToContents();
-        setEditTriggers(QAbstractItemView::AllEditTriggers);
         setGeometry(QRect(200, 200, 1000, 1000));
         resize(_width, _height); // Установка размеров для окна
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать

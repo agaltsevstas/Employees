@@ -62,7 +62,7 @@ namespace Client
         _dialog->rememberMe->setChecked(true);
         _status->setSizePolicy(_dialog->authorization->sizePolicy());
         // Установка главного окна по центру экрана по умолчанию
-        move(_settings->value("center", qApp->primaryScreen()->availableGeometry().center()).toPoint());
+        move(_settings->value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
 //        QPixmap loginIcon(":/images/login.png");
 //        QPixmap passwordIcon(":/images/password.png");
@@ -82,7 +82,7 @@ namespace Client
     {
         addToCache();
 
-        _settings->setValue("center", geometry().center());
+        _settings->setValue("centerDialog", geometry().center());
     }
 
     void Dialog::readFormCache()

@@ -22,13 +22,14 @@ public:
     enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
 
     void setEditStrategy(EditStrategy iStrategy);
-    EditStrategy editStrategy() const { return _strategy; }
+    EditStrategy getEditStrategy() const { return _strategy; }
+
     void submitAll();
 
 Q_SIGNALS:
     void sendRequest(const QByteArray &iRequest);
 
-private:
+private Q_SLOTS:
     void update();
 
 private:

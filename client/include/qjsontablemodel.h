@@ -16,14 +16,19 @@ public:
 
     enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
 
-    void setEditStrategy(EditStrategy iStrategy) { _strategy = iStrategy; }
-    EditStrategy editStrategy() const { return _strategy; }
+    void setEditStrategy(EditStrategy iStrategy);
+    EditStrategy egetEitStrategy() const { return _strategy; }
 
     bool setDatabase(const QJsonDocument &iDatabase);
     bool setDatabase(const QJsonArray &iDatabase);
 
     bool setPermissions(const QJsonDocument &iPermissions);
     bool setPermissions(const QJsonObject &iPermissions);
+
+    void submitAll();
+
+    bool createUser();
+    bool deleteUser();
 
 Q_SIGNALS:
     void sendRequest(const QByteArray &iRequest);
@@ -49,6 +54,8 @@ private:
     EditStrategy _strategy = OnFieldChange;
     QList<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
+    QJsonArray _recordsCache;
+    friend class Delegate;
 };
 
 #endif // QJSONTABLEMODEL_H

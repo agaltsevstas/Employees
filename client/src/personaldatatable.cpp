@@ -45,7 +45,7 @@ PersonalDataTable::PersonalDataTable(const QString& iName, const QJsonDocument &
             _layout->addWidget(label, i, 0, 1, 1);
 
             QLineEdit *lineEdit = new QLineEdit(field, _groupBox);
-            connect(lineEdit, &QLineEdit::editingFinished, this, &PersonalDataTable::update);
+//            connect(lineEdit, &QLineEdit::editingFinished, this, &PersonalDataTable::update);
             if (field == "password")
             {
                 lineEdit->setEchoMode(QLineEdit::Password);
@@ -150,6 +150,9 @@ void PersonalDataTable::update()
         if (!found)
             _recordsCache->push_back(record);
     }
+
+    lineEdit->clearFocus();
+    lineEdit->deselect();
 }
 
 void PersonalDataTable::submitAll()

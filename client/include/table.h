@@ -36,11 +36,12 @@ namespace Client
         void showDatabase();
         void updatePersonalData(const QByteArray &iData);
         void updateData(const QByteArray &iData);
-        void on_exit_clicked();
         void on_revert_clicked();
         void on_autoUpdate_clicked(bool isChecked);
-
         void on_update_clicked();
+        void onCreateUserClicked();
+        void onDeleteUserClicked();
+        void on_exit_clicked();
 
     private:
         void loadSettings();

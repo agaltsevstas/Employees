@@ -41,6 +41,7 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
+    include/delegate.h \
     include/personaldatatable.h \
     include/tableView.h \
     include/client.h \
@@ -53,6 +54,7 @@ HEADERS += \
 #/opt/homebrew/lib
 
 SOURCES += \
+    src/delegate.cpp \
     src/personaldatatable.cpp \
     src/tableView.cpp \
     src/client.cpp \

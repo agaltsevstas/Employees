@@ -210,7 +210,6 @@ namespace Server
     bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable)
     {
         const QString request = QString::fromUtf8(iRequest);
-        qInfo() << request;
         QSqlQuery query(_db);
         if (!query.exec(request))
         {
