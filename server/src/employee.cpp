@@ -474,7 +474,6 @@ const Employee::Type Employee::CheckField(std::string iValue, const Field iField
             case FIELD_PASSPORT :
             {
                 std::regex regular ("^[0-9]{10}$");
-                std::regex_match(iValue, regular);
                 if (iValue.empty())
                 {
                     type.status = ST_EMPTY;
@@ -500,7 +499,6 @@ const Employee::Type Employee::CheckField(std::string iValue, const Field iField
             case FIELD_PHONE :
             {
                 std::regex regular ("^[0-9]{10}$");
-                std::regex_match(iValue, regular);
                 if (iValue.empty())
                 {
                     type.status = ST_EMPTY;

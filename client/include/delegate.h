@@ -2,6 +2,7 @@
 #define DELEGATE_H
 
 #include <QStyledItemDelegate>
+#include <QTableView>
 
 
 class Delegate : public QStyledItemDelegate
@@ -10,14 +11,7 @@ class Delegate : public QStyledItemDelegate
 public:
     Delegate(QObject* parent = nullptr);
 
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-
-    QSize sizeHint(const QStyleOptionViewItem &option,
-                   const QModelIndex &index) const override;
-
-    bool editorEvent(QEvent *event, QAbstractItemModel *model,
-                     const QStyleOptionViewItem &option,
-                     const QModelIndex &index) override;
+private:
 
     QWidget *createEditor(QWidget *parent,
                           const QStyleOptionViewItem &option,
@@ -25,6 +19,20 @@ public:
 
     void setEditorData(QWidget *editor,
                        const QModelIndex &index) const override;
+
+//    bool editorEvent(QEvent *event, QAbstractItemModel *model,
+//                     const QStyleOptionViewItem &option,
+//                     const QModelIndex &index) override;
+
+
+//    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+
+//    QSize sizeHint(const QStyleOptionViewItem &option,
+//                   const QModelIndex &index) const override;
+
+//    void updateEditorGeometry(QWidget *editor,
+//                              const QStyleOptionViewItem &option,
+//                              const QModelIndex &index) const;
 
 private:
     QPixmap star;

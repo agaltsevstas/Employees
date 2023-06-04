@@ -49,6 +49,7 @@ HEADERS += \
     include/qjsontablemodel.h \
     include/user.h \
     include/table.h \
+    include/utils.h
 
 #HEADERS += \
 #/opt/homebrew/lib
@@ -62,7 +63,8 @@ SOURCES += \
     src/dialog.cpp \
     src/qjsontablemodel.cpp \
     src/user.cpp \
-    src/table.cpp
+    src/table.cpp \
+    src/utils.cpp
 
 FORMS += \
     forms/dialog.ui \

@@ -1,9 +1,13 @@
 #include "qjsontablemodel.h"
 #include "client.h"
+#include "utils.h"
 
+#include <QColor>
+#include <QInputDialog>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QColor>
+#include <QMessageBox>
+#include <QTimer>
 
 
 inline void swap(QJsonValueRef first, QJsonValueRef second)
@@ -100,6 +104,173 @@ bool QJsonTableModel::deleteUser()
     return true;
 }
 
+bool QJsonTableModel::createEmail(int row)
+{
+    if (auto tableView = static_cast<QWidget*>(parent()))
+    {
+        if (_array.at(row).isObject())
+        {
+
+            QJsonObject rowObject = _array.at(row).toObject();
+            if (rowObject.contains("id") &&
+                rowObject.contains("surname") &&
+                rowObject.contains("name") &&
+                rowObject.contains("patronymic") &&
+                rowObject.contains("email"))
+            {
+                const qint64 id = rowObject.take("id").toInteger();
+                const QString surname = rowObject.take("surname").toString();
+                const QString name = rowObject.take("name").toString();
+                const QString patronymic = rowObject.take("patronymic").toString();
+                const QString email = rowObject.take("email").toString();
+
+                QString newEmail = Utils::CreateEmail(QVector<QString>{surname, name, patronymic});
+                const int column = std::distance(_headers.constBegin(), std::find_if(_headers.constBegin(), _headers.constEnd(), [&](const auto& header)
+                {
+                    return header.first.first == "email";
+                }));
+
+                while (true)
+                {
+                    if (column > 0 && checkDublicate(index(row, column), newEmail))
+                    {
+                        if (newEmail != email)
+                            createRecord(id, "email", newEmail);
+
+                        break;
+                    }
+                    else
+                    {
+                        while (true)
+                        {
+                            bool ok;
+                            QString message = QInputDialog::getText(tableView,
+                                                             tr("Предупреждение"),
+                                                             tr("Данная почта уже существует, измените почту:"),
+                                                             QLineEdit::Normal, newEmail, &ok);
+                            qDebug() << "Данная почта уже существует: " << newEmail;
+
+                            if (ok)
+                            {
+                                if (Client::Employee::CheckField("email", message))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
+                                    QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                                    warning.exec();
+                                    qDebug() << "Ошибка: " << message;
+                                }
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool QJsonTableModel::checkDublicate(const QModelIndex &index, QString &iValue)/* const*/
+{
+    const QString& field = _headers[index.column()].first.first;
+    const QString& fieldName = _headers[index.column()].first.second;
+
+    if (field == "passport" || field == "phone" || field == "email")
+    {
+        qsizetype size = _array.count();
+        for (decltype(size) i = 0; i < size; ++i)
+        {
+            if (i != index.row())
+            {
+                if (_array.at(i).isObject())
+                {
+                    QJsonObject row = _array.at(i).toObject();
+                    if (row.contains(field))
+                    {
+                        auto column = row.take(field);
+                        if (column.isString())
+                        {
+                            auto value = column.toString();
+                            if (value == iValue)
+                            {
+                                iValue = "поле >> " + fieldName + value + " - повторяется";
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool QJsonTableModel::createRecord(int index, const QString &columnName, const QString &value)
+{
+    QJsonObject record;
+    record.insert("id", index);
+    record.insert("column", columnName);
+    record.insert("value", value);
+
+    if (_strategy == OnFieldChange)
+    {
+        sendRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
+    }
+    else if (_strategy == OnManualSubmit)
+    {
+        bool found = false;
+        for (decltype(_recordsCache.size()) i = 0, I = _recordsCache.size(); i < I; ++i)
+        {
+            if (_recordsCache.at(i).isObject())
+            {
+                const QJsonObject object = _recordsCache.at(i).toObject();
+                if (object.contains("id") && object.contains("column") && object.contains("value"))
+                {
+                    if (object.value("id") == index && object.value("column") == columnName)
+                    {
+                        found = true;
+                        if (object.value("value") != value)
+                        {
+                            _recordsCache.replace(i, record);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!found)
+            _recordsCache.push_back(record);
+    }
+}
+
+JsonTableModel *QJsonTableModel::relationModel(int column) const
+{
+    QString header = headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
+    QSet<QString> uniqueData;
+    for (int i = 0, I = rowCount({}); i < I; ++i)
+    {
+        QString text = data(index(i, column), Qt::DisplayRole).toString();
+        if (!uniqueData.contains(text))
+        {
+            uniqueData.insert(text);
+        }
+     }
+
+    return new JsonTableModel(header, {uniqueData.begin(), uniqueData.end()});
+}
+
 QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole)
@@ -139,51 +310,41 @@ QJsonObject QJsonTableModel::getJsonObject(const QModelIndex &index) const
 
 bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (index.isValid() && !value.toString().isEmpty() && role == Qt::EditRole)
+    QString message = value.toString();
+    if (index.isValid() && !message.isEmpty() && role == Qt::EditRole)
     {
-        const QString& key = _headers[index.column()].first.first;
-        QJsonObject jsonObject = getJsonObject(index);
-        jsonObject[key] = value.toJsonValue();
-        setJsonObject(index, jsonObject);
-
-        QJsonObject record;
-        record.insert("id", jsonObject["id"].toInteger());
-        record.insert("column", key);
-        record.insert("value", value.toString());
-        if (_strategy == OnFieldChange)
+        if (auto tableView = static_cast<QWidget*>(parent()))
         {
-            sendRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
-        }
-        else if (_strategy == OnManualSubmit)
-        {
-            bool found = false;
-            for (decltype(_recordsCache.size()) i = 0, I = _recordsCache.size(); i < I; ++i)
+            const QString& field = _headers[index.column()].first.first;
+            if (Client::Employee::CheckField(field, message))
             {
-                if (_recordsCache.at(i).isObject())
+                if (checkDublicate(index, message))
                 {
-                    const QJsonObject object = _recordsCache.at(i).toObject();
-                    if (object.contains("column") && object.contains("value"))
-                    {
-                        if (object.value("column") == key)
-                        {
-                            found = true;
-                            if (object.value("value") != value.toString())
-                            {
-                                _recordsCache.replace(i, record);
-                                break;
-                            }
-                        }
-                    }
+                    QJsonObject jsonObject = getJsonObject(index);
+                    jsonObject[field] = value.toJsonValue();
+                    setJsonObject(index, jsonObject);
+                    createRecord(jsonObject["id"].toInteger(), field, message);
+                    emit dataChanged(index, index);
+            //        emit dataChanged(createIndex(index.row(), index.column()), createIndex(index.row(), index.column()));
+                    return true;
+                }
+                else
+                {
+                    createEmail(index.row());
+                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
+                    QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                    warning.exec();
+                    qDebug() << "Ошибка: " << message;
                 }
             }
-
-            if (!found)
-                _recordsCache.push_back(record);
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << message;
+            }
         }
-
-        emit dataChanged(index, index);
-//        emit dataChanged(createIndex(index.row(), index.column()), createIndex(index.row(), index.column()));
-        return true;
     }
     return false;
 }
@@ -238,7 +399,7 @@ Qt::ItemFlags QJsonTableModel::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-bool QJsonTableModel::sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order)
+bool QJsonTableModel::sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order) const
 {
     auto value_1 = first.toObject()[_headers[column].first.first];
     auto value_2 = second.toObject()[_headers[column].first.first];
@@ -271,7 +432,7 @@ void QJsonTableModel::sort(int column, Qt::SortOrder order)
     emit layoutChanged();
 }
 
-bool QJsonTableModel::isSortColumn(int column)
+bool QJsonTableModel::isSortColumn(int column) const
 {
     return std::is_sorted(std::begin(_array), std::end(_array), [&](const auto &lhs, const auto &rhs) { return sortColumn(lhs, rhs, column); });
 }

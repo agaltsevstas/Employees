@@ -1,10 +1,62 @@
 #ifndef QJSONTABLEMODEL_H
 #define QJSONTABLEMODEL_H
 
+#include "QtGui/qcolor.h"
 #include <QAbstractTableModel>
 #include <QJsonArray>
 #include <QPair>
 
+
+//class JsonTableModel;
+
+class JsonTableModel : public QAbstractTableModel
+{
+public: JsonTableModel(const QString &iHeader, const QVector<QString>& iData) :
+       _header(iHeader),
+       _data(iData)
+    {
+
+    }
+private:
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override
+    {
+        return _header;
+    }
+
+    int columnCount(const QModelIndex &parent) const override
+    {
+        return 1;
+    }
+
+    int rowCount(const QModelIndex &parent) const override
+    {
+        return _data.size();
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        switch (role)
+        {
+            case Qt::FontRole:
+//        case Qt::BackgroundRole:
+//        case Qt::ForegroundRole:
+            return QColor(Qt::red);
+            [[fallthrough]];
+            case Qt::EditRole:
+            case Qt::DisplayRole:
+            {
+                return _data[index.row()];
+            }
+        }
+
+        return {};
+    }
+
+private:
+    QString _header;
+    QVector<QString> _data;
+};
 
 class QJsonTableModel final : public QAbstractTableModel
 {
@@ -30,6 +82,8 @@ public:
     bool createUser();
     bool deleteUser();
 
+    JsonTableModel *relationModel(int column) const;
+
 Q_SIGNALS:
     void sendRequest(const QByteArray &iRequest);
 
@@ -37,8 +91,12 @@ private:
     void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);
     QJsonObject getJsonObject(const QModelIndex &index) const;
 
-    bool isSortColumn(int column);
-    bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder);
+    bool isSortColumn(int column) const;
+    bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder) const;
+
+    bool createEmail(int row);
+    bool checkDublicate(const QModelIndex &index, QString &iValue)/* const*/;
+    bool createRecord(int index, const QString &columnName, const QString &value);
 
 private:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;

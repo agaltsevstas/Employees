@@ -3,8 +3,6 @@
 
 #include <QTableView>
 
-class QJsonTableModel;
-
 namespace Client
 {
     class TableView : public QTableView

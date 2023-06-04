@@ -261,7 +261,7 @@ namespace Client
                 if (database.isArray() &&
                     database_permissions.isObject())
                 {
-                    _databaseModel = new QJsonTableModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()), this);
+                    _databaseModel = new QJsonTableModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()), _tableView);
                     _databaseModel->setEditStrategy(_ui->autoUpdate->isChecked() ? QJsonTableModel::EditStrategy::OnFieldChange : QJsonTableModel::EditStrategy::OnManualSubmit);
                     connect(_databaseModel, SIGNAL(sendRequest(const QByteArray&)), this, SLOT(updateData(const QByteArray&)));
                     _tableView->setModel(_databaseModel);

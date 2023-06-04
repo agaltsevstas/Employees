@@ -17,6 +17,7 @@ namespace Client
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setHorizontalStretch(10);
         setSizePolicy(sizePolicy);
+        setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 //        setSizeAdjustPolicy(SizeAdjustPolicy::AdjustToContents);
 //        setGeometry(QRect(0, 0, 1000, 1000));
         setMinimumSize(QSize(1000, 657));
