@@ -2,6 +2,8 @@
 #define TABLEVIEW_H
 
 #include <QTableView>
+class QJsonTableModel;
+
 
 namespace Client
 {
@@ -9,12 +11,30 @@ namespace Client
     {
         Q_OBJECT
         Q_PROPERTY(bool sortingEnabled READ isSortingEnabled WRITE setSortingEnabled)
+
     public:
         TableView(QWidget *parent = nullptr);
 
-        void setModel(QAbstractItemModel *model) override;
+        enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
+
+        void setEditStrategy(EditStrategy iStrategy);
+        void setDataModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
+        void setDataModel(const QString& iName, const QJsonDocument &iDatabase);
+        const QAbstractItemModel *getModel() const;
+
+        void submitAll();
+        bool addUser();
+        bool deleteUser();
+
+        std::function<void(const QByteArray &iData)> createData;
+        std::function<void(const QByteArray &iData)> deleteData;
+        std::function<void(const QByteArray &iData)> updateData;
+
+    Q_SIGNALS:
+        void getUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
 
     private:
+        void setModel(QAbstractItemModel *model) override;
 //        void resizeEvent(QResizeEvent *event) override;
 
     private slots:
@@ -28,7 +48,7 @@ namespace Client
         const int _y = 0;
         const int _width = 800;  /// Ширина окна виджета и сцены
         const int _height = 600; /// Высота окна виджета и сцены
-        QAbstractItemModel *_model = nullptr;
+        QJsonTableModel* _model;
     };
 }
 

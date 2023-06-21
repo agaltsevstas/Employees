@@ -76,7 +76,7 @@ namespace Client
     void Employee::SetId(const QString &iID)
     {
         QString ID = iID;
-        Employee::Type type = _CheckField(ID, FIELD_ID);
+        Employee::Type type = _checkField(ID, FIELD_ID);
         _id = type.uintValue;
         _fieldStatus[FIELD_ID] = type.status;
     }
@@ -84,7 +84,7 @@ namespace Client
     void Employee::SetRole(const QString &iRole)
     {
         QString role = iRole;
-        Employee::Type type = _CheckField(role, FIELD_ROLE);
+        Employee::Type type = _checkField(role, FIELD_ROLE);
         _role = type.stringValue;
         _fieldStatus[FIELD_ROLE] = type.status;
     }
@@ -92,7 +92,7 @@ namespace Client
     void Employee::SetSurname(const QString &iSurname)
     {
         QString surname = iSurname;
-        Employee::Type type = _CheckField(surname, FIELD_SURNAME);
+        Employee::Type type = _checkField(surname, FIELD_SURNAME);
         _surname = type.stringValue;
         _fieldStatus[FIELD_SURNAME] = type.status;
     }
@@ -100,7 +100,7 @@ namespace Client
     void Employee::SetName(const QString &iName)
     {
         QString name = iName;
-        Employee::Type type = _CheckField(name, FIELD_NAME);
+        Employee::Type type = _checkField(name, FIELD_NAME);
         _name = type.stringValue;
         _fieldStatus[FIELD_NAME] = type.status;
     }
@@ -108,7 +108,7 @@ namespace Client
     void Employee::SetPatronymic(const QString &iPatronymic)
     {
         QString patronymic = iPatronymic;
-        Employee::Type type = _CheckField(patronymic, FIELD_PATRONYMIC);
+        Employee::Type type = _checkField(patronymic, FIELD_PATRONYMIC);
         _patronymic = type.stringValue;
         _fieldStatus[FIELD_PATRONYMIC] = type.status;
     }
@@ -116,7 +116,7 @@ namespace Client
     void Employee::SetSex(const QString &iSex)
     {
         QString sex = iSex;
-        Employee::Type type = _CheckField(sex, FIELD_SEX);
+        Employee::Type type = _checkField(sex, FIELD_SEX);
         _sex = type.stringValue;
         _fieldStatus[FIELD_SEX] = type.status;
     }
@@ -124,7 +124,7 @@ namespace Client
     void Employee::SetDateOfBirth(const QString &iDateOfBirth)
     {
         QString dateOfBirth = iDateOfBirth;
-        Employee::Type type = _CheckField(dateOfBirth, FIELD_DATE_OF_BIRTH);
+        Employee::Type type = _checkField(dateOfBirth, FIELD_DATE_OF_BIRTH);
         _dateOfBirth = type.stringValue;
         _fieldStatus[FIELD_DATE_OF_BIRTH] = type.status;
     }
@@ -132,7 +132,7 @@ namespace Client
     void Employee::SetPassport(const QString &iPassport)
     {
         QString passport = iPassport;
-        Employee::Type type = _CheckField(passport, FIELD_PASSPORT);
+        Employee::Type type = _checkField(passport, FIELD_PASSPORT);
         _passport = type.uint64Value;
         _fieldStatus[FIELD_PASSPORT] = type.status;
     }
@@ -140,7 +140,7 @@ namespace Client
     void Employee::SetPhone(const QString &iPhone)
     {
         QString phone = iPhone;
-        Employee::Type type = _CheckField(phone, FIELD_PHONE);
+        Employee::Type type = _checkField(phone, FIELD_PHONE);
         _phone = type.uint64Value;
         _fieldStatus[FIELD_PHONE] = type.status;
     }
@@ -148,7 +148,7 @@ namespace Client
     void Employee::SetEmail(const QString &iEmail)
     {
         QString email = iEmail;
-        Employee::Type type = _CheckField(email, FIELD_EMAIL);
+        Employee::Type type = _checkField(email, FIELD_EMAIL);
         _email = type.stringValue;
         _fieldStatus[FIELD_EMAIL] = type.status;
     }
@@ -156,7 +156,7 @@ namespace Client
     void Employee::SetDateOfHiring(const QString &iDateOfHiring)
     {
         QString dateOfHiring = iDateOfHiring;
-        Employee::Type type = _CheckField(dateOfHiring, FIELD_DATE_OF_HIRING);
+        Employee::Type type = _checkField(dateOfHiring, FIELD_DATE_OF_HIRING);
         _dateOfHiring = type.stringValue;
         _fieldStatus[FIELD_DATE_OF_HIRING] = type.status;
     }
@@ -164,7 +164,7 @@ namespace Client
     void Employee::SetWorkingHours(const QString &iWorkingHours)
     {
         QString workingHours = iWorkingHours;
-        Employee::Type type = _CheckField(workingHours, FIELD_WORKING_HOURS);
+        Employee::Type type = _checkField(workingHours, FIELD_WORKING_HOURS);
         _workingHours = type.stringValue;
         _fieldStatus[FIELD_WORKING_HOURS] = type.status;
     }
@@ -172,7 +172,7 @@ namespace Client
     void Employee::SetSalary(const QString &iSalary)
     {
         QString salary = iSalary;
-        Employee::Type type = _CheckField(salary, FIELD_SALARY);
+        Employee::Type type = _checkField(salary, FIELD_SALARY);
         _salary = type.uintValue;
         _fieldStatus[FIELD_SALARY] = type.status;
     }
@@ -180,18 +180,18 @@ namespace Client
     void Employee::SetPassword(const QString &iPassword)
     {
         QString password = iPassword;
-        Employee::Type type = _CheckField(password, FIELD_PASSWORD);
+        Employee::Type type = _checkField(password, FIELD_PASSWORD);
         _password = type.stringValue;
         _fieldStatus[FIELD_PASSWORD] = type.status;
     }
 
-    bool Employee::CheckField(const QString &iField, QString &iValue)
+    bool Employee::checkField(const QString &iField, QString &iValue)
     {
         Field field = checkParameters.value(iField);
-        return _CheckField(iValue, field).status == Status::ST_OK;
+        return _checkField(iValue, field).status == Status::ST_OK;
     }
 
-    const Employee::Type Employee::_CheckField(QString &iValue, const Field iField)
+    const Employee::Type Employee::_checkField(QString &iValue, const Field iField)
     {
         Type type;
 
@@ -228,8 +228,8 @@ namespace Client
                 case FIELD_ROLE :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("(Бухгалтер|Водитель|Главный_бухгалтер|Главный_юрист-консультант|Грузчик|Директор|Кассир|Логист|"
-                                          "Менеджер_по_закупкам|Менеджер_по_продажам|Начальник_отдела_закупок|Начальник_склада|Юрист|Менеджер_по_персоналу)");
+                    QRegularExpression regular ("(Бухгалтер|Водитель|Главный бухгалтер|Главный юрист-консультант|Грузчик|Директор|Кассир|Логист|"
+                                          "Менеджер по закупкам|Менеджер по продажам|Начальник отдела закупок|Начальник склада|Юрист|Менеджер по персоналу)");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустая должность >> " + iValue + ", введите должность";
@@ -319,7 +319,7 @@ namespace Client
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Пустое отчество >> " + iValue + ", введите отчество";
+                        iValue = "Некорретное отчество >> " + iValue + ", введите отчество";
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорретное отчество >> " << iValue << std::endl;
                     }
@@ -340,7 +340,7 @@ namespace Client
                     QRegularExpression regular ("^(Муж|Жен)$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустое пол >> " + iValue + ", введите пол (например, Муж)";
+                        iValue = "Пустой пол >> " + iValue + ", введите пол (например, Муж)";
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустой пол >> " << iValue << std::endl;
                     }

@@ -2,13 +2,14 @@
 #define TABLE_H
 
 #include <QWidget>
-#include <QTableView>
 #include <QTableWidget>
 
-class PersonalDataTable;
-class QJsonTableModel;
 class QPushButton;
 class QSettings;
+class QStackedWidget;
+
+class QGridLayout;
+class QLabel;
 
 namespace Ui
 {
@@ -18,6 +19,7 @@ namespace Ui
 namespace Client
 {
     class Requester;
+    class TablePrivate;
     class TableView;
 
     class Table : public QWidget
@@ -32,16 +34,21 @@ namespace Client
         void openDialog(); /// Открытие главного окна.
 
     private Q_SLOTS:
+        void selectionChanged(const QItemSelection &, const QItemSelection &);
         void showDB(bool iResult, const QString &error);
         void showDatabase();
         void updatePersonalData(const QByteArray &iData);
+        void createData(const QByteArray &iData);
+        void deleteData(const QByteArray &iData);
         void updateData(const QByteArray &iData);
-        void on_revert_clicked();
-        void on_autoUpdate_clicked(bool isChecked);
-        void on_update_clicked();
-        void onCreateUserClicked();
+        void onRevertClicked();
+        void onAutoUpdateClicked(bool isChecked);
+        void onUpdateClicked();
+        void onCancelClicked();
+        void onAddUserClicked();
         void onDeleteUserClicked();
-        void on_exit_clicked();
+        void onCreateUserClicked();
+        void onExitClicked();
 
     private:
         void loadSettings();
@@ -52,11 +59,14 @@ namespace Client
 
     private:
         Ui::Table *_ui = nullptr;
-        PersonalDataTable *_personalData = nullptr;
-        QJsonTableModel *_databaseModel = nullptr;
+        QStackedWidget* _stackedWidget;
+        TablePrivate *_personalData = nullptr;
+        TablePrivate *_userData = nullptr;
         TableView *_tableView;
         QSettings *_settings = nullptr;
         Requester *_requester = nullptr;
+
+        friend class TablePrivate;
     };
 }
 

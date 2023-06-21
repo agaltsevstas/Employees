@@ -2,7 +2,6 @@
 #define DELEGATE_H
 
 #include <QStyledItemDelegate>
-#include <QTableView>
 
 
 class Delegate : public QStyledItemDelegate

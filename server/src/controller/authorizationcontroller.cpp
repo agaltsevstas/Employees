@@ -13,6 +13,15 @@ namespace Server
 {
     struct Tree
     {
+        enum class Type
+        {
+            POST,
+            GET,
+            PATCH,
+            DELETE
+        };
+
+        Type type;
         QByteArray table;
         QByteArray id;
         QByteArray column;
@@ -111,7 +120,7 @@ namespace Server
             {
                 return true;
             }
-            else if (_request.getMethod() == "PATCH")
+            else
             {
                 if (_request.getBody().isEmpty())
                     return false;
@@ -124,47 +133,80 @@ namespace Server
                     _response.setStatus(403, parseError.errorString().toUtf8());
                 }
 
-                auto parseObject = [this](const QJsonValue& iTable)->bool
+                if (_request.getMethod() == "POST")
                 {
-                    if (iTable.isObject())
+                    return true;
+                }
+                else if (_request.getMethod() == "DELETE")
+                {
+                    if (json.isObject())
                     {
-                        const QJsonObject subobject = iTable.toObject();
-                        auto id = subobject.constFind("id");
-                        auto column = subobject.constFind("column");
-                        auto value = subobject.constFind("value");
-                        if (value != subobject.constEnd() && column != subobject.constEnd())
+                        const QJsonObject object = json.object();
+                        if (auto table = object.constFind("employee"); table != object.constEnd())
                         {
-                            Tree tree;
-                            tree.table = "employee";
-                            tree.id = (id != subobject.constEnd()) ? QByteArray::number(id->toInteger()) : QByteArray::number(_controller._authenticationService->getID());
-                            tree.column = column->toString().toUtf8();
-                            tree.value = value->toString().toUtf8();
-                            _trees.push_back(tree);
-                            return true;
+                            if (table->isObject())
+                            {
+                                const QJsonObject subobject = table->toObject();
+                                if (auto id = subobject.constFind("id"); id != subobject.constEnd())
+                                {
+                                    Tree tree;
+                                    tree.type = Tree::Type::DELETE;
+                                    tree.table = "employee";
+                                    tree.id = (id != subobject.constEnd()) ? QByteArray::number(id->toInteger()) : QByteArray::number(_controller._authenticationService->getID());
+                                    _trees.push_back(tree);
+                                    return true;
+                                }
+                            }
                         }
                     }
-
-                    return false;
-                };
-
-                if (json.isObject())
+                }
+                else if (_request.getMethod() == "PATCH")
                 {
-                    const QJsonObject object = json.object();
-                    if (auto table = object.constFind("employee"); table != object.constEnd())
+                    auto parseObject = [this](const QJsonValue& iTable)->bool
                     {
-                        if (table->isObject())
+                        if (iTable.isObject())
                         {
-                            return parseObject(*table);
-                        }
-                        else if (table->isArray())
-                        {
-                            for (const auto& subtable: table->toArray())
+                            const QJsonObject subobject = iTable.toObject();
+                            auto id = subobject.constFind("id");
+                            auto column = subobject.constFind("column");
+                            auto value = subobject.constFind("value");
+                            if (value != subobject.constEnd() &&
+                                column != subobject.constEnd())
                             {
-                                if (!parseObject(subtable))
-                                    return false;
+                                Tree tree;
+                                tree.type = Tree::Type::POST;
+                                tree.table = "employee";
+                                /// Может быть updatePersonalData или updateDatabase
+                                tree.id = (id != subobject.constEnd()) ? QByteArray::number(id->toInteger()) : QByteArray::number(_controller._authenticationService->getID());
+                                tree.column = column->toString().toUtf8();
+                                tree.value = value->toString().toUtf8();
+                                _trees.push_back(tree);
+                                return true;
                             }
+                        }
 
-                            return true;
+                        return false;
+                    };
+
+                    if (json.isObject())
+                    {
+                        const QJsonObject object = json.object();
+                        if (auto table = object.constFind("employee"); table != object.constEnd())
+                        {
+                            if (table->isObject())
+                            {
+                                return parseObject(*table);
+                            }
+                            else if (table->isArray())
+                            {
+                                for (const auto& subtable: table->toArray())
+                                {
+                                    if (!parseObject(subtable))
+                                        return false;
+                                }
+
+                                return true;
+                            }
                         }
                     }
                 }
@@ -494,10 +536,29 @@ namespace Server
             Tree tree = iTrees.front();
             iTrees.pop_front();
 
-            if (!db->sendRequest("UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' WHERE id = " + tree.id +  ";"))
+            if (tree.type == Tree::Type::POST)
             {
-                iResponse.setStatus(401, "Bad Request");
-                return;
+                if (!db->sendRequest("UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' WHERE id = " + tree.id +  ";"))
+                {
+                    iResponse.setStatus(401, "Bad Request");
+                    return;
+                }
+            }
+            else if (tree.type == Tree::Type::DELETE)
+            {
+                if (!db->sendRequest("UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' WHERE id = " + tree.id +  ";"))
+                {
+                    iResponse.setStatus(401, "Bad Request");
+                    return;
+                }
+            }
+            else if (tree.type == Tree::Type::PATCH)
+            {
+                if (!db->sendRequest("UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' WHERE id = " + tree.id +  ";"))
+                {
+                    iResponse.setStatus(401, "Bad Request");
+                    return;
+                }
             }
         }
 

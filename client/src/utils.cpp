@@ -82,17 +82,17 @@ namespace Utils
 
     QString Date()
     {
-        return QDateTime::currentDateTime().toString("yyyy.MM.dd");
+        return QDateTime::currentDateTime().toString("yyyy.mm.dd");
     }
 
     QVector<int> FindAge(const QVector<QString> &iData, const QVector<QString> &iDateOfBirth)
     {
-        uint currentDay = iData[0].toUInt();
-        uint currentMonth = iData[1].toUInt();
-        uint currentYear = iData[2].toUInt();
-        uint birthDay = iDateOfBirth[0].toUInt();
-        uint birthMonth = iDateOfBirth[1].toUInt();
-        uint birthYear = iDateOfBirth[2].toUInt();
+        uint currentYear = iData.at(0).toUInt();
+        uint currentMonth = iData.at(1).toUInt();
+        uint currentDay = iData.at(2).toUInt();
+        uint birthDay = iDateOfBirth.at(0).toUInt();
+        uint birthMonth = iDateOfBirth.at(1).toUInt();
+        uint birthYear = iDateOfBirth.at(2).toUInt();
 
         const uint february = ((birthYear % 4) == 0) && (((birthYear % 100) != 0) || ((birthYear % 400) == 0)) ? 29 : 28;
         uint month[12] = { 31, february, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // Кол-во дней в 12 месяцах

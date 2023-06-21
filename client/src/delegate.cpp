@@ -1,14 +1,23 @@
 #include "delegate.h"
-#include "qjsontablemodel.h"
 
-#include <QPainter>
 #include <QAbstractItemView>
-#include <QEvent>
-#include <QMouseEvent>
-#include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QEvent>
 #include <QLineEdit>
+#include <QMouseEvent>
+#include <QJsonTableModel>
+#include <QPainter>
+#include <QUInt64Validator>
 
+
+QSizePolicy GetSizePolice()
+{
+    QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    sizePolicy.setHorizontalStretch(0);
+    sizePolicy.setVerticalStretch(0);
+    return sizePolicy;
+}
 
 Delegate::Delegate(QObject* parent) : QStyledItemDelegate(parent)
 {
@@ -42,7 +51,8 @@ QWidget *Delegate::createEditor(QWidget *parent,
 //                    comboBox->setModelColumn(index.column());
                     comboBox->setDuplicatesEnabled(false);
                     comboBox->installEventFilter(const_cast<Delegate*>(this));
-                    comboBox->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred));
+                    comboBox->setSizePolicy(GetSizePolice());
+                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n    border: 1px solid gray;\n}\n\nQComboBox::drop-down {\n    border-color: transparent;\n}"));
 //                    QLineEdit *lineEdit = new QLineEdit(comboBox);
 //                    QFont font = lineEdit->font();
 //                    font.setBold(true);
@@ -53,13 +63,20 @@ QWidget *Delegate::createEditor(QWidget *parent,
                     return comboBox;
                 }
             }
+            case 7:
+            case 8:
+            {
+                QLineEdit *lineEdit = new QLineEdit(parent);
+                lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
+                lineEdit->setValidator(new UInt64Validator(0, 9999999999, parent));
+                return lineEdit;
+            }
             case 12:
             {
-                QSpinBox *spinbox = new QSpinBox(parent);
+                QDoubleSpinBox *spinbox = new QDoubleSpinBox(parent);
                 spinbox->setFrame(false);
                 spinbox->setValue(model->data(index, Qt::DisplayRole).toInt());
                 spinbox->setRange(0, 1000000);
-
                 return spinbox;
             }
             default:
@@ -90,7 +107,7 @@ void Delegate::setEditorData(QWidget *editor,
         }
         case 12:
         {
-            QSpinBox *spinbox = dynamic_cast<QSpinBox*>(editor);
+            QDoubleSpinBox *spinbox = dynamic_cast<QDoubleSpinBox*>(editor);
             spinbox->setBackgroundRole(QPalette::ColorRole::BrightText);
 //            spinbox->setPalette();
             auto value = spinbox->value();

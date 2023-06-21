@@ -42,12 +42,12 @@ macx
 INCLUDEPATH += $$PWD/include
 HEADERS += \
     include/delegate.h \
-    include/personaldatatable.h \
+    include/quint64validator.h \
     include/tableView.h \
     include/client.h \
     include/dialog.h \
     include/qjsontablemodel.h \
-    include/user.h \
+    include/table_p.h \
     include/table.h \
     include/utils.h
 
@@ -56,13 +56,13 @@ HEADERS += \
 
 SOURCES += \
     src/delegate.cpp \
-    src/personaldatatable.cpp \
+    src/quint64validator.cpp \
     src/tableView.cpp \
     src/client.cpp \
     src/main.cpp \
     src/dialog.cpp \
     src/qjsontablemodel.cpp \
-    src/user.cpp \
+    src/table_p.cpp \
     src/table.cpp \
     src/utils.cpp
 

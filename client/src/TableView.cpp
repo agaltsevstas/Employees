@@ -1,15 +1,23 @@
+#include "client.h"
 #include "tableView.h"
 #include "delegate.h"
 
-#include <QObject>
+#include <QComboBox>
 #include <QHeaderView>
-#include <QResizeEvent>
+#include <QLayout>
+#include <QLineEdit>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QJsonTableModel>
+#include <QObject>
+#include <QResizeEvent>
+#include <QAbstractItemModel>
 
 
 namespace Client
 {
-    TableView::TableView(QWidget *parent) : QTableView(parent)
+    TableView::TableView( QWidget *parent) :
+        QTableView(parent)
     {
         setObjectName(QString::fromUtf8("tableView"));
 
@@ -18,7 +26,6 @@ namespace Client
         sizePolicy.setHorizontalStretch(10);
         setSizePolicy(sizePolicy);
         setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-//        setSizeAdjustPolicy(SizeAdjustPolicy::AdjustToContents);
 //        setGeometry(QRect(0, 0, 1000, 1000));
         setMinimumSize(QSize(1000, 657));
         setSortingEnabled(true);
@@ -45,10 +52,36 @@ namespace Client
 //        connect(this, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(ItemDoubleClicked(int, int)));
     }
 
+    void TableView::setEditStrategy(EditStrategy iStrategy)
+    {
+        _model->setEditStrategy(static_cast<QJsonTableModel::EditStrategy>(iStrategy));
+    }
+
+    void TableView::setDataModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
+    {
+        _model = new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this);
+        connect(_model, &QJsonTableModel::sendUpdateRequest, createData);
+        connect(_model, &QJsonTableModel::sendUpdateRequest, deleteData);
+        connect(_model, &QJsonTableModel::sendUpdateRequest, updateData);
+        setModel(_model);
+    }
+
+    void TableView::setDataModel(const QString& iName, const QJsonDocument &iDatabase)
+    {
+        _model = new QJsonTableModel(iName, QJsonDocument(iDatabase), this);
+        setModel(_model);
+    }
+
+    const QAbstractItemModel *TableView::getModel() const
+    {
+        return _model;
+    }
+
     void TableView::setModel(QAbstractItemModel *model)
     {
-//        horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-        QTableView::setModel(_model = model);
+        horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        _model = qobject_cast<QJsonTableModel*>(model);
+        QTableView::setModel(model);
         resizeRowsToContents();
         resizeColumnsToContents();
         setGeometry(QRect(200, 200, 1000, 1000));
@@ -86,4 +119,82 @@ namespace Client
 //    {
 
 //    }
+
+    void TableView::submitAll()
+    {
+        if (_model)
+            _model->submitAll();
+    }
+
+    bool TableView::addUser()
+    {
+        if (!_model)
+            return false;
+
+
+        QJsonObject record;
+        record.insert(Client::Employee::id(), _model->size());
+
+        const auto fieldNames = Client::Employee::getFieldNames();
+        for (int i = 1, I = fieldNames.size(); i < I; ++i)
+        {
+            QPair<QString, QString> field = fieldNames[i];
+            bool result = false;
+            std::function<void(QWidget*)> handleLineEdit = [&](QWidget* widget)
+            {
+                if ( widget)
+                {
+                    QString value;
+                    if (auto lineEdit = qobject_cast<const QLineEdit*>(widget))
+                    {
+                        value = lineEdit->text();
+                    }
+                    else if (auto comboBox = qobject_cast<const QComboBox*>(widget))
+                    {
+                        value = comboBox->currentText();
+                    }
+
+                    if (_model->checkField(_model->size(), i, value))
+                    {
+                        record.insert(field.first, value);
+                        widget->setStyleSheet("");
+                        result = true;
+                    }
+                    else
+                    {
+                        widget->setStyleSheet("QLineEdit { background: rgb(255,168,175); }");
+                    }
+                }
+            };
+
+            emit getUserData(field.first, handleLineEdit);
+
+            if (!result)
+                return false;
+        }
+
+        _model->addRow(record);
+        return true;
+    }
+
+    bool TableView::deleteUser()
+    {
+        if (_model)
+        {
+            if (QItemSelectionModel *select = selectionModel())
+            {
+                if (select->hasSelection())
+                {
+                    const QModelIndexList selectedRows = select->selectedRows();
+                    for (const auto &selectedRow : selectedRows)
+                    {
+                        if (!_model->deleteRow(selectedRow.row()))
+                            return false;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 }

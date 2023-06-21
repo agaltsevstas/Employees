@@ -8,8 +8,6 @@
 #include <QList>
 #include <QString>
 
-#include <iomanip>
-#include <functional>
 
 namespace Client
 {
@@ -58,7 +56,7 @@ namespace Client
 
     public:
 
-        static QList<QPair<QString, QString>> getFileds()
+        static QList<QPair<QString, QString>> getFieldNames()
         {
             return
             {
@@ -76,6 +74,36 @@ namespace Client
                 { workingHours(), "Часы работы: "},
                 { salary(),       "Зарплата: "},
                 { password(),     "Пароль: "}
+            };
+        }
+
+        static QList<QString> getRoles()
+        {
+            return
+            {
+                "Бухгалтер",
+                "Водитель",
+                "Главный бухгалтер",
+                "Главный юрист-консультант",
+                "Грузчик",
+                "Директор",
+                "Кассир",
+                "Логист",
+                "Менеджер по закупкам",
+                "Менеджер по продажам",
+                "Начальник отдела закупок",
+                "Начальник склада",
+                "Юрист",
+                "Менеджер по персоналу"
+            };
+        }
+
+        static QList<QString> getSex()
+        {
+            return
+            {
+                "Муж",
+                "Жен"
             };
         }
 
@@ -99,7 +127,7 @@ namespace Client
          * @param iWarning - Предупреждение о невалидности данных поля
          */
 
-        static bool CheckField(const QString &iField, QString &iValue);
+        static bool checkField(const QString &iField, QString &iValue);
         static QString employeeTable() { return "employee"; }
         static QString permissionTable() { return "permission"; }
         static QString personalDataPermissionTable() { return "personal_data_permission"; }
@@ -112,7 +140,8 @@ namespace Client
                 employeeTable(),
                 permissionTable(),
                 personalDataPermissionTable(),
-                databasePermissionTable()};
+                databasePermissionTable()
+            };
         }
 
     private:
@@ -270,7 +299,7 @@ namespace Client
          * @param iField - Номер поля
          * @return Структура данных
          */
-        static const Type _CheckField(QString &iValue, const Field iField);
+        static const Type _checkField(QString &iValue, const Field iField);
     };
 }
 

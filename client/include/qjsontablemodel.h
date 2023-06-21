@@ -7,7 +7,10 @@
 #include <QPair>
 
 
-//class JsonTableModel;
+namespace Client
+{
+    class TableView;
+}
 
 class JsonTableModel : public QAbstractTableModel
 {
@@ -19,17 +22,17 @@ public: JsonTableModel(const QString &iHeader, const QVector<QString>& iData) :
     }
 private:
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override
+    QVariant headerData(int, Qt::Orientation, int) const override
     {
         return _header;
     }
 
-    int columnCount(const QModelIndex &parent) const override
+    int columnCount(const QModelIndex &) const override
     {
         return 1;
     }
 
-    int rowCount(const QModelIndex &parent) const override
+    int rowCount(const QModelIndex &) const override
     {
         return _data.size();
     }
@@ -79,24 +82,30 @@ public:
 
     void submitAll();
 
-    bool createUser();
-    bool deleteUser();
+    bool checkField(int row, int column, const QString &ivalue) const;
+    inline void addRow(const QJsonObject &iUser) { _array.push_back(iUser); };
+    bool deleteRow(int row);
 
     JsonTableModel *relationModel(int column) const;
 
+   inline qsizetype size() const { return _array.size(); }
+
 Q_SIGNALS:
-    void sendRequest(const QByteArray &iRequest);
+    void sendCreateRequest(const QByteArray &iRequest);
+    void sendDeleteRequest(const QByteArray &iRequest);
+    void sendUpdateRequest(const QByteArray &iRequest);
 
 private:
     void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);
-    QJsonObject getJsonObject(const QModelIndex &index) const;
+    QJsonObject getJsonObject(int row) const;
 
     bool isSortColumn(int column) const;
     bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder) const;
 
+    void updateRecord(int index, const QString &columnName, const QString &value);
     bool createEmail(int row);
-    bool checkDublicate(const QModelIndex &index, QString &iValue)/* const*/;
-    bool createRecord(int index, const QString &columnName, const QString &value);
+    bool checkFieldOnDuplicate(int row, int column, QString &iValue) const;
+    bool checkRowOnDeleted(int row) const;
 
 private:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -112,7 +121,8 @@ private:
     EditStrategy _strategy = OnFieldChange;
     QList<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
-    QJsonArray _recordsCache;
+    QJsonArray _recordsCreateCache, _recordsDeleteCache, _recordsUpdateCache;
+
     friend class Delegate;
 };
 

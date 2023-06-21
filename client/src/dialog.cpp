@@ -28,6 +28,7 @@ namespace Client
         _requester(new Requester(this))
     {
         _dialog->setupUi(this);
+
         _dialog->gridLayout->addWidget(_status, 5, 0, 1, 4);
         _dialog->gridLayout->addWidget(_requester->getProgressBar(), 6, 0, 1, 4);
 
