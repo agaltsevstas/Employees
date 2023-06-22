@@ -47,6 +47,7 @@ namespace Client
         void onCancelClicked();
         void onAddUserClicked();
         void onDeleteUserClicked();
+        void onRestoreUserClicked();
         void onCreateUserClicked();
         void onExitClicked();
 

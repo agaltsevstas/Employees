@@ -4,6 +4,7 @@
 #include "client.h"
 #include "requester.h"
 
+#include <QDoubleSpinBox>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGridLayout>
@@ -16,7 +17,7 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QSplitter>
-#include <QDoubleSpinBox>
+#include <QStackedWidget>
 #include <QUInt64Validator>
 
 
@@ -39,15 +40,13 @@ namespace Client
             return;
         }
 
-        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
+        QSizePolicy sizePolicy = GetSizePolice();
         setSizePolicy(sizePolicy);
 
         QGridLayout *gridLayout = new QGridLayout(this);
 
         QSplitter *splitter = new QSplitter(this);
-        splitter->setSizePolicy(GetSizePolice());
+        splitter->setSizePolicy(sizePolicy);
         splitter->setOrientation(Qt::Vertical);
         splitter->setObjectName("splitter");
         QSizePolicy sizePolicySplitter = GetSizePolice();
@@ -116,7 +115,7 @@ namespace Client
             {
                 QLabel *label = new QLabel(this);
                 label->setObjectName(field);
-                label->setSizePolicy(GetSizePolice());
+                label->setSizePolicy(sizePolicy);
                 label->setText(name);
                 dataLayout->addWidget(label, i, 0, 1, 1);
 
@@ -132,7 +131,7 @@ namespace Client
 
                     if (it_data->isString())
                         comboBox->setCurrentText(it_data->toString());
-                    comboBox->setSizePolicy(GetSizePolice());
+                    comboBox->setSizePolicy(sizePolicy);
                     comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n    border: 1px solid gray;\n}\n\nQComboBox::drop-down {\n    border-color: transparent;\n}"));
                     dataLayout->addWidget(comboBox, i, 1, 1, 1);
                     _data.push_back({label, comboBox});
@@ -188,7 +187,7 @@ namespace Client
                         Q_ASSERT(false);
                     }
 
-                    lineEdit->setSizePolicy(GetSizePolice());
+                    lineEdit->setSizePolicy(sizePolicy);
                     lineEdit->setStyleSheet(QString::fromUtf8("QTextEdit {\n"
             "    border: 1px solid gray;\n"
             "}"));
@@ -206,32 +205,45 @@ namespace Client
             create_user != subobject_permissions.end() &&
             delete_user != subobject_permissions.end())
         {
-            if (show_db->isBool() && show_db->toBool())
+            if (show_db->isBool())
             {
                 QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
-                showDatabase->setSizePolicy(GetSizePolice());
+                showDatabase->setSizePolicy(sizePolicy);
                 connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
                 buttonLayout->addWidget(showDatabase, 1, 1, 1, 1);
             }
 
-            if (create_user->isBool() && create_user->toBool())
+            if (create_user->isBool())
             {
                 QPushButton *createUser = new QPushButton("Создать пользователя", this);
                 connect(createUser, SIGNAL(clicked()), parent, SLOT(onCreateUserClicked()));
                 createUser->setObjectName("createUser");
-                createUser->setSizePolicy(GetSizePolice());
+                createUser->setSizePolicy(sizePolicy);
                 createUser->setEnabled(false);
                 buttonLayout->addWidget(createUser, 1, 2, 1, 1);
             }
 
-            if (delete_user->isBool() && delete_user->toBool())
+            if (delete_user->isBool())
             {
+                QStackedWidget* stackedWidget = new QStackedWidget(verticalLayoutWidget);
+                stackedWidget->setObjectName("changeUser");
+                stackedWidget->setSizePolicy(sizePolicy);
+
                 QPushButton *deleteUser = new QPushButton("Удалить пользователя", this);
                 connect(deleteUser, SIGNAL(clicked()), parent, SLOT(onDeleteUserClicked()));
                 deleteUser->setObjectName("deleteUser");
-                deleteUser->setSizePolicy(GetSizePolice());
+                deleteUser->setSizePolicy(sizePolicy);
                 deleteUser->setEnabled(false);
-                buttonLayout->addWidget(deleteUser, 1, 3, 1, 1);
+                stackedWidget->addWidget(deleteUser);
+
+                QPushButton *restoreUser = new QPushButton("Восстановить пользователя", this);
+                connect(restoreUser, SIGNAL(clicked()), parent, SLOT(onRestoreUserClicked()));
+                restoreUser->setObjectName("restoreUser");
+                restoreUser->setSizePolicy(sizePolicy);
+                stackedWidget->addWidget(restoreUser);
+
+                stackedWidget->setCurrentWidget(deleteUser);
+                buttonLayout->addWidget(stackedWidget, 1, 3, 1, 1);
             }
         }
 

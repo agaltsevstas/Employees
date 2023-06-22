@@ -25,6 +25,8 @@ namespace Client
         void submitAll();
         bool addUser();
         bool deleteUser();
+        void restoreUser();
+        std::optional<bool> canDelete();
 
         std::function<void(const QByteArray &iData)> createData;
         std::function<void(const QByteArray &iData)> deleteData;

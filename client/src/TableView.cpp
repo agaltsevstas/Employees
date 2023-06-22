@@ -142,7 +142,7 @@ namespace Client
             bool result = false;
             std::function<void(QWidget*)> handleLineEdit = [&](QWidget* widget)
             {
-                if ( widget)
+                if (widget)
                 {
                     QString value;
                     if (auto lineEdit = qobject_cast<const QLineEdit*>(widget))
@@ -179,22 +179,54 @@ namespace Client
 
     bool TableView::deleteUser()
     {
-        if (_model)
+        if (QItemSelectionModel *select = selectionModel())
         {
-            if (QItemSelectionModel *select = selectionModel())
+            if (select->hasSelection())
             {
-                if (select->hasSelection())
+                for (const auto &selectedRow : select->selectedRows())
                 {
-                    const QModelIndexList selectedRows = select->selectedRows();
-                    for (const auto &selectedRow : selectedRows)
-                    {
-                        if (!_model->deleteRow(selectedRow.row()))
-                            return false;
-                    }
+                    if (!_model->deleteRow(selectedRow.row()))
+                        return false;
                 }
             }
         }
 
         return false;
+    }
+
+    void TableView::restoreUser()
+    {
+        if (QItemSelectionModel *select = selectionModel())
+        {
+            if (select->hasSelection())
+            {
+                for (const auto &selectedRow : select->selectedRows())
+                {
+                    _model->restoreRow(selectedRow.row());
+                }
+            }
+        }
+    }
+
+    std::optional<bool> TableView::canDelete()
+    {
+        std::optional<bool> allDeleted;
+
+        if (QItemSelectionModel *select = selectionModel())
+        {
+            if (select->hasSelection())
+            {
+                for (const auto &selectedRow : select->selectedRows())
+                {
+                    bool canDelete = _model->canDeleteRow(selectedRow.row());
+                    if (allDeleted.has_value() && (*allDeleted & canDelete))
+                        return {};
+
+                    allDeleted = canDelete;
+                }
+            }
+        }
+
+        return allDeleted;
     }
 }

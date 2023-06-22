@@ -104,10 +104,35 @@ namespace Client
 
     void Table::selectionChanged(const QItemSelection &, const QItemSelection &)
     {
-        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+        if (QStackedWidget* stackedWidget = _personalData->findChild<QStackedWidget*>("changeUser"))
         {
-            const QModelIndexList selection = _tableView->selectionModel()->selectedRows();
-            deleteUser->setEnabled(!selection.empty());
+            auto canDelete = _tableView->canDelete();
+            if (canDelete.has_value())
+            {
+                if (canDelete.value())
+                {
+                    if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+                    {
+                        stackedWidget->setCurrentWidget(deleteUser);
+                        deleteUser->setEnabled(true);
+                    }
+                }
+                else
+                {
+                    if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
+                    {
+                        stackedWidget->setCurrentWidget(restoreUser);
+                    }
+                }
+            }
+            else
+            {
+                if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+                {
+                    stackedWidget->setCurrentWidget(deleteUser);
+                    deleteUser->setEnabled(false);
+                }
+            }
         }
     }
 
@@ -239,10 +264,12 @@ namespace Client
             if (!_tableView)
             {
                 _tableView = new TableView(this);
+                _tableView->setDataModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
+                if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
+                    _tableView->setEditStrategy(autoUpdate->isChecked() ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
                 _tableView->createData = std::bind(&Table::createData, this, std::placeholders::_1);
                 _tableView->deleteData = std::bind(&Table::deleteData, this, std::placeholders::_1);
                 _tableView->updateData = std::bind(&Table::updateData, this, std::placeholders::_1);
-                _tableView->setDataModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
                 connect(_tableView->selectionModel(),
                         SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
                         SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
@@ -269,10 +296,16 @@ namespace Client
 
         if (isCheckable)
         {
+            if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+            {
+                deleteUser->setEnabled(false);
+            }
+
             showDatabase->setText("Показать базу данных");
             _tableView->setHidden(true);
             _personalData->adjustSize();
             adjustSize();
+            update();
         }
         else
         {
@@ -362,11 +395,33 @@ namespace Client
         {
 
         }
+
+        if (QStackedWidget* stackedWidget = _personalData->findChild<QStackedWidget*>("changeUser"))
+        {
+            if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
+            {
+                stackedWidget->setCurrentWidget(restoreUser);
+            }
+        }
+    }
+
+    void Table::onRestoreUserClicked()
+    {
+        _tableView->restoreUser();
+
+        if (QStackedWidget* stackedWidget = _personalData->findChild<QStackedWidget*>("changeUser"))
+        {
+            if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+            {
+                stackedWidget->setCurrentWidget(deleteUser);
+                deleteUser->setEnabled(true);
+            }
+        }
     }
 
     void Table::onCancelClicked()
     {
-        _stackedWidget->setCurrentIndex(0);
+        _stackedWidget->setCurrentWidget(_personalData);
     }
 
     void Table::onAddUserClicked()

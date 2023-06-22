@@ -82,32 +82,32 @@ bool QJsonTableModel::setPermissions(const QJsonObject &iPermissions)
 
 void QJsonTableModel::submitAll()
 {
-    if (!_recordsCreateCache.empty())
+    if (!_recordsCreatedCache.empty())
     {
-        sendCreateRequest(QJsonDocument(QJsonObject{{_name, _recordsCreateCache}}).toJson());
+        sendCreateRequest(QJsonDocument(QJsonObject{{_name, _recordsCreatedCache}}).toJson());
 
-        while(!_recordsCreateCache.empty())
-            _recordsCreateCache.pop_back();
+        while(!_recordsCreatedCache.empty())
+            _recordsCreatedCache.pop_back();
     }
     else
         qInfo() << "Пустые данные для создания!";
 
-    if (!_recordsDeleteCache.empty())
+    if (!_recordsDeletedCache.empty())
     {
-        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, _recordsDeleteCache}}).toJson());
+        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, _recordsDeletedCache}}).toJson());
 
-        while(!_recordsDeleteCache.empty())
-             _recordsDeleteCache.pop_back();
+        while(!_recordsDeletedCache.empty())
+             _recordsDeletedCache.pop_back();
     }
     else
         qInfo() << "Пустые данные для удаления!";
 
-    if (!_recordsUpdateCache.empty())
+    if (!_recordsUpdatedCache.empty())
     {
-        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, _recordsUpdateCache}}).toJson());
+        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, _recordsUpdatedCache}}).toJson());
 
-        while(!_recordsUpdateCache.empty())
-             _recordsUpdateCache.pop_back();
+        while(!_recordsUpdatedCache.empty())
+             _recordsUpdatedCache.pop_back();
     }
     else
         qInfo() << "Пустые данные для обновления!";
@@ -165,14 +165,14 @@ bool QJsonTableModel::deleteRow(int row)
     else if (_strategy == OnManualSubmit)
     {
         bool found = false;
-        for (decltype(_recordsDeleteCache.size()) i = 0, I = _recordsDeleteCache.size(); i < I; ++i)
+        for (const auto& recordDeleted : _recordsDeletedCache)
         {
-            if (_recordsDeleteCache.at(i).isObject())
+            if (recordDeleted.isObject())
             {
-                const QJsonObject object = _recordsDeleteCache.at(i).toObject();
-                if (object.contains("id"))
+                const QJsonObject object = recordDeleted.toObject();
+                if (object.contains(Client::Employee::id()))
                 {
-                    if (object.value("id") == id)
+                    if (object.value(Client::Employee::id()) == id)
                     {
                         return true;
                     }
@@ -181,7 +181,41 @@ bool QJsonTableModel::deleteRow(int row)
         }
 
         if (!found)
-            _recordsDeleteCache.push_back(record);
+            _recordsDeletedCache.push_back(record);
+    }
+
+    return true;
+}
+
+void QJsonTableModel::restoreRow(int row)
+{
+    QJsonObject jsonObject = getJsonObject(row);
+    const qint64 id = jsonObject["id"].toInteger();
+
+    _recordsDeletedCache.erase(std::find_if(_recordsDeletedCache.begin(), _recordsDeletedCache.end(), [&](const auto& recordDeleted)
+    {
+        return recordDeleted.isObject() &&recordDeleted.toObject().contains(Client::Employee::id()) && recordDeleted.toObject().value(Client::Employee::id()) == id;
+    }));
+}
+
+bool QJsonTableModel::canDeleteRow(int row)
+{
+    QJsonObject jsonObject = getJsonObject(row);
+    const qint64 id = jsonObject["id"].toInteger();
+
+    for (const auto& recordDeleted : _recordsDeletedCache)
+    {
+        if (recordDeleted.isObject())
+        {
+            const QJsonObject object = recordDeleted.toObject();
+            if (object.contains("id"))
+            {
+                if (object.value("id") == id)
+                {
+                    return false;
+                }
+            }
+        }
     }
 
     return true;
@@ -303,7 +337,7 @@ bool QJsonTableModel::checkRowOnDeleted(int row) const
     QJsonObject jsonObject = getJsonObject(row);
     const qint64 id = jsonObject["id"].toInt();
 
-    for (const auto& recordDelete : _recordsDeleteCache)
+    for (const auto& recordDelete : _recordsDeletedCache)
     {
         if (recordDelete.isObject())
         {
@@ -338,11 +372,11 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
     else if (_strategy == OnManualSubmit)
     {
         bool found = false;
-        for (decltype(_recordsUpdateCache.size()) i = 0, I = _recordsUpdateCache.size(); i < I; ++i)
+        for (decltype(_recordsUpdatedCache.size()) i = 0, I = _recordsUpdatedCache.size(); i < I; ++i)
         {
-            if (_recordsUpdateCache.at(i).isObject())
+            if (_recordsUpdatedCache.at(i).isObject())
             {
-                const QJsonObject object = _recordsUpdateCache.at(i).toObject();
+                const QJsonObject object = _recordsUpdatedCache.at(i).toObject();
                 if (object.contains("id") && object.contains("column") && object.contains("value"))
                 {
                     if (object.value("id") == index && object.value("column") == columnName)
@@ -350,7 +384,7 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
                         found = true;
                         if (object.value("value") != value)
                         {
-                            _recordsUpdateCache.replace(i, record);
+                            _recordsUpdatedCache.replace(i, record);
                             break;
                         }
                     }
@@ -359,7 +393,7 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
         }
 
         if (!found)
-            _recordsUpdateCache.push_back(record);
+            _recordsUpdatedCache.push_back(record);
     }
 }
 

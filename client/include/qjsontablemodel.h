@@ -85,6 +85,8 @@ public:
     bool checkField(int row, int column, const QString &ivalue) const;
     inline void addRow(const QJsonObject &iUser) { _array.push_back(iUser); };
     bool deleteRow(int row);
+    void restoreRow(int row);
+    bool canDeleteRow(int row);
 
     JsonTableModel *relationModel(int column) const;
 
@@ -121,7 +123,7 @@ private:
     EditStrategy _strategy = OnFieldChange;
     QList<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
-    QJsonArray _recordsCreateCache, _recordsDeleteCache, _recordsUpdateCache;
+    QJsonArray _recordsCreatedCache, _recordsDeletedCache, _recordsUpdatedCache;
 
     friend class Delegate;
 };
