@@ -19,30 +19,24 @@ namespace Client
     TableView::TableView( QWidget *parent) :
         QTableView(parent)
     {
-        setObjectName(QString::fromUtf8("tableView"));
+        setItemDelegate(new Delegate(this));
 
+        setObjectName(QString::fromUtf8("tableView"));
+        setSortingEnabled(true);
+        setMinimumHeight(700);
+//        setMinimumSize(QSize(803, 654));
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setHorizontalStretch(10);
         setSizePolicy(sizePolicy);
         setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-//        setGeometry(QRect(0, 0, 1000, 1000));
-        setMinimumSize(QSize(1000, 657));
-        setSortingEnabled(true);
         setSelectionBehavior(QAbstractItemView::SelectRows);
         setSelectionMode(QAbstractItemView::SingleSelection);
-        setItemDelegate(new Delegate(this));
         setEditTriggers(QAbstractItemView::DoubleClicked);
+//        horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+//        horizontalHeader()->setCascadingSectionResizes(true);
 //        horizontalHeader()->setHighlightSections(false);
 
-        /* Устанавливаем названия колонок в таблице с сортировкой данных
-         * */
-//        for(int i = 0, j = 0; i < model->columnCount(); i++, j++)
-//        {
-//            _table.setHeaderData(i,Qt::Horizontal,headers[j]);
-//        }
-
-        // _tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);;
         // connect(_tableView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(slotHandleDeleteButton(const QModelIndex&)));
 
 //        connect(horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(onHeaderClicked(int)));
@@ -79,30 +73,22 @@ namespace Client
 
     void TableView::setModel(QAbstractItemModel *model)
     {
-        horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-        _model = qobject_cast<QJsonTableModel*>(model);
-        QTableView::setModel(model);
-        resizeRowsToContents();
-        resizeColumnsToContents();
-        setGeometry(QRect(200, 200, 1000, 1000));
-        resize(_width, _height); // Установка размеров для окна
+        QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
 //        adjustSize();
-        // resize(_width, _height + addToHeight * 20); // Установка размеров для окна
     }
 
 //    void TableView::resizeEvent(QResizeEvent *event)
 //    {
-////        horizontalHeader()->setCascadingSectionResizes(true);
 //        QTableView::resizeEvent(event);
-////        adjustSize();
+//        adjustSize();
 //    }
 
 //    void TableView::onHeaderClicked(int column)
 //    {
 //        qDebug() << "Нажатие на столбец";
-////        bool sorted = qobject_cast<QJsonTableModel*>(_model)->isSortColumn(column);
-////        sortByColumn(column, sorted ? Qt::SortOrder::DescendingOrder : Qt::SortOrder::AscendingOrder);
+//        bool sorted = qobject_cast<QJsonTableModel*>(_model)->isSortColumn(column);
+//        sortByColumn(column, sorted ? Qt::SortOrder::DescendingOrder : Qt::SortOrder::AscendingOrder);
 //    }
 
 //    void TableView::itemSelectionChanged(QItemSelection, QItemSelection)

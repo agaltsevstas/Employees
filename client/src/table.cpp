@@ -104,35 +104,31 @@ namespace Client
 
     void Table::selectionChanged(const QItemSelection &, const QItemSelection &)
     {
-        if (QStackedWidget* stackedWidget = _personalData->findChild<QStackedWidget*>("changeUser"))
+        QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser");
+        QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser");
+        if (!deleteUser || !restoreUser)
+            return;
+
+        auto canDelete = _tableView->canDelete();
+        if (canDelete.has_value())
         {
-            auto canDelete = _tableView->canDelete();
-            if (canDelete.has_value())
+            if (canDelete.value())
             {
-                if (canDelete.value())
-                {
-                    if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
-                    {
-                        stackedWidget->setCurrentWidget(deleteUser);
-                        deleteUser->setEnabled(true);
-                    }
-                }
-                else
-                {
-                    if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
-                    {
-                        stackedWidget->setCurrentWidget(restoreUser);
-                    }
-                }
+                deleteUser->setEnabled(true);
+                deleteUser->setVisible(true);
+                restoreUser->setVisible(false);
             }
             else
             {
-                if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
-                {
-                    stackedWidget->setCurrentWidget(deleteUser);
-                    deleteUser->setEnabled(false);
-                }
+                restoreUser->setVisible(true);
+                deleteUser->setEnabled(false);
             }
+        }
+        else
+        {
+            deleteUser->setEnabled(false);
+            deleteUser->setVisible(true);
+            restoreUser->setVisible(false);
         }
     }
 
@@ -168,8 +164,6 @@ namespace Client
         {
             Q_ASSERT(false);
         }
-
-//        _ui->personalData->adjustSize();
     }
 
     QSizePolicy Table::GetSizePolice()
@@ -190,6 +184,7 @@ namespace Client
     {
         if (_personalData)
             _personalData->setEditStrategy(isChecked ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
+
         if (_tableView)
             _tableView->setEditStrategy(isChecked ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
 
@@ -303,15 +298,15 @@ namespace Client
 
             showDatabase->setText("Показать базу данных");
             _tableView->setHidden(true);
-            _personalData->adjustSize();
+            _tableView->setParent(0);
             adjustSize();
-            update();
         }
         else
         {
             if (_tableView)
             {
                 _tableView->setHidden(false);
+                _ui->splitter->addWidget(_tableView);
                 adjustSize();
             }
             else
@@ -322,13 +317,6 @@ namespace Client
             }
 
             showDatabase->setText("Скрыть базу данных");
-        }
-
-        if (_tableView)
-        {
-//            auto del1 = _ui->groupBox->size();
-//            auto del2 = _tableView->geometry().size();
-//            auto del3 = del1 + del2;
         }
 
         showDatabase->setCheckable(!isCheckable);
@@ -396,27 +384,25 @@ namespace Client
 
         }
 
-        if (QStackedWidget* stackedWidget = _personalData->findChild<QStackedWidget*>("changeUser"))
-        {
-            if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
-            {
-                stackedWidget->setCurrentWidget(restoreUser);
-            }
-        }
+        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+            deleteUser->setVisible(false);
+
+        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
+            restoreUser->setVisible(true);
     }
 
     void Table::onRestoreUserClicked()
     {
         _tableView->restoreUser();
 
-        if (QStackedWidget* stackedWidget = _personalData->findChild<QStackedWidget*>("changeUser"))
+        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
         {
-            if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
-            {
-                stackedWidget->setCurrentWidget(deleteUser);
-                deleteUser->setEnabled(true);
-            }
+            deleteUser->setEnabled(true);
+            deleteUser->setVisible(true);
         }
+
+        QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser");
+            restoreUser->setVisible(false);
     }
 
     void Table::onCancelClicked()

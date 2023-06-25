@@ -31,6 +31,23 @@ namespace Client
         return sizePolicy;
     }
 
+    class StackedWidget : public QStackedWidget
+    {
+    public:
+        StackedWidget(QWidget *parent = nullptr) : QStackedWidget(parent){}
+
+    private:
+        QSize sizeHint() const override
+        {
+          return currentWidget()->sizeHint();
+        }
+
+        QSize minimumSizeHint() const override
+        {
+          return currentWidget()->minimumSizeHint();
+        }
+    };
+
     TablePrivate::TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent) :
     QWidget(parent), _name(iName)
     {
@@ -42,8 +59,7 @@ namespace Client
 
         QSizePolicy sizePolicy = GetSizePolice();
         setSizePolicy(sizePolicy);
-
-        QGridLayout *gridLayout = new QGridLayout(this);
+        setMinimumHeight(700);
 
         QSplitter *splitter = new QSplitter(this);
         splitter->setSizePolicy(sizePolicy);
@@ -60,6 +76,7 @@ namespace Client
 
         QWidget *verticalLayoutWidget = new QWidget(splitter);
         verticalLayoutWidget->setObjectName("verticalLayoutWidget");
+        verticalLayoutWidget->setSizePolicy(sizePolicy);
 
         QGridLayout *dataLayout = new QGridLayout(data);
         dataLayout->setObjectName("dataLayout");
@@ -68,35 +85,36 @@ namespace Client
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
 
-        QCheckBox *autoUpdate = new QCheckBox(verticalLayoutWidget);
+        QCheckBox *autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
         connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
         autoUpdate->setObjectName("autoUpdate");
-        autoUpdate->setText("Автоматическое обновление");
         autoUpdate->setSizePolicy(sizePolicy);
         autoUpdate->setChecked(true);
 
-        QPushButton *update= new QPushButton(verticalLayoutWidget);
+        QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
         connect(update, SIGNAL(clicked()), parent, SLOT(onUpdateClicked()));
+        update->setIcon(QPixmap(QString::fromUtf8("../images/reload.png")));
         update->setObjectName("update");
-        update->setText("Обновить");
         update->setSizePolicy(sizePolicy);
 
         QPushButton *revert = new QPushButton(verticalLayoutWidget);
         connect(revert, SIGNAL(clicked()), parent, SLOT(onRevertClicked()));
+        revert->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
         revert->setObjectName("revert");
         revert->setText("Откатить");
         revert->setSizePolicy(sizePolicy);
 
-        QPushButton *exit = new QPushButton(verticalLayoutWidget);
+        QPushButton *exit = new QPushButton("Выход", verticalLayoutWidget);
         connect(exit, SIGNAL(clicked()), parent, SLOT(onExitClicked()));
+        exit->setIcon(QPixmap(QString::fromUtf8("../images/exit.png")));
         exit->setObjectName("exit");
-        exit->setText("Выход");
         exit->setEnabled(true);
         exit->setSizePolicy(sizePolicy);
 
         splitter->addWidget(data);
         splitter->addWidget(verticalLayoutWidget);
 
+        QGridLayout *gridLayout = new QGridLayout(this);
         gridLayout->addWidget(splitter, 0, 0, 1, 1);
         setLayout(gridLayout);
 
@@ -124,6 +142,8 @@ namespace Client
                 {
                     QComboBox *comboBox = new QComboBox(this);
                     comboBox->setObjectName(field);
+                    comboBox->setToolTip(Client::Employee::helpFields()[field]);
+                    comboBox->setPlaceholderText(Client::Employee::helpFields()[field]);
                     if (field == Client::Employee::role())
                         comboBox->addItems(Client::Employee::getRoles());
                     else if (field == Client::Employee::sex())
@@ -140,7 +160,8 @@ namespace Client
                 {
                     QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
                     spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
-                    spinBox->setAccessibleDescription("Введите " + name.toLower());
+                    spinBox->setToolTip(Client::Employee::helpFields()[field]);
+                    spinBox->setAccessibleDescription(Client::Employee::helpFields()[field]);
                     spinBox->setRange(0, 1000000);
                     if (it_data->isDouble())
                         spinBox->setValue(it_data->toDouble());
@@ -152,13 +173,19 @@ namespace Client
                 else
                 {
                     QLineEdit *lineEdit = new QLineEdit(this);
-                    lineEdit->setObjectName(field);
-                    lineEdit->setPlaceholderText("Введите " + name.toLower());
 
-                    if (field == Client::Employee::passport() ||
-                        field == Client::Employee::phone())
+                    if (field == Client::Employee::dateOfBirth() ||
+                        field == Client::Employee::dateOfHiring())
                     {
-                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, this) );
+                        lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this) );
+                    }
+                    else if (field == Client::Employee::passport())
+                    {
+                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this) );
+                    }
+                    else if (field == Client::Employee::phone())
+                    {
+                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
                     }
                     else if (field == Client::Employee::password())
                     {
@@ -187,6 +214,9 @@ namespace Client
                         Q_ASSERT(false);
                     }
 
+                    lineEdit->setObjectName(field);
+                    lineEdit->setToolTip(Client::Employee::helpFields()[field]);
+                    lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
                     lineEdit->setSizePolicy(sizePolicy);
                     lineEdit->setStyleSheet(QString::fromUtf8("QTextEdit {\n"
             "    border: 1px solid gray;\n"
@@ -207,16 +237,19 @@ namespace Client
         {
             if (show_db->isBool())
             {
-                QPushButton *showDatabase = new QPushButton("Показать базу данных", this);
-                showDatabase->setSizePolicy(sizePolicy);
+                QPushButton *showDatabase = new QPushButton("Показать базу данных", verticalLayoutWidget);
                 connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
+                showDatabase->setIcon(QPixmap(QString::fromUtf8("../images/show.png")));
+                showDatabase->setObjectName("showDatabase");
+                showDatabase->setSizePolicy(sizePolicy);
                 buttonLayout->addWidget(showDatabase, 1, 1, 1, 1);
             }
 
             if (create_user->isBool())
             {
-                QPushButton *createUser = new QPushButton("Создать пользователя", this);
+                QPushButton *createUser = new QPushButton("Создать пользователя", verticalLayoutWidget);
                 connect(createUser, SIGNAL(clicked()), parent, SLOT(onCreateUserClicked()));
+                createUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
                 createUser->setObjectName("createUser");
                 createUser->setSizePolicy(sizePolicy);
                 createUser->setEnabled(false);
@@ -225,25 +258,22 @@ namespace Client
 
             if (delete_user->isBool())
             {
-                QStackedWidget* stackedWidget = new QStackedWidget(verticalLayoutWidget);
-                stackedWidget->setObjectName("changeUser");
-                stackedWidget->setSizePolicy(sizePolicy);
-
-                QPushButton *deleteUser = new QPushButton("Удалить пользователя", this);
+                QPushButton *deleteUser = new QPushButton("Удалить пользователя", verticalLayoutWidget);
                 connect(deleteUser, SIGNAL(clicked()), parent, SLOT(onDeleteUserClicked()));
+                deleteUser->setIcon(QPixmap(QString::fromUtf8("../images/delete.png")));
                 deleteUser->setObjectName("deleteUser");
                 deleteUser->setSizePolicy(sizePolicy);
                 deleteUser->setEnabled(false);
-                stackedWidget->addWidget(deleteUser);
+                buttonLayout->addWidget(deleteUser, 1, 3, 1, 1);
 
-                QPushButton *restoreUser = new QPushButton("Восстановить пользователя", this);
+                QPushButton *restoreUser = new QPushButton("Восстановить пользователя", verticalLayoutWidget);
                 connect(restoreUser, SIGNAL(clicked()), parent, SLOT(onRestoreUserClicked()));
+                restoreUser->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
                 restoreUser->setObjectName("restoreUser");
                 restoreUser->setSizePolicy(sizePolicy);
-                stackedWidget->addWidget(restoreUser);
-
-                stackedWidget->setCurrentWidget(deleteUser);
-                buttonLayout->addWidget(stackedWidget, 1, 3, 1, 1);
+                restoreUser->setEnabled(true);
+                restoreUser->setVisible(false);
+                buttonLayout->addWidget(restoreUser, 1, 3, 1, 1);
             }
         }
 
@@ -253,11 +283,7 @@ namespace Client
         buttonLayout->addWidget(exit, 2, 0, 1, buttonLayout->columnCount());
         buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), 3, 0, 1, buttonLayout->columnCount());
 
-//        data->adjustSize();
-//        data->update();
-//        dataLayout->update();
-//        buttonLayout->update();
-//        splitter->update();
+        adjustSize();
     }
 
     TablePrivate::TablePrivate(const QString &iName, QWidget *parent) : QWidget(parent), _name(iName)
@@ -305,7 +331,8 @@ namespace Client
             {
                 QComboBox *comboBox = new QComboBox(this);
                 comboBox->setObjectName(field);
-                comboBox->setPlaceholderText("Введите " + name.toLower());
+                comboBox->setToolTip(Client::Employee::helpFields()[field]);
+                comboBox->setPlaceholderText(Client::Employee::helpFields()[field]);
                 if (field == Client::Employee::role())
                     comboBox->addItems(Client::Employee::getRoles());
                 else if (field == Client::Employee::sex())
@@ -320,7 +347,8 @@ namespace Client
                 QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
                 spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
                 spinBox->setObjectName(field);
-                spinBox->setAccessibleDescription("Введите " + name.toLower());
+                spinBox->setToolTip(Client::Employee::helpFields()[field]);
+                spinBox->setAccessibleDescription(Client::Employee::helpFields()[field]);
                 spinBox->setRange(0, 1000000);
                 spinBox->setValue(10000);
                 spinBox->setSizePolicy(GetSizePolice());
@@ -331,13 +359,23 @@ namespace Client
             else
             {
                 QLineEdit *lineEdit = new QLineEdit(this);
-                if (field == Client::Employee::passport() ||
-                    field == Client::Employee::phone())
+
+                if (field == Client::Employee::dateOfBirth() ||
+                    field == Client::Employee::dateOfHiring())
                 {
-                    lineEdit->setValidator(new UInt64Validator(0, 9999999999, this) );
+                    lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this) );
+                }
+                else if (field == Client::Employee::passport())
+                {
+                    lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this) );
+                }
+                else if (field == Client::Employee::phone())
+                {
+                    lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
                 }
                 lineEdit->setObjectName(field);
-                lineEdit->setPlaceholderText("Введите " + name.toLower());
+                lineEdit->setToolTip(Client::Employee::helpFields()[field]);
+                lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
                 lineEdit->setSizePolicy(GetSizePolice());
                 lineEdit->setStyleSheet(QString::fromUtf8("QTextEdit {\n"
         "    border: 1px solid gray;\n"
@@ -347,20 +385,27 @@ namespace Client
             }
         }
 
-        QPushButton *cancel= new QPushButton(verticalLayoutWidget);
+        QPushButton *cancel = new QPushButton("Отмена", verticalLayoutWidget);
         connect(cancel, SIGNAL(clicked()), parent, SLOT(onCancelClicked()));
+        cancel->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
         cancel->setObjectName("cancel");
-        cancel->setText("Отмена");
         cancel->setSizePolicy(sizePolicy);
 
-        QPushButton *addUser = new QPushButton(verticalLayoutWidget);
+        QPushButton *resetData = new QPushButton("Сбросить данные", verticalLayoutWidget);
+        connect(resetData, SIGNAL(clicked()), SLOT(onResetDataClicked()));
+        resetData->setIcon(QPixmap(QString::fromUtf8("../images/delete.png")));
+        resetData->setObjectName("resetData");
+        resetData->setSizePolicy(sizePolicy);
+
+        QPushButton *addUser = new QPushButton("Добавить в базу данных", verticalLayoutWidget);
         connect(addUser, SIGNAL(clicked()), parent, SLOT(onAddUserClicked()));
+        addUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
         addUser->setObjectName("addUser");
-        addUser->setText("Добавить в базу данных");
         addUser->setSizePolicy(sizePolicy);
 
         buttonLayout->addWidget(cancel, 0, 0, 1, 1);
-        buttonLayout->addWidget(addUser, 0, 1, 1, 1);
+        buttonLayout->addWidget(resetData, 0, 1, 1, 1);
+        buttonLayout->addWidget(addUser, 0, 2, 1, 1);
 
         splitter->addWidget(data);
         splitter->addWidget(verticalLayoutWidget);
@@ -480,5 +525,24 @@ namespace Client
         }
         else
             qInfo() << "Пустые данные!";
+    }
+
+    void TablePrivate::onResetDataClicked()
+    {
+        for (auto& [_, widget]: _data)
+        {
+            if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
+            {
+                lineEdit->clear();
+            }
+            else if (auto comboBox = qobject_cast<QComboBox*>(widget))
+            {
+                comboBox->clear();
+            }
+            else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+            {
+                spinBox->setValue(10000);
+            }
+        }
     }
 }

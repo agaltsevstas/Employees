@@ -34,6 +34,7 @@ namespace Client
 
     public Q_SLOTS:
         void sendUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
+        void onResetDataClicked();
 
     private Q_SLOTS:
         void update();

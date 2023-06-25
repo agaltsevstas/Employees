@@ -204,13 +204,13 @@ namespace Client
                     QRegularExpression regular ("^[0-9]{1,4}$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустой ID >> " + iValue + ", введите ID (например, 100)";
+                        iValue = "Пустой ID >> " + iValue + ", " + helpFields()[id()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустой ID >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректный ID >> " + iValue + ", введите ID (например, 100)";
+                        iValue = "Некорректный ID >> " + iValue + ", " + helpFields()[id()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректный ID >> " << iValue << std::endl;
                     }
@@ -232,13 +232,13 @@ namespace Client
                                           "Менеджер по закупкам|Менеджер по продажам|Начальник отдела закупок|Начальник склада|Юрист|Менеджер по персоналу)");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая должность >> " + iValue + ", введите должность";
+                        iValue = "Пустая должность >> " + iValue + ", " + helpFields()[role()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустая должность >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректная должность >> " + iValue + ", введите должность";
+                        iValue = "Некорректная должность >> " + iValue + ", " + helpFields()[role()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректная должность >> " << iValue << std::endl;
                     }
@@ -259,13 +259,13 @@ namespace Client
                     QRegularExpression regular ("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая фамилия >> " + iValue + ", введите фамилию";
+                        iValue = "Пустая фамилия >> " + iValue + ", " + helpFields()[surname()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустая фамилия >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректная фамилия >> " + iValue + ", введите фамилию";
+                        iValue = "Некорректная фамилия >> " + iValue + ", " + helpFields()[surname()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректная фамилия >> " << iValue << std::endl;
                     }
@@ -286,13 +286,13 @@ namespace Client
                     QRegularExpression regular ("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустое имя >> " + iValue + ", введите имя";
+                        iValue = "Пустое имя >> " + iValue + ", " + helpFields()[name()];
                         type.status = ST_EMPTY;
     //                    Logger::info << "Пустое имя >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорретное имя >> " + iValue + ", введите имя";
+                        iValue = "Некорретное имя >> " + iValue + ", " + helpFields()[name()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорретное имя >> " << iValue << std::endl;
                     }
@@ -313,13 +313,13 @@ namespace Client
                     QRegularExpression regular ("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустое отчество >> " + iValue + ", введите отчество";
+                        iValue = "Пустое отчество >> " + iValue + ", " + helpFields()[patronymic()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустое отчество >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорретное отчество >> " + iValue + ", введите отчество";
+                        iValue = "Некорретное отчество >> " + iValue + ", " + helpFields()[patronymic()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорретное отчество >> " << iValue << std::endl;
                     }
@@ -340,13 +340,13 @@ namespace Client
                     QRegularExpression regular ("^(Муж|Жен)$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустой пол >> " + iValue + ", введите пол (например, Муж)";
+                        iValue = "Пустой пол >> " + iValue + ", " + helpFields()[sex()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустой пол >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректный пол >> " + iValue + ", введите пол (например, Муж)";
+                        iValue = "Некорректный пол >> " + iValue + ", " + helpFields()[sex()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректный пол >> " << iValue << std::endl;
                     }
@@ -368,13 +368,13 @@ namespace Client
                                           "[02468][48])|[13579][26])|([13579][26]|[02468][048]|0[0-9]|1[0-6])00))$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая дата рождения >> " + iValue + ", введите дату рождения (например, 16.12.1995 или 16/12/1995 или 16-12-1995)";
+                        iValue = "Пустая дата рождения >> " + iValue + ", " + helpFields()[dateOfBirth()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустая дата рождения >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректная дата рождения >> " + iValue + ", введите дату рождения (например, 16.12.1995 или 16/12/1995 или 16-12-1995)";
+                        iValue = "Некорректная дата рождения >> " + iValue + ", " + helpFields()[dateOfBirth()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректная дата рождения >> " << iValue << std::endl;
                     }
@@ -382,14 +382,14 @@ namespace Client
                     {
                         // Нахождение возраста
                         QStringList data = Utils::SplitString(Utils::Date(), " .-");
-                        QStringList dateOfBirth = Utils::SplitString(iValue, " .-");
-                        auto age = Utils::FindAge(data, dateOfBirth);
+                        QStringList dateofbirth = Utils::SplitString(iValue, " .-");
+                        auto age = Utils::FindAge(data, dateofbirth);
                         int year = age[0];
                         int month = age[1];
                         int day = age[2];
                         if (year < 18)
                         {
-                            iValue = "Неудовлетворительный возраст >> " + iValue + ", введите дату рождения (например, 16.12.1995 или 16/12/1995 или 16-12-1995)";
+                            iValue = "Неудовлетворительный возраст >> " + iValue + ", " + helpFields()[dateOfBirth()];
                             type.status = ST_WRONGDATA;
     //                        Logger::warning << "Неудовлетворительный возраст >> " << "Лет: " << year << "Месяцев: " << month << "Дней: " << day << std::endl;
                         }
@@ -410,13 +410,13 @@ namespace Client
                     QRegularExpression regular ("^[0-9]{10}$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустой паспорт >> " + iValue + ", введите номер паспорта (например, 4516561974)";
+                        iValue = "Пустой паспорт >> " + iValue + ", " + helpFields()[passport()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустой паспорт >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректный паспорт >> " + iValue + ", введите номер паспорта (например, 4516561974)";
+                        iValue = "Некорректный паспорт >> " + iValue + ", " + helpFields()[passport()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректный паспорт >> " << iValue << std::endl;
                     }
@@ -436,13 +436,13 @@ namespace Client
                     QRegularExpression regular ("^[0-9]{10}$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустой телефон >> " + iValue + ", введите номер телефона (например, 9032697963)";
+                        iValue = "Пустой телефон >> " + iValue + ", " + helpFields()[phone()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустой телефон >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректный телефон >> " + iValue + ", введите номер телефона (например, 9032697963)";
+                        iValue = "Некорректный телефон >> " + iValue + ", " + helpFields()[phone()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректный телефон >> " << iValue << std::endl;
                     }
@@ -462,13 +462,13 @@ namespace Client
                     QRegularExpression regular ("^([a-z0-9]+)(\\.)([a-z0-9]+)(\\.)([a-z0-9]+)(@)(tradingcompany)(\\.)(ru)$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая почта >> " + iValue + ", введите почту (например, surname.name.patronymic@tradingcompany.ru)";
+                        iValue = "Пустая почта >> " + iValue + ", " + helpFields()[email()];
                         type.status = ST_EMPTY;
 //                        Logger::error << "Пустая почта >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректная почта >> " + iValue + ", введите почту (например, surname.name.patronymic@tradingcompany.ru)";
+                        iValue = "Некорректная почта >> " + iValue + ", " + helpFields()[email()];
                         type.status = ST_WRONGDATA;
 //                        Logger::warning << "Некорректная почта >> " << iValue << std::endl;
                     }
@@ -491,13 +491,13 @@ namespace Client
                                           "[02468][48])|[13579][26])|([13579][26]|[02468][048]|0[0-9]|1[0-6])00))$");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая дата принятия на работу >> " + iValue + ", введите дату принятия на работу (например, 16.04.2018 или 16/04/2018 или 16-04-2018)";
+                        iValue = "Пустая дата принятия на работу >> " + iValue + ", " + helpFields()[dateOfHiring()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустая дата принятия на работу >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректная дата принятия на работу >> " + iValue + ", введите дату принятия на работу (например, 16.04.2018 или 16/04/2018 или 16-04-2018)";
+                        iValue = "Некорректная дата принятия на работу >> " + iValue + ", " + helpFields()[dateOfHiring()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректная дата принятия на работу >> " << iValue << std::endl;
                     }
@@ -515,24 +515,18 @@ namespace Client
                 case FIELD_WORKING_HOURS :
                 {
                     QRegularExpression regular ("(((((Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье),*)+)|"
-                                          "(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)-"
-                                          "(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье))="
-                                          "([0-1]?[0-9]|[2][0-3]):([0-5][0-9])-([0-1]?[0-9]|[2][0-3]):([0-5][0-9]);*)+");
+                                                  "(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)-"
+                                                  "(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье))="
+                                                  "([0-1]?[0-9]|[2][0-3]):([0-5][0-9])-([0-1]?[0-9]|[2][0-3]):([0-5][0-9]);*)+");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустые часы работы >> " + iValue + ", введите время работы (например, "
-                                                                     "Понедельник=09:00-18:00 или "
-                                                                     "Понедельник-Пятница=09:00-18:00 или "
-                                                                     "Понедельник=09:00-18:00;Пятница=09:00-18:00)";
+                        iValue = "Пустые часы работы >> " + iValue + ", " + helpFields()[workingHours()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустые часы работы >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректные часы работы >> " + iValue + ", введите время работы (например, "
-                                                                     "Понедельник=09:00-18:00 или "
-                                                                     "Понедельник-Пятница=09:00-18:00 или "
-                                                                     "Понедельник=09:00-18:00;Пятница=09:00-18:00)";
+                        iValue = "Некорректные часы работы >> " + iValue + ", " + helpFields()[workingHours()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректные часы работы >> " << iValue << std::endl;
                     }
@@ -553,13 +547,13 @@ namespace Client
                     QRegularExpression regular ("[0-9]+");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая зарплата >> " + iValue + ", введите зарплату (в рублях)";
+                        iValue = "Пустая зарплата >> " + iValue + ", " + helpFields()[salary()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустая зарплата >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректная зарплата >> " + iValue + ", введите зарплату (в рублях)";
+                        iValue = "Некорректная зарплата >> " + iValue + ", " + helpFields()[salary()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректная зарплата >> " << iValue << std::endl;
                     }
@@ -579,19 +573,13 @@ namespace Client
                     QRegularExpression regular ("(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{6,}");
                     if (iValue.isEmpty())
                     {
-                        iValue = "Пустая пароль >> " + iValue + ", введите новый пароль (пароль должен содержать:\n-не менее 6 символов\n"
-                                                                  "-хотя бы одну прописную латинскую букву\n"
-                                                                  "-хотя бы одну строчную латинскую букву\n"
-                                                                  "-хотя бы одну цифру)";
+                        iValue = "Пустая пароль >> " + iValue + ", " + helpFields()[password()];
                         type.status = ST_EMPTY;
     //                    Logger::error << "Пустой пароль >> " << iValue << std::endl;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
-                        iValue = "Некорректный пароль >> " + iValue + ", введите новый пароль (пароль должен содержать:\n-не менее 6 символов\n"
-                                                                  "-хотя бы одну прописную латинскую букву\n"
-                                                                  "-хотя бы одну строчную латинскую букву\n"
-                                                                  "-хотя бы одну цифру)";
+                        iValue = "Некорректный пароль >> " + iValue + ", " + helpFields()[password()];
                         type.status = ST_WRONGDATA;
     //                    Logger::warning << "Некорректный пароль >> " << iValue << std::endl;
                     }

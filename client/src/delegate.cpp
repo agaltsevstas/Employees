@@ -1,4 +1,5 @@
 #include "delegate.h"
+#include "client.h"
 
 #include <QAbstractItemView>
 #include <QDoubleSpinBox>
@@ -48,6 +49,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
                 if (childModel)
                 {
                     comboBox->setModel(childModel);
+                    comboBox->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
 //                    comboBox->setModelColumn(index.column());
                     comboBox->setDuplicatesEnabled(false);
                     comboBox->installEventFilter(const_cast<Delegate*>(this));
@@ -63,19 +65,37 @@ QWidget *Delegate::createEditor(QWidget *parent,
                     return comboBox;
                 }
             }
+            case 6:
+            case 10:
+            {
+                QLineEdit *lineEdit = new QLineEdit(parent);
+                lineEdit->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
+                lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
+                lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, parent));
+                return lineEdit;
+            }
             case 7:
+            {
+                QLineEdit *lineEdit = new QLineEdit(parent);
+                lineEdit->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
+                lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
+                lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, parent));
+                return lineEdit;
+            }
             case 8:
             {
                 QLineEdit *lineEdit = new QLineEdit(parent);
+                lineEdit->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
-                lineEdit->setValidator(new UInt64Validator(0, 9999999999, parent));
+                lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, parent));
                 return lineEdit;
             }
             case 12:
             {
                 QDoubleSpinBox *spinbox = new QDoubleSpinBox(parent);
-                spinbox->setFrame(false);
+                spinbox->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
                 spinbox->setValue(model->data(index, Qt::DisplayRole).toInt());
+                spinbox->setFrame(false);
                 spinbox->setRange(0, 1000000);
                 return spinbox;
             }

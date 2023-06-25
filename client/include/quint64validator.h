@@ -7,7 +7,15 @@ class UInt64Validator : public QValidator
 {
     Q_OBJECT
 public:
-    UInt64Validator(quint64 min, quint64 max, QObject *parent = nullptr);
+    enum class Mode
+    {
+        None = 0,
+        Date,
+        Passport,
+        Phone
+    };
+
+    UInt64Validator(quint64 min, quint64 max, Mode mode = Mode::None, QObject *parent = nullptr);
     inline quint64 bottom() const { return _min; }
     inline quint64 top() const { return _max; }
     void setBottom(quint64 min);
@@ -17,8 +25,10 @@ public:
 
     QValidator::State validate(QString &input, int&) const override;
 private:
+    Mode _mode;
     quint64 _min;
     quint64 _max;
+    mutable QString _cache;
 };
 
 #endif // QUINT64VALIDATOR_H
