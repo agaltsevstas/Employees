@@ -265,9 +265,8 @@ namespace Client
                 _tableView->createData = std::bind(&Table::createData, this, std::placeholders::_1);
                 _tableView->deleteData = std::bind(&Table::deleteData, this, std::placeholders::_1);
                 _tableView->updateData = std::bind(&Table::updateData, this, std::placeholders::_1);
-                connect(_tableView->selectionModel(),
-                        SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
-                        SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
+                connect(_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+                                                      SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
 
                 connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
                 connect(_personalData, SIGNAL(sendClearSearch()), _tableView, SLOT(clearSearchChanged()));
@@ -292,13 +291,21 @@ namespace Client
         if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
             createUser->setEnabled(!isCheckable);
 
+        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+            deleteUser->setEnabled(!isCheckable);
+
+        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
+            restoreUser->setEnabled(!isCheckable);
+
+        if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
+            search->setEnabled(!isCheckable);
+
+        if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
+            valueSearch->setEnabled(!isCheckable);
+
+
         if (isCheckable)
         {
-            if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
-            {
-                deleteUser->setEnabled(false);
-            }
-
             showDatabase->setText("Показать базу данных");
             _tableView->setHidden(true);
             _tableView->setParent(NULL);

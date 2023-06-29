@@ -55,7 +55,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
                     comboBox->setDuplicatesEnabled(false);
                     comboBox->installEventFilter(const_cast<Delegate*>(this));
                     comboBox->setSizePolicy(GetSizePolice());
-                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n    border: 1px solid gray;\n}\n\nQComboBox::drop-down {\n    border-color: transparent;\n}"));
+                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox { border: 1px solid gray; padding: 0px; } QComboBox::drop-down { border-color: transparent; }"));
 //                    QLineEdit *lineEdit = new QLineEdit(comboBox);
 //                    QFont font = lineEdit->font();
 //                    font.setBold(true);

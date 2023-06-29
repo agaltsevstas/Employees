@@ -50,6 +50,7 @@ namespace Client
         splitter->setObjectName("splitter");
         QSizePolicy sizePolicySplitter = GetSizePolice();
         sizePolicySplitter.setVerticalStretch(20);
+        sizePolicySplitter.setHorizontalStretch(20);
         splitter->setSizePolicy(sizePolicySplitter);
 
         QGroupBox *data = new QGroupBox(splitter);
@@ -102,7 +103,7 @@ namespace Client
                     if (it_data->isString())
                         comboBox->setCurrentText(it_data->toString());
                     comboBox->setSizePolicy(sizePolicy);
-                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n border: 1px solid gray;\n}\n\n QComboBox::drop-down {\n border-color: transparent;\n}"));
+                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;} QComboBox::focus {border: 4px solid #a5cdff;}"));
                     dataLayout->addWidget(comboBox, i, 1, 1, 1);
                     _data.push_back({label, comboBox});
                 }
@@ -116,7 +117,7 @@ namespace Client
                     if (it_data->isDouble())
                         spinBox->setValue(it_data->toDouble());
                     spinBox->setSizePolicy(GetSizePolice());
-                    spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {\n border: 1px solid gray;\n }"));
+                    spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                     dataLayout->addWidget(spinBox, i, 1, 1, 1);
                     _data.push_back({label, spinBox});
                 }
@@ -167,7 +168,8 @@ namespace Client
                     lineEdit->setToolTip(Client::Employee::helpFields()[field]);
                     lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
                     lineEdit->setSizePolicy(sizePolicyLine);
-                    lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {\n border: 1px solid gray;\n}"));
+                    lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
+                    lineEdit->setAttribute(Qt::WA_MacShowFocusRect, true);
                     lineEdit->setClearButtonEnabled(true);
                     dataLayout->addWidget(lineEdit, i, 1, 1, 1);
                     _data.push_back({label,lineEdit});
@@ -227,6 +229,7 @@ namespace Client
                 connect(search, SIGNAL(clicked()), SLOT(onSearchClicked()));
                 search->setObjectName("search");
                 search->setSizePolicy(sizePolicy);
+                search->setEnabled(false);
                 buttonLayout->addWidget(search, 2, 0, 1, 1);
 
                 QLineEdit *valueSearch = new QLineEdit(verticalLayoutWidget);
@@ -239,7 +242,8 @@ namespace Client
                         emit sendClearSearch();
                     });
                 }
-//                connect(valueSearch, SIGNAL(mousePressEvent(QMouseEvent *)), this, SLOT(onClearSearchClicked(QMouseEvent *)));
+                connect(valueSearch, SIGNAL(returnPressed()), this, SLOT(onSearchClicked()));
+
                 valueSearch->setObjectName("valueSearch");
                 valueSearch->setToolTip("Введите слово или часть слова");
                 valueSearch->setPlaceholderText("Введите слово или часть слова");
@@ -247,7 +251,8 @@ namespace Client
 
                 const QIcon searchIcon("../images/search.png");
                 valueSearch->addAction(searchIcon, QLineEdit::LeadingPosition);
-                valueSearch->setStyleSheet(QString::fromUtf8("QLineEdit {\n border: 1px solid gray;\n}"));
+                valueSearch->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
+                valueSearch->setEnabled(false);
                 buttonLayout->addWidget(valueSearch, 2, 1, 1, buttonLayout->columnCount() - 1);
             }
         }
@@ -351,7 +356,7 @@ namespace Client
                 else if (field == Client::Employee::sex())
                     comboBox->addItems(Client::Employee::getSex());
                 comboBox->setSizePolicy(GetSizePolice());
-                comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n    border: 1px solid gray;\n}\n\nQComboBox::drop-down {\n    border-color: transparent;\n}"));
+                comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;} QComboBox:focus {border: 4px solid #a5cdff;}"));
                 dataLayout->addWidget(comboBox, i, 1, 1, 1);
                 _data.push_back({label, comboBox});
             }
@@ -365,7 +370,7 @@ namespace Client
                 spinBox->setRange(0, 1000000);
                 spinBox->setValue(10000);
                 spinBox->setSizePolicy(GetSizePolice());
-                spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {\n border: 1px solid gray;\n }"));
+                spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;}"));
                 dataLayout->addWidget(spinBox, i, 1, 1, 1);
                 _data.push_back({label, spinBox});
             }
@@ -390,7 +395,7 @@ namespace Client
                 lineEdit->setToolTip(Client::Employee::helpFields()[field]);
                 lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
                 lineEdit->setSizePolicy(sizePolicyLine);
-                lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {\n border: 1px solid gray;\n}"));
+                lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                 lineEdit->setClearButtonEnabled(true);
                 dataLayout->addWidget(lineEdit, i, 1, 1, 1);
                 _data.push_back({label, lineEdit});

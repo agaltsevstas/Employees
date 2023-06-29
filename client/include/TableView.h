@@ -42,10 +42,6 @@ namespace Client
     public Q_SLOTS:
         void valueSearchChanged(const QString &iValue);
         void clearSearchChanged();
-//        void onHeaderClicked(int iColumn);
-//        void itemSelectionChanged(QItemSelection, QItemSelection);
-//        void itemEdited(int, int);
-//        void itemDoubleClicked(int, int);
 
     private:
         const int _x = 0;

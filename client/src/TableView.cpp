@@ -25,7 +25,6 @@ namespace Client
         setMinimumHeight(700);
 //        setMinimumSize(QSize(803, 654));
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
         sizePolicy.setHorizontalStretch(10);
         setSizePolicy(sizePolicy);
         setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
@@ -35,14 +34,6 @@ namespace Client
 //        horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 //        horizontalHeader()->setCascadingSectionResizes(true);
 //        horizontalHeader()->setHighlightSections(false);
-
-        // connect(_tableView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(slotHandleDeleteButton(const QModelIndex&)));
-
-//        connect(horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(onHeaderClicked(int)));
-//        connect(this, SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(itemSelectionChanged(QItemSelection, QItemSelection)));
-//        connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(ItemSelectionChanged()));
-//        connect(this, SIGNAL(cellChanged(int, int)), this, SLOT(ItemEdited(int, int)));
-//        connect(this, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(ItemDoubleClicked(int, int)));
     }
 
     void TableView::setEditStrategy(EditStrategy iStrategy) noexcept
@@ -75,35 +66,13 @@ namespace Client
     {
         QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
-//        adjustSize();
+        adjustSize();
     }
 
 //    void TableView::resizeEvent(QResizeEvent *event)
 //    {
 //        QTableView::resizeEvent(event);
 //        adjustSize();
-//    }
-
-//    void TableView::onHeaderClicked(int column)
-//    {
-//        qDebug() << "Нажатие на столбец";
-//        bool sorted = qobject_cast<QJsonTableModel*>(_model)->isSortColumn(column);
-//        sortByColumn(column, sorted ? Qt::SortOrder::DescendingOrder : Qt::SortOrder::AscendingOrder);
-//    }
-
-//    void TableView::itemSelectionChanged(QItemSelection, QItemSelection)
-//    {
-//        int k = 0;
-//    }
-
-//    void TableView::itemEdited(int, int)
-//    {
-
-//    }
-
-//    void TableView::itemDoubleClicked(int, int)
-//    {
-
 //    }
 
     void TableView::submitAll()
@@ -142,12 +111,18 @@ namespace Client
                     if (_model->checkField(_model->size(), i, value))
                     {
                         record.insert(field.first, value);
-                        widget->setStyleSheet("");
+                        QPalette palette = widget->palette();
+                        palette.setColor(QPalette::Base, Qt::white);
+                        palette.setColor(QPalette::Text, Qt::black);
+                        widget->setPalette(palette);
                         result = true;
                     }
                     else
                     {
-                        widget->setStyleSheet("QLineEdit { background: rgb(255,168,175); }");
+                        QPalette palette = widget->palette();
+                        palette.setColor(QPalette::Base, Qt::red);
+                        palette.setColor(QPalette::Text, Qt::red);
+                        widget->setPalette(palette);
                     }
                 }
             };
