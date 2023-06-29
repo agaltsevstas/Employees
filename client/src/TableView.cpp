@@ -16,8 +16,7 @@
 
 namespace Client
 {
-    TableView::TableView( QWidget *parent) :
-        QTableView(parent)
+    TableView::TableView( QWidget *parent) : QTableView(parent)
     {
         setItemDelegate(new Delegate(this));
 
@@ -46,12 +45,13 @@ namespace Client
 //        connect(this, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(ItemDoubleClicked(int, int)));
     }
 
-    void TableView::setEditStrategy(EditStrategy iStrategy)
+    void TableView::setEditStrategy(EditStrategy iStrategy) noexcept
     {
-        _model->setEditStrategy(static_cast<QJsonTableModel::EditStrategy>(iStrategy));
+        if (_model)
+            _model->setEditStrategy(static_cast<QJsonTableModel::EditStrategy>(iStrategy));
     }
 
-    void TableView::setDataModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
+    void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
     {
         _model = new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this);
         connect(_model, &QJsonTableModel::sendUpdateRequest, createData);
@@ -60,13 +60,13 @@ namespace Client
         setModel(_model);
     }
 
-    void TableView::setDataModel(const QString& iName, const QJsonDocument &iDatabase)
+    void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase)
     {
         _model = new QJsonTableModel(iName, QJsonDocument(iDatabase), this);
         setModel(_model);
     }
 
-    const QAbstractItemModel *TableView::getModel() const
+    const QAbstractItemModel *TableView::getModel() const noexcept
     {
         return _model;
     }
@@ -117,7 +117,6 @@ namespace Client
         if (!_model)
             return false;
 
-
         QJsonObject record;
         record.insert(Client::Employee::id(), _model->size());
 
@@ -165,6 +164,9 @@ namespace Client
 
     bool TableView::deleteUser()
     {
+        if (!_model)
+            return false;
+
         if (QItemSelectionModel *select = selectionModel())
         {
             if (select->hasSelection())
@@ -182,6 +184,9 @@ namespace Client
 
     void TableView::restoreUser()
     {
+        if (!_model)
+            return;
+
         if (QItemSelectionModel *select = selectionModel())
         {
             if (select->hasSelection())
@@ -196,6 +201,9 @@ namespace Client
 
     std::optional<bool> TableView::canDelete()
     {
+        if (!_model)
+            return {};
+
         std::optional<bool> allDeleted;
 
         if (QItemSelectionModel *select = selectionModel())
@@ -214,5 +222,32 @@ namespace Client
         }
 
         return allDeleted;
+    }
+
+    void TableView::valueSearchChanged(const QString &iValue)
+    {
+        if (!_model)
+            return;
+
+        std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
+        {
+            setRowHidden(index, false);
+        });
+
+        _hiddenIndices = _model->valueSearch(iValue);
+        std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
+        {
+            setRowHidden(index, true);
+        });
+    }
+
+    void TableView::clearSearchChanged()
+    {
+        std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
+        {
+            setRowHidden(index, false);
+        });
+
+        _hiddenIndices.clear();
     }
 }

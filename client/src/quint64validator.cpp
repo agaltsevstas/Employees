@@ -11,7 +11,7 @@ UInt64Validator::UInt64Validator(quint64 minimum, quint64 maximum, Mode mode, QO
 
 }
 
-void UInt64Validator::setBottom(quint64 minimum)
+void UInt64Validator::setBottom(quint64 minimum) noexcept
 {
     if (_min == minimum)
         return;
@@ -20,7 +20,7 @@ void UInt64Validator::setBottom(quint64 minimum)
     changed();
 }
 
-void UInt64Validator::setTop(quint32 maximum)
+void UInt64Validator::setTop(quint32 maximum) noexcept
 {
     if (_max == maximum)
         return;
@@ -29,7 +29,7 @@ void UInt64Validator::setTop(quint32 maximum)
     changed();
 }
 
-void UInt64Validator::setRange(quint32 minimum, quint32 maximum)
+void UInt64Validator::setRange(quint32 minimum, quint32 maximum) noexcept
 {
     setBottom(minimum);
     setTop(maximum);

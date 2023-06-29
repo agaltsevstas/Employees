@@ -26,7 +26,7 @@ namespace Client
         { Employee::password(),     Employee::Field::FIELD_PASSWORD}
     };
 
-    const Employee& Employee::operator = (const Employee &object)
+    const Employee& Employee::operator = (const Employee &object) noexcept
     {
         _surname = object._surname;
         _name = object._name;
@@ -48,7 +48,7 @@ namespace Client
         return *this;
     }
 
-    QDataStream& operator << (QDataStream &ioOut, const Employee &object)
+    QDataStream& operator << (QDataStream &ioOut, const Employee &object) noexcept
     {
         ioOut << "ID: "                      << object._id           << ", ";
         ioOut << "Должность: "               << object._role         << ", ";
@@ -67,13 +67,13 @@ namespace Client
         return ioOut;
     }
 
-    bool operator == (const Employee &first, const Employee &second)
+    bool operator == (const Employee &first, const Employee &second) noexcept
     {
         return (first._email == second._email) &&
                (first._password == second._password);
     }
 
-    void Employee::SetId(const QString &iID)
+    void Employee::SetId(const QString &iID) noexcept
     {
         QString ID = iID;
         Employee::Type type = _checkField(ID, FIELD_ID);
@@ -81,7 +81,7 @@ namespace Client
         _fieldStatus[FIELD_ID] = type.status;
     }
 
-    void Employee::SetRole(const QString &iRole)
+    void Employee::SetRole(const QString &iRole) noexcept
     {
         QString role = iRole;
         Employee::Type type = _checkField(role, FIELD_ROLE);
@@ -89,7 +89,7 @@ namespace Client
         _fieldStatus[FIELD_ROLE] = type.status;
     }
 
-    void Employee::SetSurname(const QString &iSurname)
+    void Employee::SetSurname(const QString &iSurname) noexcept
     {
         QString surname = iSurname;
         Employee::Type type = _checkField(surname, FIELD_SURNAME);
@@ -97,7 +97,7 @@ namespace Client
         _fieldStatus[FIELD_SURNAME] = type.status;
     }
 
-    void Employee::SetName(const QString &iName)
+    void Employee::SetName(const QString &iName) noexcept
     {
         QString name = iName;
         Employee::Type type = _checkField(name, FIELD_NAME);
@@ -105,7 +105,7 @@ namespace Client
         _fieldStatus[FIELD_NAME] = type.status;
     }
 
-    void Employee::SetPatronymic(const QString &iPatronymic)
+    void Employee::SetPatronymic(const QString &iPatronymic) noexcept
     {
         QString patronymic = iPatronymic;
         Employee::Type type = _checkField(patronymic, FIELD_PATRONYMIC);
@@ -113,7 +113,7 @@ namespace Client
         _fieldStatus[FIELD_PATRONYMIC] = type.status;
     }
 
-    void Employee::SetSex(const QString &iSex)
+    void Employee::SetSex(const QString &iSex) noexcept
     {
         QString sex = iSex;
         Employee::Type type = _checkField(sex, FIELD_SEX);
@@ -121,7 +121,7 @@ namespace Client
         _fieldStatus[FIELD_SEX] = type.status;
     }
 
-    void Employee::SetDateOfBirth(const QString &iDateOfBirth)
+    void Employee::SetDateOfBirth(const QString &iDateOfBirth) noexcept
     {
         QString dateOfBirth = iDateOfBirth;
         Employee::Type type = _checkField(dateOfBirth, FIELD_DATE_OF_BIRTH);
@@ -129,7 +129,7 @@ namespace Client
         _fieldStatus[FIELD_DATE_OF_BIRTH] = type.status;
     }
 
-    void Employee::SetPassport(const QString &iPassport)
+    void Employee::SetPassport(const QString &iPassport) noexcept
     {
         QString passport = iPassport;
         Employee::Type type = _checkField(passport, FIELD_PASSPORT);
@@ -137,7 +137,7 @@ namespace Client
         _fieldStatus[FIELD_PASSPORT] = type.status;
     }
 
-    void Employee::SetPhone(const QString &iPhone)
+    void Employee::SetPhone(const QString &iPhone) noexcept
     {
         QString phone = iPhone;
         Employee::Type type = _checkField(phone, FIELD_PHONE);
@@ -145,7 +145,7 @@ namespace Client
         _fieldStatus[FIELD_PHONE] = type.status;
     }
 
-    void Employee::SetEmail(const QString &iEmail)
+    void Employee::SetEmail(const QString &iEmail) noexcept
     {
         QString email = iEmail;
         Employee::Type type = _checkField(email, FIELD_EMAIL);
@@ -153,7 +153,7 @@ namespace Client
         _fieldStatus[FIELD_EMAIL] = type.status;
     }
 
-    void Employee::SetDateOfHiring(const QString &iDateOfHiring)
+    void Employee::SetDateOfHiring(const QString &iDateOfHiring) noexcept
     {
         QString dateOfHiring = iDateOfHiring;
         Employee::Type type = _checkField(dateOfHiring, FIELD_DATE_OF_HIRING);
@@ -161,7 +161,7 @@ namespace Client
         _fieldStatus[FIELD_DATE_OF_HIRING] = type.status;
     }
 
-    void Employee::SetWorkingHours(const QString &iWorkingHours)
+    void Employee::SetWorkingHours(const QString &iWorkingHours) noexcept
     {
         QString workingHours = iWorkingHours;
         Employee::Type type = _checkField(workingHours, FIELD_WORKING_HOURS);
@@ -169,7 +169,7 @@ namespace Client
         _fieldStatus[FIELD_WORKING_HOURS] = type.status;
     }
 
-    void Employee::SetSalary(const QString &iSalary)
+    void Employee::SetSalary(const QString &iSalary) noexcept
     {
         QString salary = iSalary;
         Employee::Type type = _checkField(salary, FIELD_SALARY);
@@ -177,7 +177,7 @@ namespace Client
         _fieldStatus[FIELD_SALARY] = type.status;
     }
 
-    void Employee::SetPassword(const QString &iPassword)
+    void Employee::SetPassword(const QString &iPassword) noexcept
     {
         QString password = iPassword;
         Employee::Type type = _checkField(password, FIELD_PASSWORD);
@@ -228,7 +228,7 @@ namespace Client
                 case FIELD_ROLE :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("(Бухгалтер|Водитель|Главный бухгалтер|Главный юрист-консультант|Грузчик|Директор|Кассир|Логист|"
+                    QRegularExpression regular ("(Бухгалтер|Водитель|Главный бухгалтер|Главный юрист-консультант|Грузчик|Директор|Кассир|Логист|"
                                           "Менеджер по закупкам|Менеджер по продажам|Начальник отдела закупок|Начальник склада|Юрист|Менеджер по персоналу)");
                     if (iValue.isEmpty())
                     {
@@ -610,43 +610,43 @@ namespace Client
         return {};
     }
 
-    void Employee::ChangeStatusRole()
+    void Employee::ChangeStatusRole() noexcept
     {
         _fieldStatus[FIELD_ROLE] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись должности >> " << _role << std::endl;
     }
 
-    void Employee::ChangeStatusSurname()
+    void Employee::ChangeStatusSurname() noexcept
     {
         _fieldStatus[FIELD_SURNAME] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись фамилии >> " << _surname << std::endl;
     }
 
-    void Employee::ChangeStatusName()
+    void Employee::ChangeStatusName() noexcept
     {
         _fieldStatus[FIELD_NAME] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись имени >> " << _name << std::endl;
     }
 
-    void Employee::ChangeStatusPatronymic()
+    void Employee::ChangeStatusPatronymic() noexcept
     {
         _fieldStatus[FIELD_PATRONYMIC] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись отчества >> " << _patronymic << std::endl;
     }
 
-    void Employee::ChangeStatusSex()
+    void Employee::ChangeStatusSex() noexcept
     {
         _fieldStatus[FIELD_SEX] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись пола >> " << _sex << std::endl;
     }
 
-    void Employee::ChangeStatusDateOfBirth()
+    void Employee::ChangeStatusDateOfBirth() noexcept
     {
         _fieldStatus[FIELD_DATE_OF_BIRTH] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись даты рождения >> " << _dateOfBirth << std::endl;
     }
 
-    void Employee::ChangeStatusPassport(const bool canOverwrite)
+    void Employee::ChangeStatusPassport(const bool canOverwrite) noexcept
     {
         if (canOverwrite)
         {
@@ -662,7 +662,7 @@ namespace Client
         }
     }
 
-    void Employee::ChangeStatusPhone(const bool canOverwrite)
+    void Employee::ChangeStatusPhone(const bool canOverwrite) noexcept
     {
         if (canOverwrite)
         {
@@ -678,7 +678,7 @@ namespace Client
         }
     }
 
-    void Employee::ChangeStatusEmail(const bool canOverwrite)
+    void Employee::ChangeStatusEmail(const bool canOverwrite) noexcept
     {
         if (canOverwrite)
         {
@@ -692,25 +692,25 @@ namespace Client
         }
     }
 
-    void Employee::ChangeStatusDateOfHiring()
+    void Employee::ChangeStatusDateOfHiring() noexcept
     {
         _fieldStatus[FIELD_DATE_OF_HIRING] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись даты принятия на работу >> " << _dateOfHiring << std::endl;
     }
 
-    void Employee::ChangeStatusWorkingHours()
+    void Employee::ChangeStatusWorkingHours() noexcept
     {
         _fieldStatus[FIELD_WORKING_HOURS] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись часов работы >> " << _workingHours << std::endl;
     }
 
-    void Employee::ChangeStatusSalary()
+    void Employee::ChangeStatusSalary() noexcept
     {
         _fieldStatus[FIELD_SALARY] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись зарплаты >> " << _salary << std::endl;
     }
 
-    void Employee::ChangeStatusPassword()
+    void Employee::ChangeStatusPassword() noexcept
     {
         _fieldStatus[FIELD_PASSWORD] = ST_OVERWRITEDATA;
     //    Logger::info << "Перезапись пароля >> " << _password << std::endl;

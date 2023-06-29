@@ -166,7 +166,7 @@ namespace Client
         }
     }
 
-    QSizePolicy Table::GetSizePolice()
+    QSizePolicy Table::GetSizePolice() noexcept
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
@@ -259,7 +259,7 @@ namespace Client
             if (!_tableView)
             {
                 _tableView = new TableView(this);
-                _tableView->setDataModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
+                _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
                 if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
                     _tableView->setEditStrategy(autoUpdate->isChecked() ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
                 _tableView->createData = std::bind(&Table::createData, this, std::placeholders::_1);
@@ -268,6 +268,9 @@ namespace Client
                 connect(_tableView->selectionModel(),
                         SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
                         SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
+
+                connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
+                connect(_personalData, SIGNAL(sendClearSearch()), _tableView, SLOT(clearSearchChanged()));
                 _ui->splitter->addWidget(_tableView);
     //            _tableView->horizontalHeader()->setSortIndicator(0, 0);
             }
@@ -298,7 +301,7 @@ namespace Client
 
             showDatabase->setText("Показать базу данных");
             _tableView->setHidden(true);
-            _tableView->setParent(0);
+            _tableView->setParent(NULL);
             adjustSize();
         }
         else

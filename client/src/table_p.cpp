@@ -23,30 +23,13 @@
 
 namespace Client
 {
-    QSizePolicy GetSizePolice()
+    QSizePolicy GetSizePolice() noexcept
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
         return sizePolicy;
     }
-
-    class StackedWidget : public QStackedWidget
-    {
-    public:
-        StackedWidget(QWidget *parent = nullptr) : QStackedWidget(parent){}
-
-    private:
-        QSize sizeHint() const override
-        {
-          return currentWidget()->sizeHint();
-        }
-
-        QSize minimumSizeHint() const override
-        {
-          return currentWidget()->minimumSizeHint();
-        }
-    };
 
     TablePrivate::TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent) :
     QWidget(parent), _name(iName)
@@ -85,40 +68,8 @@ namespace Client
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
 
-        QCheckBox *autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
-        connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
-        autoUpdate->setObjectName("autoUpdate");
-        autoUpdate->setSizePolicy(sizePolicy);
-        autoUpdate->setChecked(true);
-
-        QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
-        connect(update, SIGNAL(clicked()), parent, SLOT(onUpdateClicked()));
-        update->setIcon(QPixmap(QString::fromUtf8("../images/reload.png")));
-        update->setObjectName("update");
-        update->setSizePolicy(sizePolicy);
-
-        QPushButton *revert = new QPushButton(verticalLayoutWidget);
-        connect(revert, SIGNAL(clicked()), parent, SLOT(onRevertClicked()));
-        revert->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
-        revert->setObjectName("revert");
-        revert->setText("Откатить");
-        revert->setSizePolicy(sizePolicy);
-
-        QPushButton *exit = new QPushButton("Выход", verticalLayoutWidget);
-        connect(exit, SIGNAL(clicked()), parent, SLOT(onExitClicked()));
-        exit->setIcon(QPixmap(QString::fromUtf8("../images/exit.png")));
-        exit->setObjectName("exit");
-        exit->setEnabled(true);
-        exit->setSizePolicy(sizePolicy);
-
-        splitter->addWidget(data);
-        splitter->addWidget(verticalLayoutWidget);
-
-        QGridLayout *gridLayout = new QGridLayout(this);
-        gridLayout->addWidget(splitter, 0, 0, 1, 1);
-        setLayout(gridLayout);
-
-        setEditStrategy(autoUpdate->isChecked() ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
+        QSizePolicy sizePolicyLine = GetSizePolice();
+        sizePolicyLine.setHorizontalStretch(1);
 
         const auto fieldNames = Client::Employee::getFieldNames();
         for (decltype(fieldNames.size()) i = 0, I = fieldNames.size(); i < I; ++i)
@@ -131,10 +82,9 @@ namespace Client
             auto it_permissions = object_permissions.find(field);
             if (it_data != object_data.end() && it_permissions != object_permissions.end())
             {
-                QLabel *label = new QLabel(this);
+                QLabel *label = new QLabel(name, this);
                 label->setObjectName(field);
                 label->setSizePolicy(sizePolicy);
-                label->setText(name);
                 dataLayout->addWidget(label, i, 0, 1, 1);
 
                 if (field == Client::Employee::role() ||
@@ -152,7 +102,7 @@ namespace Client
                     if (it_data->isString())
                         comboBox->setCurrentText(it_data->toString());
                     comboBox->setSizePolicy(sizePolicy);
-                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n    border: 1px solid gray;\n}\n\nQComboBox::drop-down {\n    border-color: transparent;\n}"));
+                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {\n border: 1px solid gray;\n}\n\n QComboBox::drop-down {\n border-color: transparent;\n}"));
                     dataLayout->addWidget(comboBox, i, 1, 1, 1);
                     _data.push_back({label, comboBox});
                 }
@@ -214,13 +164,11 @@ namespace Client
                         Q_ASSERT(false);
                     }
 
-                    lineEdit->setObjectName(field);
                     lineEdit->setToolTip(Client::Employee::helpFields()[field]);
                     lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
-                    lineEdit->setSizePolicy(sizePolicy);
-                    lineEdit->setStyleSheet(QString::fromUtf8("QTextEdit {\n"
-            "    border: 1px solid gray;\n"
-            "}"));
+                    lineEdit->setSizePolicy(sizePolicyLine);
+                    lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {\n border: 1px solid gray;\n}"));
+                    lineEdit->setClearButtonEnabled(true);
                     dataLayout->addWidget(lineEdit, i, 1, 1, 1);
                     _data.push_back({label,lineEdit});
                 }
@@ -235,16 +183,6 @@ namespace Client
             create_user != subobject_permissions.end() &&
             delete_user != subobject_permissions.end())
         {
-            if (show_db->isBool())
-            {
-                QPushButton *showDatabase = new QPushButton("Показать базу данных", verticalLayoutWidget);
-                connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
-                showDatabase->setIcon(QPixmap(QString::fromUtf8("../images/show.png")));
-                showDatabase->setObjectName("showDatabase");
-                showDatabase->setSizePolicy(sizePolicy);
-                buttonLayout->addWidget(showDatabase, 1, 1, 1, 1);
-            }
-
             if (create_user->isBool())
             {
                 QPushButton *createUser = new QPushButton("Создать пользователя", verticalLayoutWidget);
@@ -275,13 +213,85 @@ namespace Client
                 restoreUser->setVisible(false);
                 buttonLayout->addWidget(restoreUser, 1, 3, 1, 1);
             }
+
+            if (show_db->isBool())
+            {
+                QPushButton *showDatabase = new QPushButton("Показать базу данных", verticalLayoutWidget);
+                connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
+                showDatabase->setIcon(QPixmap(QString::fromUtf8("../images/show.png")));
+                showDatabase->setObjectName("showDatabase");
+                showDatabase->setSizePolicy(sizePolicy);
+                buttonLayout->addWidget(showDatabase, 1, 1, 1, 1);
+
+                QPushButton *search = new QPushButton("Поиск", verticalLayoutWidget);
+                connect(search, SIGNAL(clicked()), SLOT(onSearchClicked()));
+                search->setObjectName("search");
+                search->setSizePolicy(sizePolicy);
+                buttonLayout->addWidget(search, 2, 0, 1, 1);
+
+                QLineEdit *valueSearch = new QLineEdit(verticalLayoutWidget);
+                valueSearch->setClearButtonEnabled(true);
+                QList<QAction*> actionList = valueSearch->findChildren<QAction*>();
+                if (!actionList.isEmpty())
+                {
+                    connect(actionList.first(), &QAction::triggered, this, [this]()
+                    {
+                        emit sendClearSearch();
+                    });
+                }
+//                connect(valueSearch, SIGNAL(mousePressEvent(QMouseEvent *)), this, SLOT(onClearSearchClicked(QMouseEvent *)));
+                valueSearch->setObjectName("valueSearch");
+                valueSearch->setToolTip("Введите слово или часть слова");
+                valueSearch->setPlaceholderText("Введите слово или часть слова");
+                valueSearch->setSizePolicy(sizePolicy);
+
+                const QIcon searchIcon("../images/search.png");
+                valueSearch->addAction(searchIcon, QLineEdit::LeadingPosition);
+                valueSearch->setStyleSheet(QString::fromUtf8("QLineEdit {\n border: 1px solid gray;\n}"));
+                buttonLayout->addWidget(valueSearch, 2, 1, 1, buttonLayout->columnCount() - 1);
+            }
         }
 
-        buttonLayout->addWidget(revert, 1, 0, 1, 1);
+        QCheckBox *autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
+        connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
+        autoUpdate->setObjectName("autoUpdate");
+        autoUpdate->setSizePolicy(sizePolicy);
+        autoUpdate->setChecked(true);
         buttonLayout->addWidget(autoUpdate, 0, 0, 1, buttonLayout->columnCount() / 2);
+
+        QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
+        connect(update, SIGNAL(clicked()), parent, SLOT(onUpdateClicked()));
+        update->setIcon(QPixmap(QString::fromUtf8("../images/reload.png")));
+        update->setObjectName("update");
+        update->setSizePolicy(sizePolicy);
         buttonLayout->addWidget(update, 0, 2, 1, buttonLayout->columnCount() / 2);
-        buttonLayout->addWidget(exit, 2, 0, 1, buttonLayout->columnCount());
-        buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), 3, 0, 1, buttonLayout->columnCount());
+
+        QPushButton *revert = new QPushButton(verticalLayoutWidget);
+        connect(revert, SIGNAL(clicked()), parent, SLOT(onRevertClicked()));
+        revert->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
+        revert->setObjectName("revert");
+        revert->setText("Откатить");
+        revert->setSizePolicy(sizePolicy);
+        buttonLayout->addWidget(revert, 1, 0, 1, 1);
+
+        QPushButton *exit = new QPushButton("Выход", verticalLayoutWidget);
+        connect(exit, SIGNAL(clicked()), parent, SLOT(onExitClicked()));
+        exit->setIcon(QPixmap(QString::fromUtf8("../images/exit.png")));
+        exit->setObjectName("exit");
+        exit->setEnabled(true);
+        exit->setSizePolicy(sizePolicy);
+        buttonLayout->addWidget(exit, (buttonLayout->rowCount() == 3) ? 3 : 2, 0, 1, buttonLayout->columnCount());
+
+        splitter->addWidget(data);
+        splitter->addWidget(verticalLayoutWidget);
+
+        QGridLayout *gridLayout = new QGridLayout(this);
+        gridLayout->addWidget(splitter, 0, 0, 1, 1);
+        setLayout(gridLayout);
+
+        setEditStrategy(autoUpdate->isChecked() ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
+
+        buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), (buttonLayout->rowCount() == 4) ? 4 : 3, 0, 1, buttonLayout->columnCount());
 
         adjustSize();
     }
@@ -314,6 +324,9 @@ namespace Client
         QGridLayout *buttonLayout = new QGridLayout(verticalLayoutWidget);
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
+
+        QSizePolicy sizePolicyLine = GetSizePolice();
+        sizePolicyLine.setHorizontalStretch(1);
 
         const auto fieldNames = Client::Employee::getFieldNames();
         for (decltype(fieldNames.size()) i = 1, I = fieldNames.size(); i < I; ++i)
@@ -376,10 +389,9 @@ namespace Client
                 lineEdit->setObjectName(field);
                 lineEdit->setToolTip(Client::Employee::helpFields()[field]);
                 lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
-                lineEdit->setSizePolicy(GetSizePolice());
-                lineEdit->setStyleSheet(QString::fromUtf8("QTextEdit {\n"
-        "    border: 1px solid gray;\n"
-        "}"));
+                lineEdit->setSizePolicy(sizePolicyLine);
+                lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {\n border: 1px solid gray;\n}"));
+                lineEdit->setClearButtonEnabled(true);
                 dataLayout->addWidget(lineEdit, i, 1, 1, 1);
                 _data.push_back({label, lineEdit});
             }
@@ -451,6 +463,9 @@ namespace Client
     void TablePrivate::update()
     {
         QLineEdit *lineEdit = qobject_cast<QLineEdit*>(sender());
+        if (!lineEdit)
+            return;
+
         auto found = std::find_if(std::begin(_data), std::end(_data), [&lineEdit](const auto& data) { return data.second == lineEdit; });
         if (found == std::end(_data))
         {
@@ -543,6 +558,14 @@ namespace Client
             {
                 spinBox->setValue(10000);
             }
+        }
+    }
+
+    void TablePrivate::onSearchClicked()
+    {
+        if (QLineEdit* value = findChild<QLineEdit*>("valueSearch"))
+        {
+            emit sendValueSearch(value->text());
         }
     }
 }

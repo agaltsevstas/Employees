@@ -20,7 +20,8 @@ QSizePolicy GetSizePolice()
     return sizePolicy;
 }
 
-Delegate::Delegate(QObject* parent) : QStyledItemDelegate(parent)
+Delegate::Delegate(QObject* parent) noexcept :
+    QStyledItemDelegate(parent)
 {
 
 }

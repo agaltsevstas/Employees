@@ -13,14 +13,14 @@ namespace Client
         Q_PROPERTY(bool sortingEnabled READ isSortingEnabled WRITE setSortingEnabled)
 
     public:
-        TableView(QWidget *parent = nullptr);
+        explicit TableView(QWidget *parent = nullptr);
 
         enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
 
-        void setEditStrategy(EditStrategy iStrategy);
-        void setDataModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
-        void setDataModel(const QString& iName, const QJsonDocument &iDatabase);
-        const QAbstractItemModel *getModel() const;
+        void setEditStrategy(EditStrategy iStrategy) noexcept;
+        void setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
+        void setModel(const QString& iName, const QJsonDocument &iDatabase);
+        const QAbstractItemModel *getModel() const noexcept;
 
         void submitAll();
         bool addUser();
@@ -39,7 +39,9 @@ namespace Client
         void setModel(QAbstractItemModel *model) override;
 //        void resizeEvent(QResizeEvent *event) override;
 
-    private slots:
+    public Q_SLOTS:
+        void valueSearchChanged(const QString &iValue);
+        void clearSearchChanged();
 //        void onHeaderClicked(int iColumn);
 //        void itemSelectionChanged(QItemSelection, QItemSelection);
 //        void itemEdited(int, int);
@@ -50,7 +52,8 @@ namespace Client
         const int _y = 0;
         const int _width = 800;  /// Ширина окна виджета и сцены
         const int _height = 600; /// Высота окна виджета и сцены
-        QJsonTableModel* _model;
+        QList<int> _hiddenIndices;
+        QJsonTableModel* _model = nullptr;
     };
 }
 

@@ -9,7 +9,7 @@
 #include <QTimer>
 
 
-inline void swap(QJsonValueRef first, QJsonValueRef second)
+inline void swap(QJsonValueRef first, QJsonValueRef second) noexcept
 {
     QJsonValue temp(first);
     first = QJsonValue(second);
@@ -29,7 +29,7 @@ QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDat
     setDatabase(iDatabase);
 }
 
-void QJsonTableModel::setEditStrategy(EditStrategy iStrategy)
+void QJsonTableModel::setEditStrategy(EditStrategy iStrategy) noexcept
 {
     if (iStrategy != _strategy)
     {
@@ -40,12 +40,12 @@ void QJsonTableModel::setEditStrategy(EditStrategy iStrategy)
     }
 }
 
-bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase)
+bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase) noexcept
 {
     return setDatabase(iDatabase.array());
 }
 
-bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase)
+bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
 {
     if (iDatabase.isEmpty())
         return false;
@@ -219,6 +219,45 @@ bool QJsonTableModel::canDeleteRow(int row)
     }
 
     return true;
+}
+
+QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
+{
+    QList<int> hiddenIndices;
+    for (qsizetype i = 0, I = _array.count(); i < I; ++i)
+    {
+        if (_array.at(i).isObject())
+        {
+            bool isNotFound = true;
+            const QJsonObject row = _array.at(i).toObject();
+            for (const auto &column : row)
+            {
+                if (column.isString())
+                {
+                    QString value = column.toString().toLower();
+                    if (value.contains(iValue.toLower()))
+                    {
+                        isNotFound = false;
+                        break;
+                    }
+                }
+                else if (column.isDouble())
+                {
+                    QString value = QString::number(column.toDouble()).toLower();
+                    if (value.contains(iValue.toLower()))
+                    {
+                        isNotFound = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isNotFound)
+                hiddenIndices.push_back(i);
+        }
+    }
+
+    return hiddenIndices;
 }
 
 bool QJsonTableModel::createEmail(int row)
@@ -428,12 +467,12 @@ QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, i
     }
 }
 
-int QJsonTableModel::rowCount(const QModelIndex &) const
+int QJsonTableModel::rowCount(const QModelIndex &) const noexcept
 {
     return _array.size();
 }
 
-int QJsonTableModel::columnCount(const QModelIndex &) const
+int QJsonTableModel::columnCount(const QModelIndex &) const noexcept
 {
     return _headers.size();
 }

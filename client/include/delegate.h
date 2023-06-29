@@ -8,7 +8,7 @@ class Delegate : public QStyledItemDelegate
 {
 
 public:
-    Delegate(QObject* parent = nullptr);
+    explicit Delegate(QObject* parent = nullptr) noexcept;
 
 private:
 

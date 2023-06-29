@@ -56,14 +56,14 @@ namespace Client
         void saveSettings();
         void resizeEvent(QResizeEvent *event) override;
         void setPersonalData(const QJsonDocument &iJson);
-        static QSizePolicy GetSizePolice();
+        static QSizePolicy GetSizePolice() noexcept;
 
     private:
         Ui::Table *_ui = nullptr;
-        QStackedWidget* _stackedWidget;
+        QStackedWidget* _stackedWidget = nullptr;
         TablePrivate *_personalData = nullptr;
         TablePrivate *_userData = nullptr;
-        TableView *_tableView;
+        TableView *_tableView = nullptr;
         QSettings *_settings = nullptr;
         Requester *_requester = nullptr;
 

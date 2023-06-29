@@ -24,7 +24,7 @@ namespace Client
         Q_OBJECT
 
     public:
-        Dialog(QWidget *parent = nullptr);
+        explicit Dialog(QWidget *parent = nullptr);
         ~Dialog();
 
     private:

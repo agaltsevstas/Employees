@@ -19,33 +19,33 @@ namespace Utils
      * @param iTextCyrillic - Кириллица
      * @return Латиница
      */
-    QString Translit(const QString &iTextCyrillic);
+    QString Translit(const QString &iTextCyrillic) noexcept;
     
     /*!
      * @brief Создание почты, используя фамилию, имя и отчество
      * @param iAnthroponym - Вектор антропононимов
      * @return Готовая почта
      */
-    QString CreateEmail(const QVector<QString> &iAnthroponym);
+    QString CreateEmail(const QVector<QString> &iAnthroponym) noexcept;
 
     /*!
      * @brief Разбиение текста на части
      * @param iSource - Исходный текст
      * @param iDelim - Исходный текст
      */
-    QStringList SplitString(QString iSource, const QString &iDelim);
+    QStringList SplitString(QString iSource, const QString &iDelim) noexcept;
 
     /*!
      * @brief Получение локального времени
      * @return - Локальное время
      */
-    QString LocalTime();
+    QString LocalTime() noexcept;
 
     /*!
      * @brief Получение текущей даты
      * @return - Текущая дата
      */
-    QString Date();
+    QString Date() noexcept;
     
     /*!
      * @brief Получение возраста
@@ -61,14 +61,14 @@ namespace Utils
      * @param iNumberUpper - Кол-во прописных букв в начале текста, остальные буквы переводятся в строчные
      * @return Готовый текст
      */
-    QString ToUpperAndToLower(const QString& iSource, uint iNumberUpper = 1);
+    QString ToUpperAndToLower(const QString& iSource, uint iNumberUpper = 1) noexcept;
 
     /*!
      * @brief Конвертирование текста в прописные и строчные буквы
      * @param iSource - Исходный текст
      * @param iNumberUpper - Кол-во прописных букв в начале текста, остальные буквы переводятся в строчные
      */
-    void ToUpperandtolower(QString &iSource, uint iNumberUpper = 1);
+    void ToUpperandtolower(QString &iSource, uint iNumberUpper = 1) noexcept;
 
     /*!
      * @brief Форматирование текста в формат Postgres

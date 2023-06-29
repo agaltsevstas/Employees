@@ -56,7 +56,7 @@ namespace Client
 
     public:
 
-        static QList<QPair<QString, QString>> getFieldNames()
+        inline static QList<QPair<QString, QString>> getFieldNames() noexcept
         {
             return
             {
@@ -77,7 +77,7 @@ namespace Client
             };
         }
 
-        static QMap<QString, QString> helpFields()
+        inline static QMap<QString, QString> helpFields() noexcept
         {
             return
             {
@@ -104,14 +104,14 @@ namespace Client
             };
         };
 
-        static QList<QString> getRoles()
+        inline static QList<QString> getRoles() noexcept
         {
             return
             {
                 "Бухгалтер",
                 "Водитель",
-                "Главный бухгалтер",
-                "Главный юрист-консультант",
+                "Главный бухгалтер",
+                "Главный юрист-консультант",
                 "Грузчик",
                 "Директор",
                 "Кассир",
@@ -125,7 +125,7 @@ namespace Client
             };
         }
 
-        static QList<QString> getSex()
+        inline static QList<QString> getSex() noexcept
         {
             return
             {
@@ -160,7 +160,7 @@ namespace Client
         static QString personalDataPermissionTable() { return "personal_data_permission"; }
         static QString databasePermissionTable() { return "database_permission"; }
 
-        static QList<QString> getTables()
+        static QList<QString> getTables() noexcept
         {
             return
             {
@@ -241,7 +241,7 @@ namespace Client
          * @param object - объект
          * @return Измененный объект
          */
-        const Employee& operator = (const Employee &object);
+        const Employee& operator = (const Employee &object) noexcept;
 
         /*!
          * @brief Перегрузка оператора << (вывода).
@@ -250,7 +250,7 @@ namespace Client
          * @param object - объект
          * @return Поток вывода
          */
-        friend QDataStream& operator << (QDataStream &ioOut, const Employee &object);
+        friend QDataStream& operator << (QDataStream &ioOut, const Employee &object) noexcept;
 
         /*!
          * @brief Перегрузка оператора == (сравнения).
@@ -259,7 +259,7 @@ namespace Client
          * @param second - второй объект
          * @return Логическое значение
          */
-        friend bool operator == (const Employee &first, const Employee &second);
+        friend bool operator == (const Employee &first, const Employee &second) noexcept;
 
     private:
         uint32_t _id = 0;       /// ID
@@ -281,40 +281,40 @@ namespace Client
          * @brief Инициализация полей
          * @param Значение поля
          */
-        void SetId(const QString &iID);
-        void SetRole(const QString &iRole);
-        void SetSurname(const QString &iSurname);
-        void SetName(const QString &iName);
-        void SetPatronymic(const QString &iPatronymic);
-        void SetSex(const QString &iSex);
-        void SetDateOfBirth(const QString &iDateOfBirth);
-        void SetPhone(const QString &iPhone);
-        void SetEmail(const QString &iEmail);
-        void SetDateOfHiring(const QString &iDateOfHiring);
-        void SetWorkingHours(const QString &iWorkingHours);
-        void SetPassport(const QString &iPassport);
-        void SetSalary(const QString &iSalary);
-        void SetPassword(const QString &iPassword);
+        void SetId(const QString &iID) noexcept;
+        void SetRole(const QString &iRole) noexcept;
+        void SetSurname(const QString &iSurname) noexcept;
+        void SetName(const QString &iName) noexcept;
+        void SetPatronymic(const QString &iPatronymic) noexcept;
+        void SetSex(const QString &iSex) noexcept;
+        void SetDateOfBirth(const QString &iDateOfBirth) noexcept;
+        void SetPhone(const QString &iPhone) noexcept;
+        void SetEmail(const QString &iEmail) noexcept;
+        void SetDateOfHiring(const QString &iDateOfHiring) noexcept;
+        void SetWorkingHours(const QString &iWorkingHours) noexcept;
+        void SetPassport(const QString &iPassport) noexcept;
+        void SetSalary(const QString &iSalary) noexcept;
+        void SetPassword(const QString &iPassword) noexcept;
 
         /*!
          * @brief Изменение статуса полей на перезапись/дублирование данных
          */
-        void ChangeStatusRole();
-        void ChangeStatusSurname();
-        void ChangeStatusName();
-        void ChangeStatusPatronymic();
-        void ChangeStatusSex();
-        void ChangeStatusDateOfBirth();
+        void ChangeStatusRole() noexcept;
+        void ChangeStatusSurname() noexcept;
+        void ChangeStatusName() noexcept;
+        void ChangeStatusPatronymic() noexcept;
+        void ChangeStatusSex() noexcept;
+        void ChangeStatusDateOfBirth() noexcept;
         /// @param canOverwrite - true-перезапись/false-дублирование
-        void ChangeStatusPassport(const bool canOverwrite = false);
+        void ChangeStatusPassport(const bool canOverwrite = false) noexcept;
         /// @param canOverwrite - true-перезапись/false-дублирование
-        void ChangeStatusPhone(const bool canOverwrite = false);
+        void ChangeStatusPhone(const bool canOverwrite = false) noexcept;
         /// @param canOverwrite - true-перезапись/false-дублирование
-        void ChangeStatusEmail(const bool canOverwrite);
-        void ChangeStatusDateOfHiring();
-        void ChangeStatusWorkingHours();
-        void ChangeStatusSalary();
-        void ChangeStatusPassword();
+        void ChangeStatusEmail(const bool canOverwrite) noexcept;
+        void ChangeStatusDateOfHiring() noexcept;
+        void ChangeStatusWorkingHours() noexcept;
+        void ChangeStatusSalary() noexcept;
+        void ChangeStatusPassword() noexcept;
 
         /*!
          * @details Валидация данных.
