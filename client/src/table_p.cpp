@@ -69,6 +69,9 @@ namespace Client
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
 
+        QFont fontLabel;
+        fontLabel.setUnderline(true);
+
         QSizePolicy sizePolicyLine = GetSizePolice();
         sizePolicyLine.setHorizontalStretch(1);
 
@@ -85,6 +88,7 @@ namespace Client
             {
                 QLabel *label = new QLabel(name, this);
                 label->setObjectName(field);
+                label->setFont(fontLabel);
                 label->setSizePolicy(sizePolicy);
                 dataLayout->addWidget(label, i, 0, 1, 1);
 
@@ -285,7 +289,7 @@ namespace Client
         exit->setObjectName("exit");
         exit->setEnabled(true);
         exit->setSizePolicy(sizePolicy);
-        buttonLayout->addWidget(exit, (buttonLayout->rowCount() == 3) ? 3 : 2, 0, 1, buttonLayout->columnCount());
+        buttonLayout->addWidget(exit, buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
 
         splitter->addWidget(data);
         splitter->addWidget(verticalLayoutWidget);
@@ -296,7 +300,7 @@ namespace Client
 
         setEditStrategy(autoUpdate->isChecked() ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
 
-        buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), (buttonLayout->rowCount() == 4) ? 4 : 3, 0, 1, buttonLayout->columnCount());
+        buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
 
         adjustSize();
     }
@@ -330,6 +334,9 @@ namespace Client
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
 
+        QFont fontLabel;
+        fontLabel.setUnderline(true);
+
         QSizePolicy sizePolicyLine = GetSizePolice();
         sizePolicyLine.setHorizontalStretch(1);
 
@@ -340,6 +347,7 @@ namespace Client
 
             QLabel *label = new QLabel(this);
             label->setObjectName(field);
+            label->setFont(fontLabel);
             label->setSizePolicy(GetSizePolice());
             label->setText(name);
             dataLayout->addWidget(label, i, 0, 1, 1);

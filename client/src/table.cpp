@@ -122,6 +122,7 @@ namespace Client
             {
                 restoreUser->setVisible(true);
                 deleteUser->setEnabled(false);
+                deleteUser->setVisible(false);
             }
         }
         else
@@ -291,10 +292,10 @@ namespace Client
         if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
             createUser->setEnabled(!isCheckable);
 
-        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
+        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
             deleteUser->setEnabled(!isCheckable);
 
-        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
+        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
             restoreUser->setEnabled(!isCheckable);
 
         if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))

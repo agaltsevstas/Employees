@@ -224,35 +224,41 @@ bool QJsonTableModel::canDeleteRow(int row)
 QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
 {
     QList<int> hiddenIndices;
+    QStringList values = iValue.split(" ");
+
+
     for (qsizetype i = 0, I = _array.count(); i < I; ++i)
     {
         if (_array.at(i).isObject())
         {
-            bool isNotFound = true;
-            const QJsonObject row = _array.at(i).toObject();
-            for (const auto &column : row)
+            qsizetype foundCount = 0;
+            for (const auto &v : values)
             {
-                if (column.isString())
+                const QJsonObject row = _array.at(i).toObject();
+                for (const auto &column : row)
                 {
-                    QString value = column.toString().toLower();
-                    if (value.contains(iValue.toLower()))
+                    if (column.isString())
                     {
-                        isNotFound = false;
-                        break;
+                        QString value = column.toString().toLower();
+                        if (value.contains(v.toLower()))
+                        {
+                            ++foundCount;
+                            break;
+                        }
                     }
-                }
-                else if (column.isDouble())
-                {
-                    QString value = QString::number(column.toDouble()).toLower();
-                    if (value.contains(iValue.toLower()))
+                    else if (column.isDouble())
                     {
-                        isNotFound = false;
-                        break;
+                        QString value = QString::number(column.toDouble()).toLower();
+                        if (value.contains(v.toLower()))
+                        {
+                            ++foundCount;
+                            break;
+                        }
                     }
                 }
             }
 
-            if (isNotFound)
+            if (foundCount != values.size())
                 hiddenIndices.push_back(i);
         }
     }
