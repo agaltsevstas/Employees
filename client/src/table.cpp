@@ -26,7 +26,7 @@
 
 namespace Client
 {
-    auto findTableInJson(const QJsonDocument &iJson, const QString& iTable)->int
+    [[nodiscard]] auto findTableInJson(const QJsonDocument &iJson, const QString& iTable)->int
     {
         if (iJson.isArray())
         {
@@ -268,7 +268,6 @@ namespace Client
                 _tableView->updateData = std::bind(&Table::updateData, this, std::placeholders::_1);
                 connect(_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
                                                       SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
-
                 connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
                 connect(_personalData, SIGNAL(sendClearSearch()), _tableView, SLOT(clearSearchChanged()));
                 _ui->splitter->addWidget(_tableView);

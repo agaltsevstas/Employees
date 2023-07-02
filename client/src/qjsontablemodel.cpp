@@ -16,6 +16,57 @@ inline void swap(QJsonValueRef first, QJsonValueRef second) noexcept
     second = temp;
 }
 
+class JsonTableModel : public QAbstractTableModel
+{
+public: JsonTableModel(const QString &iHeader, const QStringList& iData, QObject *parent = nullptr) :
+        QAbstractTableModel(parent),
+       _header(iHeader),
+       _data(iData)
+    {
+
+    }
+
+private:
+    inline QVariant headerData(int, Qt::Orientation, int) const noexcept override
+    {
+        return _header;
+    }
+
+    inline int columnCount(const QModelIndex &) const noexcept override
+    {
+        return 1;
+    }
+
+    inline int rowCount(const QModelIndex &) const noexcept override
+    {
+        return _data.size();
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        switch (role)
+        {
+            case Qt::FontRole:
+//        case Qt::BackgroundRole:
+//        case Qt::ForegroundRole:
+            return QColor(Qt::red);
+            [[fallthrough]];
+            case Qt::EditRole:
+            case Qt::DisplayRole:
+            {
+                return _data[index.row()];
+            }
+        }
+
+        return {};
+    }
+
+private:
+    QString _header;
+    QStringList _data;
+};
+
+
 QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent) :
     QAbstractTableModel(parent), _name(iName)
 {
@@ -147,6 +198,11 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
     }
 
     return false;
+}
+
+bool QJsonTableModel::checkField(const QModelIndex &index, const QString &value) const
+{
+    return checkField(index.row(), index.column(), value);
 }
 
 bool QJsonTableModel::deleteRow(int row)
@@ -442,18 +498,24 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
     }
 }
 
-JsonTableModel *QJsonTableModel::relationModel(int column) const
+QAbstractItemModel *QJsonTableModel::relationModel(int column) const
 {
     QString header = headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
-    QSet<QString> uniqueData;
-    for (int i = 0, I = rowCount({}); i < I; ++i)
-    {
-        QString text = data(index(i, column), Qt::DisplayRole).toString();
-        if (!uniqueData.contains(text))
-            uniqueData.insert(text);
-     }
+    const auto fieldNames = Client::Employee::getFieldNames();
+    auto fieldName = std::find_if(fieldNames.constBegin(), fieldNames.constEnd(), [header](const auto& fieldName)
+        {
+            return header == fieldName.second;
+        });
 
-    return new JsonTableModel(header, {uniqueData.begin(), uniqueData.end()});
+    if (fieldName != fieldNames.constEnd())
+    {
+        if (fieldName->first == Client::Employee::role())
+            return new JsonTableModel(header, Client::Employee::getRoles(), parent());
+        else if (fieldName->first == Client::Employee::sex())
+            return new JsonTableModel(header, Client::Employee::getSex(), parent());
+    }
+
+    return nullptr;
 }
 
 QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -495,20 +557,21 @@ QJsonObject QJsonTableModel::getJsonObject(int row) const
 
 bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    QString message = value.toString();
-    const QString& field = _headers[index.column()].first.first;
-
-    if (index.isValid() && !message.isEmpty() && role == Qt::EditRole)
+    if (index.isValid() && role == Qt::EditRole)
     {
-        if (checkField(index.row(), index.column(), message))
+        QString message = value.toString();
+        const QString& field = _headers[index.column()].first.first;
+        QJsonObject jsonObject = getJsonObject(index.row());
+        if (!message.isEmpty() && jsonObject.contains(field) && message != jsonObject[field])
         {
-            QJsonObject jsonObject = getJsonObject(index.row());
-            jsonObject[field] = value.toJsonValue();
-            setJsonObject(index, jsonObject);
-            updateRecord(jsonObject["id"].toInt(), field, message);
-            emit dataChanged(index, index);
-    //        emit dataChanged(createIndex(index.row(), index.column()), createIndex(index.row(), index.column()));
-            return true;
+            if (checkField(index, message))
+            {
+                jsonObject[field] = value.toJsonValue();
+                setJsonObject(index, jsonObject);
+                updateRecord(jsonObject["id"].toInt(), field, message);
+                emit dataChanged(index, index);
+                return true;
+            }
         }
     }
 

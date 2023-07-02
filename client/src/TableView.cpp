@@ -18,11 +18,12 @@ namespace Client
 {
     TableView::TableView( QWidget *parent) : QTableView(parent)
     {
-        setItemDelegate(new Delegate(this));
-
         setObjectName(QString::fromUtf8("tableView"));
+        setItemDelegate(new Delegate(this));
         setSortingEnabled(true);
+        setMouseTracking(true);
         setMinimumHeight(700);
+        setMinimumWidth(800);
 //        setMinimumSize(QSize(803, 654));
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(10);

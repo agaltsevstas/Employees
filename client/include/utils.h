@@ -19,33 +19,33 @@ namespace Utils
      * @param iTextCyrillic - Кириллица
      * @return Латиница
      */
-    QString Translit(const QString &iTextCyrillic) noexcept;
+    [[nodiscard]] QString Translit(const QString &iTextCyrillic) noexcept;
     
     /*!
      * @brief Создание почты, используя фамилию, имя и отчество
      * @param iAnthroponym - Вектор антропононимов
      * @return Готовая почта
      */
-    QString CreateEmail(const QVector<QString> &iAnthroponym) noexcept;
+    [[nodiscard]] QString CreateEmail(const QVector<QString> &iAnthroponym) noexcept;
 
     /*!
      * @brief Разбиение текста на части
      * @param iSource - Исходный текст
      * @param iDelim - Исходный текст
      */
-    QStringList SplitString(QString iSource, const QString &iDelim) noexcept;
+    [[nodiscard]] QStringList SplitString(QString iSource, const QString &iDelim) noexcept;
 
     /*!
      * @brief Получение локального времени
      * @return - Локальное время
      */
-    QString LocalTime() noexcept;
+    [[nodiscard]] QString LocalTime() noexcept;
 
     /*!
      * @brief Получение текущей даты
      * @return - Текущая дата
      */
-    QString Date() noexcept;
+    [[nodiscard]] QString Date() noexcept;
     
     /*!
      * @brief Получение возраста
@@ -53,7 +53,7 @@ namespace Utils
      * @param iDateOfBirth - Вектор, хранящий дату рождения (день, месяц, год)
      * @return - Найденный возраст
      */
-    QVector<int> FindAge(const QVector<QString> &iData, const QVector<QString> &iDateOfBirth);
+    [[nodiscard]] QVector<int> FindAge(const QVector<QString> &iData, const QVector<QString> &iDateOfBirth);
 
     /*!
      * @brief Конвертирование текста в прописные и строчные буквы
@@ -61,7 +61,7 @@ namespace Utils
      * @param iNumberUpper - Кол-во прописных букв в начале текста, остальные буквы переводятся в строчные
      * @return Готовый текст
      */
-    QString ToUpperAndToLower(const QString& iSource, uint iNumberUpper = 1) noexcept;
+    [[nodiscard]] QString ToUpperAndToLower(const QString& iSource, uint iNumberUpper = 1) noexcept;
 
     /*!
      * @brief Конвертирование текста в прописные и строчные буквы

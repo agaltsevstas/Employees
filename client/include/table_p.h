@@ -24,7 +24,7 @@ namespace Client
         enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
 
         void setEditStrategy(EditStrategy iStrategy);
-        inline EditStrategy getEditStrategy() const { return _strategy; }
+        [[nodiscard]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
         bool getUserData();
         void submitAll();
 

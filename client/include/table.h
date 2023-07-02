@@ -56,7 +56,7 @@ namespace Client
         void saveSettings();
         void resizeEvent(QResizeEvent *event) override;
         void setPersonalData(const QJsonDocument &iJson);
-        static QSizePolicy GetSizePolice() noexcept;
+        [[nodiscard]] static QSizePolicy GetSizePolice() noexcept;
 
     private:
         Ui::Table *_ui = nullptr;

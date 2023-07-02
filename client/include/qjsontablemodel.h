@@ -12,54 +12,7 @@ namespace Client
     class TableView;
 }
 
-class JsonTableModel : public QAbstractTableModel
-{
-public: JsonTableModel(const QString &iHeader, const QVector<QString>& iData) :
-       _header(iHeader),
-       _data(iData)
-    {
-
-    }
-
-private:
-    inline QVariant headerData(int, Qt::Orientation, int) const noexcept override
-    {
-        return _header;
-    }
-
-    inline int columnCount(const QModelIndex &) const noexcept override
-    {
-        return 1;
-    }
-
-    inline int rowCount(const QModelIndex &) const noexcept override
-    {
-        return _data.size();
-    }
-
-    QVariant data(const QModelIndex &index, int role) const override
-    {
-        switch (role)
-        {
-            case Qt::FontRole:
-//        case Qt::BackgroundRole:
-//        case Qt::ForegroundRole:
-            return QColor(Qt::red);
-            [[fallthrough]];
-            case Qt::EditRole:
-            case Qt::DisplayRole:
-            {
-                return _data[index.row()];
-            }
-        }
-
-        return {};
-    }
-
-private:
-    QString _header;
-    QVector<QString> _data;
-};
+class JsonTableModel;
 
 class QJsonTableModel final : public QAbstractTableModel
 {
@@ -82,13 +35,14 @@ public:
 
     void submitAll();
     bool checkField(int row, int column, const QString &ivalue) const;
+    bool checkField(const QModelIndex &index, const QString &value) const;
     inline void addRow(const QJsonObject &iUser) noexcept { _array.push_back(iUser); };
     bool deleteRow(int row);
     void restoreRow(int row);
     bool canDeleteRow(int row);
-    QList<int> valueSearch(const QString &iValue) const noexcept;
-    JsonTableModel *relationModel(int column) const;
-    inline qsizetype size() const noexcept { return _array.size(); }
+    [[nodiscard]] QList<int> valueSearch(const QString &iValue) const noexcept;
+    [[nodiscard]] QAbstractItemModel *relationModel(int column) const;
+    [[nodiscard]] inline qsizetype size() const noexcept { return _array.size(); }
 
 Q_SIGNALS:
     void sendCreateRequest(const QByteArray &iRequest);
@@ -97,7 +51,7 @@ Q_SIGNALS:
 
 private:
     void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);
-    QJsonObject getJsonObject(int row) const;
+    [[nodiscard]] QJsonObject getJsonObject(int row) const;
     bool isSortColumn(int column) const;
     bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder) const;
     void updateRecord(int index, const QString &columnName, const QString &value);
@@ -106,12 +60,12 @@ private:
     bool checkRowOnDeleted(int row) const;
 
 private:
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const noexcept override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const noexcept override;
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
+    [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 private:

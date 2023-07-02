@@ -56,7 +56,7 @@ namespace Client
 
     public:
 
-        inline static QList<QPair<QString, QString>> getFieldNames() noexcept
+        [[nodiscard]] inline static QList<QPair<QString, QString>> getFieldNames() noexcept
         {
             return
             {
@@ -77,7 +77,7 @@ namespace Client
             };
         }
 
-        inline static QMap<QString, QString> helpFields() noexcept
+        [[nodiscard]] inline static QMap<QString, QString> helpFields() noexcept
         {
             return
             {
@@ -104,7 +104,7 @@ namespace Client
             };
         };
 
-        inline static QList<QString> getRoles() noexcept
+        [[nodiscard]] inline static QStringList getRoles() noexcept
         {
             return
             {
@@ -125,7 +125,7 @@ namespace Client
             };
         }
 
-        inline static QList<QString> getSex() noexcept
+        [[nodiscard]] inline static QStringList getSex() noexcept
         {
             return
             {
@@ -160,7 +160,7 @@ namespace Client
         static QString personalDataPermissionTable() { return "personal_data_permission"; }
         static QString databasePermissionTable() { return "database_permission"; }
 
-        static QList<QString> getTables() noexcept
+        [[nodiscard]] static QList<QString> getTables() noexcept
         {
             return
             {

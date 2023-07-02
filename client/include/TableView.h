@@ -20,13 +20,13 @@ namespace Client
         void setEditStrategy(EditStrategy iStrategy) noexcept;
         void setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
         void setModel(const QString& iName, const QJsonDocument &iDatabase);
-        const QAbstractItemModel *getModel() const noexcept;
+        [[nodiscard]] const QAbstractItemModel *getModel() const noexcept;
 
         void submitAll();
         bool addUser();
         bool deleteUser();
         void restoreUser();
-        std::optional<bool> canDelete();
+        [[nodiscard]] std::optional<bool> canDelete();
 
         std::function<void(const QByteArray &iData)> createData;
         std::function<void(const QByteArray &iData)> deleteData;
