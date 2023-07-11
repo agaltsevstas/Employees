@@ -21,6 +21,7 @@
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
+#include <QTableWidget>
 #include <QTimer>
 
 

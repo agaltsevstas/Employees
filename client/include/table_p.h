@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+class Cache;
 class QGridLayout;
 class QGroupBox;
 class QLabel;
@@ -11,6 +12,8 @@ class QJsonArray;
 
 namespace Client
 {
+    class Table;
+
     class TablePrivate final : public QWidget
     {
         Q_OBJECT
@@ -42,6 +45,7 @@ namespace Client
         void update();
 
     private:
+        Cache &_cache;
         QString _name;
         EditStrategy _strategy = OnFieldChange;
         QList<QPair<QLabel*, QWidget*>> _data;

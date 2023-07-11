@@ -11,6 +11,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
+class Cache;
 class QStatusBar;
 class QSettings;
 
@@ -30,8 +31,6 @@ namespace Client
     private:
         void loadSettings();
         void saveSettings();
-        void readFormCache();
-        void addToCache();
 
     private slots:
         void updateLineEditStyleSheet();
@@ -46,7 +45,7 @@ namespace Client
         Ui::Dialog *_dialog = nullptr;
         Table *_table = nullptr;
         QStatusBar *_status = nullptr;
-        QMap<QString, QString> _cache;
+        Cache &_cache;
         QSettings *_settings = nullptr;
         Requester *_requester = nullptr;
     };

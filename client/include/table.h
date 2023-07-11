@@ -2,14 +2,13 @@
 #define TABLE_H
 
 #include <QWidget>
-#include <QTableWidget>
 
 class QPushButton;
 class QSettings;
 class QStackedWidget;
-
 class QGridLayout;
 class QLabel;
+class QItemSelection;
 
 namespace Ui
 {

@@ -63,7 +63,7 @@ QValidator::State UInt64Validator::validate(QString &input, int &position) const
             }
             else
             {
-                QRegularExpression regular("(^\\d{1,4}-?$)|(^(\\d{4})-(\\d{1,2}-?)$)|(^(\\d{4})-(\\d{2})-(\\d{1,2})$)");
+                QRegularExpression regular("(^\\d{1,4}$)|(^\\d{4}-?$)|(^(\\d{4})-(\\d{1,2})$)|(^(\\d{4})-(\\d{2})-?$)|(^(\\d{4})-(\\d{2})-(\\d{1,2})$)");
                 if (!regular.match(input).hasMatch())
                     return QValidator::Invalid;
 
@@ -90,7 +90,7 @@ QValidator::State UInt64Validator::validate(QString &input, int &position) const
             }
             else
             {
-                QRegularExpression regular("(^\\d{1,4}-?$)|(^(\\d{4})-(\\d{1,6})$)");
+                QRegularExpression regular("(^\\d{1,4}$)|(^\\d{4}-?$)|(^(\\d{4})-(\\d{1,6})$)");
                 if (!regular.match(input).hasMatch())
                     return QValidator::Invalid;
 
@@ -117,7 +117,10 @@ QValidator::State UInt64Validator::validate(QString &input, int &position) const
             }
             else
             {
-                QRegularExpression regular("(^\\d{1,3}-?$)|(^(\\d{3})-(\\d{1,3}-?)$)|(^(\\d{3})-(\\d{3})-(\\d{1,2}-?)$)|(^(\\d{3})-(\\d{3})-(\\d{2})-(\\d{1,2}?)$)");
+                QRegularExpression regular("(^\\d{1,3}$)|(^\\d{3}-?$)|"
+                                           "(^(\\d{3})-(\\d{1,3})$)|(^(\\d{3})-(\\d{3})-?$)|"
+                                           "(^(\\d{3})-(\\d{3})-(\\d{1,2})$)|(^(\\d{3})-(\\d{3})-(\\d{2})-?$)|"
+                                           "(^(\\d{3})-(\\d{3})-(\\d{2})-(\\d{1,2})$)");
                 if (!regular.match(input).hasMatch())
                     return QValidator::Invalid;
 

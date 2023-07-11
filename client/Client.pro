@@ -41,6 +41,7 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
+    include/cache.h \
     include/delegate.h \
     include/quint64validator.h \
     include/tableView.h \
@@ -55,6 +56,7 @@ HEADERS += \
 #/opt/homebrew/lib
 
 SOURCES += \
+    src/cache.cpp \
     src/delegate.cpp \
     src/quint64validator.cpp \
     src/tableView.cpp \

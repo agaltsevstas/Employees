@@ -1,11 +1,11 @@
 #include "ui_dialog.h"
+#include "cache.h"
 #include "dialog.h"
-#include "table.h"
 #include "requester.h"
+#include "table.h"
 
 #include <QColor>
 #include <QCompleter>
-#include <QDir>
 #include <QMessageBox>
 #include <QScreen>
 #include <QSettings>
@@ -14,7 +14,6 @@
 #include <QProgressBar>
 
 
-#define FILENAME  "cache.txt"
 #define DIRECTORY "../settings/"
 
 
@@ -24,6 +23,7 @@ namespace Client
         QDialog(parent),
         _dialog(new Ui::Dialog),
         _status(new QStatusBar(this)),
+        _cache(Cache::Instance()),
         _settings(new QSettings(DIRECTORY + QString("settings.ini"), QSettings::IniFormat, this)),
         _requester(new Requester(this))
     {
@@ -47,12 +47,7 @@ namespace Client
 
     void Dialog::loadSettings()
     {
-        readFormCache();
-
-        QStringList list;
-        for (const auto& key : _cache.keys())
-            list.push_back(key);
-        QCompleter* completer = new QCompleter(list);
+        QCompleter* completer = new QCompleter(_cache.getLogins(), _dialog->login);
         completer->setCaseSensitivity(Qt::CaseInsensitive);
 
         _dialog->login->setCompleter(completer);
@@ -72,68 +67,15 @@ namespace Client
 //        _dialog->loginIcon->setPixmap(loginIcon.scaled(width, height, Qt::KeepAspectRatio));
 //        _dialog->passwordIcon->setPixmap(passwordIcon.scaled(width, height, Qt::KeepAspectRatio));
 
-        connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iText)
+        connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iLogin)
         {
-            if (const auto login = _cache.constFind(iText); login != _cache.end())
-                _dialog->password->setText(login.value());
+                _dialog->password->setText(_cache.getPassword(iLogin));
         });
     }
 
     void Dialog::saveSettings()
     {
-        addToCache();
-
         _settings->setValue("centerDialog", geometry().center());
-    }
-
-    void Dialog::readFormCache()
-    {
-        QDir directory(DIRECTORY);
-        if (!directory.exists())
-            directory.mkpath(".");
-        QFile file(QString(DIRECTORY) + FILENAME);
-        file.open(QFile::ReadOnly | QFile::Text);
-        if (file.isOpen())
-        {
-            qDebug() << "File Cache is open";
-            QTextStream stream(&file);
-            while (!stream.atEnd())
-            {
-                QString line = stream.readLine();
-                QStringList tokens = line.split(" ");
-                if (tokens.size() == 4)
-                {
-                    if (tokens.at(0) == "Login:" && tokens.at(2) == "Password:")
-                    {
-                        QString login = tokens.at(1).mid(1, tokens.at(1).length() - 2);
-                        QString password = tokens.at(3).mid(1, tokens.at(3).length() - 2);
-                        _cache[login] = password;
-                    }
-                }
-            }
-        }
-        else
-        {
-            qDebug() << "File Cache is not open";
-        }
-    }
-
-    void Dialog::addToCache()
-    {
-        QFile file(QString(DIRECTORY) + FILENAME);
-        if (!file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
-        {
-            qDebug() << "File Cache is not open";
-            return;
-        }
-
-        QTextStream out(&file);
-        for (const auto& name : _cache.keys())
-        {
-            out << "Login: " << "\"" << name << "\" ";
-            out << "Password: " << "\"" << _cache.value(name) << "\"" << Qt::endl;
-        }
-        file.close();
     }
 
     void Dialog::updateLineEditStyleSheet()
@@ -219,14 +161,14 @@ namespace Client
         const QString password = _dialog->password->text();
         if (_dialog->rememberMe->isChecked())
         {
-            if (auto foundLogin = _cache.constFind(login); foundLogin != _cache.end() && foundLogin.value() != password)
+            if (_cache.findUser(login, password))
             {
                 QMessageBox::StandardButton reply = QMessageBox::question(this, "Пользователь с таким паролем уже существует", "Обновить пароль?", QMessageBox::Yes | QMessageBox::No);
                 if (reply == QMessageBox::Yes)
-                    _cache.insert(login, password);
+                    _cache.addUser(login, password);
             }
             else
-                _cache.insert(login, password);
+                _cache.addUser(login, password);
         }
 
         QString token = login + ":" + password;

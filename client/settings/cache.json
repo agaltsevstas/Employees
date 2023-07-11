@@ -1,0 +1,25 @@
+[
+    {
+        "Authorization": [
+            {
+                "Login": "anisimova.marija.borisovna@tradingcompany.ru",
+                "Password": "1HRmanager"
+            },
+            {
+                "Login": "stas.agaltsev.sergeevich@tradingcompany.ru",
+                "Password": "1Director"
+            }
+        ]
+    },
+    {
+        "Search": [
+            "enter",
+            "ent",
+            "var",
+            "w",
+            "c",
+            "98",
+            "981"
+        ]
+    }
+]

@@ -1,12 +1,14 @@
 #include "table.h"
 #include "table_p.h"
 #include "ui_table.h"
+#include "cache.h"
 #include "client.h"
 #include "requester.h"
 
 #include <QDoubleSpinBox>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QCompleter>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QJsonArray>
@@ -19,6 +21,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QUInt64Validator>
+#include <QStringListModel>
 
 
 namespace Client
@@ -32,7 +35,9 @@ namespace Client
     }
 
     TablePrivate::TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent) :
-    QWidget(parent), _name(iName)
+        QWidget(parent),
+        _cache(Cache::Instance()),
+        _name(iName)
     {
         if (iData.isEmpty() || iPersonalPermissions.isEmpty() || iPermissions.isEmpty())
         {
@@ -195,6 +200,7 @@ namespace Client
                 connect(createUser, SIGNAL(clicked()), parent, SLOT(onCreateUserClicked()));
                 createUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
                 createUser->setObjectName("createUser");
+                createUser->setToolTip("Создать пользователя");
                 createUser->setSizePolicy(sizePolicy);
                 createUser->setEnabled(false);
                 buttonLayout->addWidget(createUser, 1, 2, 1, 1);
@@ -206,6 +212,7 @@ namespace Client
                 connect(deleteUser, SIGNAL(clicked()), parent, SLOT(onDeleteUserClicked()));
                 deleteUser->setIcon(QPixmap(QString::fromUtf8("../images/delete.png")));
                 deleteUser->setObjectName("deleteUser");
+                deleteUser->setToolTip("Удалить пользователя из базы данных");
                 deleteUser->setSizePolicy(sizePolicy);
                 deleteUser->setEnabled(false);
                 buttonLayout->addWidget(deleteUser, 1, 3, 1, 1);
@@ -214,6 +221,7 @@ namespace Client
                 connect(restoreUser, SIGNAL(clicked()), parent, SLOT(onRestoreUserClicked()));
                 restoreUser->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
                 restoreUser->setObjectName("restoreUser");
+                deleteUser->setToolTip("Восстановить пользователя в базе данных");
                 restoreUser->setSizePolicy(sizePolicy);
                 restoreUser->setEnabled(true);
                 restoreUser->setVisible(false);
@@ -226,12 +234,14 @@ namespace Client
                 connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
                 showDatabase->setIcon(QPixmap(QString::fromUtf8("../images/show.png")));
                 showDatabase->setObjectName("showDatabase");
+                showDatabase->setToolTip("Показать базу данных сотрудников");
                 showDatabase->setSizePolicy(sizePolicy);
                 buttonLayout->addWidget(showDatabase, 1, 1, 1, 1);
 
                 QPushButton *search = new QPushButton("Поиск", verticalLayoutWidget);
                 connect(search, SIGNAL(clicked()), SLOT(onSearchClicked()));
                 search->setObjectName("search");
+                search->setToolTip("Поиск сотрудника в базе данных");
                 search->setSizePolicy(sizePolicy);
                 search->setEnabled(false);
                 buttonLayout->addWidget(search, 2, 0, 1, 1);
@@ -247,9 +257,14 @@ namespace Client
                     });
                 }
                 connect(valueSearch, SIGNAL(returnPressed()), this, SLOT(onSearchClicked()));
+                buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
 
+                QCompleter* completer = new QCompleter(_cache.getSearchWords(), valueSearch);
+                completer->setCaseSensitivity(Qt::CaseInsensitive);
+
+                valueSearch->setCompleter(completer);
                 valueSearch->setObjectName("valueSearch");
-                valueSearch->setToolTip("Введите слово или часть слова");
+                valueSearch->setToolTip("Для поиска сотрудника введите слово или часть слова");
                 valueSearch->setPlaceholderText("Введите слово или часть слова");
                 valueSearch->setSizePolicy(sizePolicy);
 
@@ -264,6 +279,7 @@ namespace Client
         QCheckBox *autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
         connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
         autoUpdate->setObjectName("autoUpdate");
+        autoUpdate->setToolTip("Автоматически отправлять данные на сервер");
         autoUpdate->setSizePolicy(sizePolicy);
         autoUpdate->setChecked(true);
         buttonLayout->addWidget(autoUpdate, 0, 0, 1, buttonLayout->columnCount() / 2);
@@ -271,6 +287,7 @@ namespace Client
         QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
         connect(update, SIGNAL(clicked()), parent, SLOT(onUpdateClicked()));
         update->setIcon(QPixmap(QString::fromUtf8("../images/reload.png")));
+        update->setToolTip("Отправить данные на сервер");
         update->setObjectName("update");
         update->setSizePolicy(sizePolicy);
         buttonLayout->addWidget(update, 0, 2, 1, buttonLayout->columnCount() / 2);
@@ -279,6 +296,7 @@ namespace Client
         connect(revert, SIGNAL(clicked()), parent, SLOT(onRevertClicked()));
         revert->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
         revert->setObjectName("revert");
+        revert->setToolTip("Вернуть предыдущие изменения");
         revert->setText("Откатить");
         revert->setSizePolicy(sizePolicy);
         buttonLayout->addWidget(revert, 1, 0, 1, 1);
@@ -287,6 +305,7 @@ namespace Client
         connect(exit, SIGNAL(clicked()), parent, SLOT(onExitClicked()));
         exit->setIcon(QPixmap(QString::fromUtf8("../images/exit.png")));
         exit->setObjectName("exit");
+        exit->setToolTip("Вернуться в главное меню");
         exit->setEnabled(true);
         exit->setSizePolicy(sizePolicy);
         buttonLayout->addWidget(exit, buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
@@ -305,7 +324,10 @@ namespace Client
         adjustSize();
     }
 
-    TablePrivate::TablePrivate(const QString &iName, QWidget *parent) : QWidget(parent), _name(iName)
+    TablePrivate::TablePrivate(const QString &iName, QWidget *parent) :
+        QWidget(parent),
+        _cache(Cache::Instance()),
+        _name(iName)
     {
         setEditStrategy(TablePrivate::EditStrategy::OnManualSubmit);
         QSizePolicy sizePolicy = GetSizePolice();
@@ -414,18 +436,21 @@ namespace Client
         connect(cancel, SIGNAL(clicked()), parent, SLOT(onCancelClicked()));
         cancel->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
         cancel->setObjectName("cancel");
+        cancel->setToolTip("Отменить ввод данных нового пользователя");
         cancel->setSizePolicy(sizePolicy);
 
         QPushButton *resetData = new QPushButton("Сбросить данные", verticalLayoutWidget);
         connect(resetData, SIGNAL(clicked()), SLOT(onResetDataClicked()));
         resetData->setIcon(QPixmap(QString::fromUtf8("../images/delete.png")));
         resetData->setObjectName("resetData");
+        resetData->setToolTip("Сбросить данные нового пользователя");
         resetData->setSizePolicy(sizePolicy);
 
         QPushButton *addUser = new QPushButton("Добавить в базу данных", verticalLayoutWidget);
         connect(addUser, SIGNAL(clicked()), parent, SLOT(onAddUserClicked()));
         addUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
         addUser->setObjectName("addUser");
+        resetData->setToolTip("Добавить в базу данных нового пользователя");
         addUser->setSizePolicy(sizePolicy);
 
         buttonLayout->addWidget(cancel, 0, 0, 1, 1);
@@ -439,7 +464,16 @@ namespace Client
         setLayout(gridLayout);
     }
 
-    TablePrivate::~TablePrivate() {}
+    TablePrivate::~TablePrivate()
+    {
+        if (QLineEdit* value = findChild<QLineEdit*>("valueSearch"))
+        {
+            if (QStringListModel* model = qobject_cast<QStringListModel*>(value->completer()->model()))
+            {
+                _cache.addSearchWords(model->stringList());
+            }
+        }
+    }
 
     void TablePrivate::setEditStrategy(EditStrategy iStrategy)
     {
@@ -578,6 +612,13 @@ namespace Client
     {
         if (QLineEdit* value = findChild<QLineEdit*>("valueSearch"))
         {
+            if (QStringListModel* model = qobject_cast<QStringListModel*>(value->completer()->model()))
+            {
+                QStringList list = model->stringList();
+                list.append(value->text());
+                model->setStringList(list);
+            }
+
             emit sendValueSearch(value->text());
         }
     }
