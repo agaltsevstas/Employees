@@ -8,10 +8,10 @@
 #include <QCompleter>
 #include <QMessageBox>
 #include <QScreen>
-#include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
 #include <QProgressBar>
+#include <Settings>
 
 
 #define DIRECTORY "../settings/"
@@ -23,10 +23,10 @@ namespace Client
         QDialog(parent),
         _dialog(new Ui::Dialog),
         _status(new QStatusBar(this)),
+        _settings(Settings::Instance()),
         _cache(Cache::Instance()),
-        _settings(new QSettings(DIRECTORY + QString("settings.ini"), QSettings::IniFormat, this)),
         _requester(new Requester(this))
-    {
+    {   
         _dialog->setupUi(this);
 
         _dialog->gridLayout->addWidget(_status, 5, 0, 1, 4);
@@ -58,7 +58,7 @@ namespace Client
         _dialog->rememberMe->setChecked(true);
         _status->setSizePolicy(_dialog->authorization->sizePolicy());
         // Установка главного окна по центру экрана по умолчанию
-        move(_settings->value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
+        move(_settings.value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
 //        QPixmap loginIcon(":/images/login.png");
 //        QPixmap passwordIcon(":/images/password.png");
@@ -75,7 +75,7 @@ namespace Client
 
     void Dialog::saveSettings()
     {
-        _settings->setValue("centerDialog", geometry().center());
+        _settings.setValue("centerDialog", geometry().center());
     }
 
     void Dialog::updateLineEditStyleSheet()
@@ -132,7 +132,7 @@ namespace Client
             _status->setStyleSheet("color: blue");
             _status->showMessage("Вход успешно выполнен!", 1000);
 
-            _table = new Table(_settings, _requester);
+            _table = new Table(_requester);
             connect(_table, &Table::openDialog, this, &Dialog::showDialog);
             QTimer::singleShot(1000, _table, SLOT(show()));
             QTimer::singleShot(1000, this, SLOT(close()));

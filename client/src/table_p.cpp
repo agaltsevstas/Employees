@@ -6,6 +6,7 @@
 #include "requester.h"
 #include "utils.h"
 
+#include <LineEdit>
 #include <QDoubleSpinBox>
 #include <QCheckBox>
 #include <QComboBox>
@@ -21,7 +22,7 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QStackedWidget>
-#include <QUInt64Validator>
+#include <Validator>
 #include <QStringListModel>
 
 
@@ -137,33 +138,52 @@ namespace Client
                 }
                 else
                 {
-                    QLineEdit *lineEdit = new QLineEdit(this);
+                    QLineEdit *lineEdit = nullptr;
 
-                    if (field == Client::Employee::dateOfBirth() ||
+                    if (field == Client::Employee::name() ||
+                        field == Client::Employee::surname() ||
+                        field == Client::Employee::patronymic())
+                    {
+                        lineEdit = new QLineEdit(this);
+                        connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(_createEmail()));
+                        lineEdit->setValidator(new TextValidator(parent));
+                    }
+                    else if (field == Client::Employee::dateOfBirth() ||
                         field == Client::Employee::dateOfHiring())
                     {
+                        lineEdit = new QLineEdit(this);
                         lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this) );
                     }
                     else if (field == Client::Employee::passport())
                     {
+                        lineEdit = new QLineEdit(this);
                         lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this) );
                     }
                     else if (field == Client::Employee::phone())
                     {
+                        lineEdit = new QLineEdit(this);
                         lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
                     }
                     else if (field == Client::Employee::workingHours())
                     {
                         placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                        lineEdit = new QLineEdit(this);
                         lineEdit->setValidator(new TextValidator(parent));
                     }
                     else if (field == Client::Employee::password())
                     {
                         placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                        lineEdit = new QLineEdit(this);
                         lineEdit->setEchoMode(QLineEdit::Password);
                     }
-                    else if (field != Client::Employee::email())
+                    else if (field == Client::Employee::email())
                     {
+                        lineEdit = new LineEdit(false, this);
+                        connect(lineEdit, SIGNAL(startingFocus()), this, SLOT(createEmail()));
+                    }
+                    else
+                    {
+                        lineEdit = new QLineEdit(this);
                         lineEdit->setValidator(new TextValidator(parent));
                     }
 
@@ -423,40 +443,52 @@ namespace Client
             }
             else
             {
-                QLineEdit *lineEdit = new QLineEdit(this);
+                QLineEdit *lineEdit = nullptr;
 
                 if (field == Client::Employee::name() ||
                     field == Client::Employee::surname() ||
                     field == Client::Employee::patronymic())
                 {
-                    connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+                    lineEdit = new QLineEdit(this);
+                    connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(createEmail()));
                     lineEdit->setValidator(new TextValidator(parent));
                 }
                 else if (field == Client::Employee::dateOfBirth() ||
                          field == Client::Employee::dateOfHiring())
                 {
+                    lineEdit = new QLineEdit(this);
                     lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this) );
                 }
                 else if (field == Client::Employee::passport())
                 {
+                    lineEdit = new QLineEdit(this);
                     lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this) );
                 }
                 else if (field == Client::Employee::phone())
                 {
+                    lineEdit = new QLineEdit(this);
                     lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
                 }
                 else if (field == Client::Employee::workingHours())
                 {
                     placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                    lineEdit = new QLineEdit(this);
                     lineEdit->setValidator(new TextValidator(parent));
                 }
                 else if (field == Client::Employee::password())
                 {
                     placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                    lineEdit = new QLineEdit(this);
                     lineEdit->setEchoMode(QLineEdit::Password);
                 }
-                else if (field != Client::Employee::email())
+                else if (field == Client::Employee::email())
                 {
+                    lineEdit = new LineEdit(false, this);
+                    connect(lineEdit, SIGNAL(startingFocus()), this, SLOT(createEmail()));
+                }
+                else
+                {
+                    lineEdit = new QLineEdit(this);
                     lineEdit->setValidator(new TextValidator(parent));
                 }
 
@@ -662,17 +694,25 @@ namespace Client
         }
     }
 
-    void TablePrivate::editingFinished()
+    void TablePrivate::createEmail()
     {
-        QLineEdit* surname = findChild<QLineEdit*>(Client::Employee::surname());
-        QLineEdit* name = findChild<QLineEdit*>(Client::Employee::name());
-        QLineEdit* patronymic = findChild<QLineEdit*>(Client::Employee::patronymic());
-        QLineEdit* email = findChild<QLineEdit*>(Client::Employee::email());
+        const QLineEdit* surname = findChild<const QLineEdit*>(Client::Employee::surname());
+        const QLineEdit* name = findChild<const QLineEdit*>(Client::Employee::name());
+        const QLineEdit* patronymic = findChild<const QLineEdit*>(Client::Employee::patronymic());
+        LineEdit* email = findChild<LineEdit*>(Client::Employee::email());
 
         if (!surname || !name || !patronymic || !email)
             return;
 
         const QString newEmail = Utils::CreateEmail({ surname->text(), name->text(), patronymic->text() });
         email->setText(newEmail);
+    }
+
+    void TablePrivate::_createEmail()
+    {
+        if (_name == Employee::employeeTable())
+            return;
+
+        createEmail();
     }
 }

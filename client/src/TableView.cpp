@@ -5,15 +5,11 @@
 #include <QAbstractItemModel>
 #include <QComboBox>
 #include <QDoubleSpinBox>
-#include <QHeaderView>
-#include <QLayout>
 #include <QLineEdit>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonTableModel>
 #include <QMessageBox>
-#include <QObject>
-#include <QResizeEvent>
 #include <QTimer>
 
 
@@ -104,7 +100,7 @@ namespace Client
                 if (widget)
                 {
                     QString value;
-                    if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget))
+                    if (const QLineEdit* lineEdit = qobject_cast<const QLineEdit*>(widget))
                     {
                         value = lineEdit->text();
                     }

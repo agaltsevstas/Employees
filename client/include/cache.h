@@ -11,25 +11,17 @@ class Cache
 public:
     static Cache &Instance() noexcept;
 
-    QStringList getLogins() const;
-    QString getPassword(const QString &iLogin) const;
+    [[nodiscard]] QStringList getLogins() const;
+    [[nodiscard]] QString getPassword(const QString &iLogin) const;
     bool findUser(const QString &iLogin, const QString &iPassword) const;
     void addUser(const QString &iLogin, const QString &iPassword);
-    QStringList getSearchWords() const;
+    [[nodiscard]] QStringList getSearchWords() const;
     void addSearchWord(const QString &iWord);
     void addSearchWords(const QStringList &iWords);
 
 private:
     Cache();
     ~Cache();
-
-    bool findValue(const QString &iTable, const QString iKey, const QString &iValue) const;
-    bool findValue(const QString &iTable, const QString &iValue) const;
-    QString getValue(const QString &iTable, const QString iFindKey, const QString &iFindValue) const;
-    QStringList getList(const QString &iTable, const QString &iKey) const;
-    QStringList getList(const QString &iTable) const;
-    void insert(const QString &iTable, const QList<QPair<QString, QString>> &iUserData);
-    void insert(const QString &iTable, const QString &iValue);
 
     /*!
      * @brief Запрет копирования
@@ -40,6 +32,14 @@ private:
      * @brief Запрет оператора присваивания
      */
     Cache& operator=(Cache&) = delete;
+
+    bool findValue(const QString &iTable, const QString iKey, const QString &iValue) const;
+    bool findValue(const QString &iTable, const QString &iValue) const;
+    [[nodiscard]] QString getValue(const QString &iTable, const QString iFindKey, const QString &iFindValue) const;
+    [[nodiscard]] QStringList getList(const QString &iTable, const QString &iKey) const;
+    [[nodiscard]] QStringList getList(const QString &iTable) const;
+    void insert(const QString &iTable, const QList<QPair<QString, QString>> &iUserData);
+    void insert(const QString &iTable, const QString &iValue);
 
 private:
     QScopedPointer<QJsonDocument> _cache;

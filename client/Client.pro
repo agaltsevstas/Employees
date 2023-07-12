@@ -43,14 +43,16 @@ INCLUDEPATH += $$PWD/include
 HEADERS += \
     include/cache.h \
     include/delegate.h \
-    include/quint64validator.h \
+    include/lineedit.h \
+    include/settings.h \
     include/tableView.h \
     include/client.h \
     include/dialog.h \
     include/qjsontablemodel.h \
     include/table_p.h \
     include/table.h \
-    include/utils.h
+    include/utils.h \
+    include/validator.h
 
 #HEADERS += \
 #/opt/homebrew/lib
@@ -58,7 +60,8 @@ HEADERS += \
 SOURCES += \
     src/cache.cpp \
     src/delegate.cpp \
-    src/quint64validator.cpp \
+    src/lineedit.cpp \
+    src/settings.cpp \
     src/tableView.cpp \
     src/client.cpp \
     src/main.cpp \
@@ -66,7 +69,8 @@ SOURCES += \
     src/qjsontablemodel.cpp \
     src/table_p.cpp \
     src/table.cpp \
-    src/utils.cpp
+    src/utils.cpp \
+    src/validator.cpp
 
 FORMS += \
     forms/dialog.ui \

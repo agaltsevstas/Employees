@@ -1,6 +1,7 @@
 #include "delegate.h"
 #include "client.h"
 
+#include <LineEdit>
 #include <QApplication>
 #include <QDoubleSpinBox>
 #include <QComboBox>
@@ -8,7 +9,7 @@
 #include <QMouseEvent>
 #include <QJsonTableModel>
 #include <QPainter>
-#include <QUInt64Validator>
+#include <Validator>
 
 
 QSizePolicy GetSizePolice()
@@ -92,6 +93,19 @@ QWidget *Delegate::createEditor(QWidget *parent,
                 lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
                 lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, parent));
+                return lineEdit;
+            }
+            case 9:
+            {
+                LineEdit *lineEdit = new LineEdit(true, parent);
+                connect(lineEdit, &LineEdit::startingFocus, [&model, &index]()
+                {
+                    const_cast<QJsonTableModel*>(model)->createEmail(index.row());
+                });
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
+                lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
+                lineEdit->showQuestion();
                 return lineEdit;
             }
             case 12:

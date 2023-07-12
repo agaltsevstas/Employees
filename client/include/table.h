@@ -4,7 +4,7 @@
 #include <QWidget>
 
 class QPushButton;
-class QSettings;
+class Settings;
 class QStackedWidget;
 class QGridLayout;
 class QLabel;
@@ -26,7 +26,7 @@ namespace Client
         Q_OBJECT
 
     public:
-        Table(QSettings *iSettings, Requester* iRequester, QWidget *parent = nullptr);
+        Table(Requester* iRequester, QWidget *parent = nullptr);
         ~Table();
 
     Q_SIGNALS:
@@ -63,8 +63,8 @@ namespace Client
         TablePrivate *_personalData = nullptr;
         TablePrivate *_userData = nullptr;
         TableView *_tableView = nullptr;
-        QSettings *_settings = nullptr;
         Requester *_requester = nullptr;
+        Settings &_settings;
 
         friend class TablePrivate;
     };

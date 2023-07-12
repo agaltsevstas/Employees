@@ -22,6 +22,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QTimer>
+#include <Settings>
 
 
 namespace Client
@@ -46,12 +47,12 @@ namespace Client
         return -1;
     };
 
-    Table::Table(QSettings *iSettings, Requester* iRequester, QWidget *parent) :
+    Table::Table(Requester* iRequester, QWidget *parent) :
         QWidget(parent),
         _ui(new Ui::Table()),
         _stackedWidget(new QStackedWidget(_ui->groupBox)),
-        _settings(iSettings),
-        _requester(iRequester)
+        _requester(iRequester),
+        _settings(Settings::Instance())
     {
         _ui->setupUi(this);
         setPersonalData(_requester->getJson());
@@ -77,8 +78,8 @@ namespace Client
 
     void Table::loadSettings()
     {
-        auto update = _settings->value("update");
-        move(_settings->value("centerTable", qApp->primaryScreen()->availableGeometry().center()).toPoint());
+        auto update = _settings.value("update");
+        move(_settings.value("centerTable", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
         if (_personalData)
         {
@@ -92,9 +93,9 @@ namespace Client
 
     void Table::saveSettings()
     {
-        _settings->setValue("centerTable", geometry().center());
+        _settings.setValue("centerTable", geometry().center());
         if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
-            _settings->setValue("update", autoUpdate->isChecked());
+            _settings.setValue("update", autoUpdate->isChecked());
     }
 
     void Table::resizeEvent(QResizeEvent *event)
@@ -376,7 +377,7 @@ namespace Client
     {
         if (!_userData)
         {
-            _userData = new TablePrivate(Employee::employeeTable(), this);
+            _userData = new TablePrivate("newEmployee", this);
             connect(_tableView,
                     SIGNAL(getUserData(const QString &, const std::function<void(QWidget*)>&)),
                     _userData,

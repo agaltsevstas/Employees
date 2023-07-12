@@ -335,7 +335,6 @@ bool QJsonTableModel::createEmail(int row)
                 rowObject.contains("patronymic") &&
                 rowObject.contains("email"))
             {
-                const qint64 id = rowObject.take(Client::Employee::id()).toInteger();
                 const QString surname = rowObject.take(Client::Employee::surname()).toString();
                 const QString name = rowObject.take(Client::Employee::name()).toString();
                 const QString patronymic = rowObject.take(Client::Employee::patronymic()).toString();
@@ -352,7 +351,7 @@ bool QJsonTableModel::createEmail(int row)
                     if (column > 0 && checkFieldOnDuplicate(row, column, newEmail))
                     {
                         if (newEmail != email)
-                            updateRecord(id, Client::Employee::email(), newEmail);
+                            setData(index(row, column), newEmail);
 
                         break;
                     }

@@ -1,9 +1,9 @@
-#ifndef QUINT64VALIDATOR_H
-#define QUINT64VALIDATOR_H
+#ifndef VALIDATOR_H
+#define VALIDATOR_H
 
 #include <QValidator>
 
-class TextValidator : public QValidator
+class TextValidator final : public QValidator
 {
     Q_OBJECT
 public:
@@ -11,7 +11,7 @@ public:
     QValidator::State validate(QString &input, int&) const override;
 };
 
-class UInt64Validator : public QValidator
+class UInt64Validator final : public QValidator
 {
     Q_OBJECT
 public:
@@ -39,4 +39,4 @@ private:
     mutable QString _cache;
 };
 
-#endif // QUINT64VALIDATOR_H
+#endif // VALIDATOR_H

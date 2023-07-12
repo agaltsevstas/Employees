@@ -1,7 +1,8 @@
-#include "quint64validator.h"
+#include "validator.h"
 #include "utils.h"
 
 #include <QLineEdit>
+#include <Validator>
 
 TextValidator::TextValidator(QObject *parent) : QValidator(parent)
 {
