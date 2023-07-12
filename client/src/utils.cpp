@@ -10,7 +10,7 @@
 namespace Utils
 {
     // Карта перевода из кириллицы в латиницу
-    [[nodiscard]] const QMap<QString, QString> translitSymbols =
+    const QMap<QString, QString> translitSymbols =
     {
         {"а", "a"},
         {"б", "b"},
@@ -139,6 +139,6 @@ namespace Utils
         if (result.size() != 3)
             return;
 
-        iData = result[0] + "-" + result[1] + "-" + result[2];
+        iData = result[2] + "-" + result[1] + "-" + result[0];
     }
 }

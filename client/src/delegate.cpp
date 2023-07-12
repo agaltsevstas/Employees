@@ -30,8 +30,24 @@ QWidget *Delegate::createEditor(QWidget *parent,
 {
     if (const auto& model = qobject_cast<const QJsonTableModel*>(index.model()))
     {
+        const QString toolTip = Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first];
+        QString placeholderText = toolTip;
         switch (index.column())
         {
+            case 11:
+                placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                [[fallthrough]];
+            case 2:
+            case 3:
+            case 4:
+            {
+                QLineEdit *lineEdit = new QLineEdit(parent);
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
+                lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
+                lineEdit->setValidator(new TextValidator(parent));
+                return lineEdit;
+            }
             case 1:
             case 5:
             {
@@ -39,7 +55,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
                 {
                     QComboBox *comboBox = new QComboBox(parent);
                     comboBox->setModel(childModel);
-                    comboBox->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
+                    comboBox->setToolTip(toolTip);
                     comboBox->setDuplicatesEnabled(false);
                     comboBox->installEventFilter(const_cast<Delegate*>(this));
                     comboBox->setSizePolicy(GetSizePolice());
@@ -54,7 +70,8 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 10:
             {
                 QLineEdit *lineEdit = new QLineEdit(parent);
-                lineEdit->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
                 lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, parent));
                 return lineEdit;
@@ -62,7 +79,8 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 7:
             {
                 QLineEdit *lineEdit = new QLineEdit(parent);
-                lineEdit->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
                 lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, parent));
                 return lineEdit;
@@ -70,20 +88,31 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 8:
             {
                 QLineEdit *lineEdit = new QLineEdit(parent);
-                lineEdit->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
                 lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, parent));
                 return lineEdit;
             }
             case 12:
             {
-                QDoubleSpinBox *spinbox = new QDoubleSpinBox(parent);
-                spinbox->setToolTip(Client::Employee::helpFields()[Client::Employee::getFieldNames()[index.column()].first]);
-                spinbox->setValue(model->data(index, Qt::DisplayRole).toInt());
-                spinbox->setFrame(false);
-                spinbox->setRange(0, 1000000);
-                return spinbox;
+                QDoubleSpinBox *spinBox = new QDoubleSpinBox(parent);
+                spinBox->setToolTip(toolTip);
+                spinBox->setValue(model->data(index, Qt::DisplayRole).toInt());
+                spinBox->setFrame(false);
+                spinBox->setRange(0, 1000000);
+                return spinBox;
             }
+            case 13:
+            {
+                placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                QLineEdit *lineEdit = new QLineEdit(parent);
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
+                lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
+                return lineEdit;
+            }
+            break;
             default:
                 break;
         }

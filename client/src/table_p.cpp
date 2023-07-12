@@ -4,6 +4,7 @@
 #include "cache.h"
 #include "client.h"
 #include "requester.h"
+#include "utils.h"
 
 #include <QDoubleSpinBox>
 #include <QCheckBox>
@@ -84,6 +85,9 @@ namespace Client
         for (decltype(fieldNames.size()) i = 0, I = fieldNames.size(); i < I; ++i)
         {
             const auto& [field, name] = fieldNames[i];
+            const QString toolTip = Client::Employee::helpFields()[field];
+            QString placeholderText = toolTip;
+
             const QJsonObject object_data = iData.object(); // обязательно нужно определить
             const QJsonObject object_permissions = iPersonalPermissions.object(); // обязательно нужно определить
 
@@ -102,8 +106,8 @@ namespace Client
                 {
                     QComboBox *comboBox = new QComboBox(this);
                     comboBox->setObjectName(field);
-                    comboBox->setToolTip(Client::Employee::helpFields()[field]);
-                    comboBox->setPlaceholderText(Client::Employee::helpFields()[field]);
+                    comboBox->setToolTip(toolTip);
+                    comboBox->setPlaceholderText(placeholderText);
                     if (field == Client::Employee::role())
                         comboBox->addItems(Client::Employee::getRoles());
                     else if (field == Client::Employee::sex())
@@ -120,8 +124,9 @@ namespace Client
                 {
                     QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
                     spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
-                    spinBox->setToolTip(Client::Employee::helpFields()[field]);
-                    spinBox->setAccessibleDescription(Client::Employee::helpFields()[field]);
+                    spinBox->setObjectName(field);
+                    spinBox->setToolTip(toolTip);
+                    spinBox->setAccessibleDescription(placeholderText);
                     spinBox->setRange(0, 1000000);
                     if (it_data->isDouble())
                         spinBox->setValue(it_data->toDouble());
@@ -147,9 +152,19 @@ namespace Client
                     {
                         lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
                     }
+                    else if (field == Client::Employee::workingHours())
+                    {
+                        placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                        lineEdit->setValidator(new TextValidator(parent));
+                    }
                     else if (field == Client::Employee::password())
                     {
+                        placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
                         lineEdit->setEchoMode(QLineEdit::Password);
+                    }
+                    else if (field != Client::Employee::email())
+                    {
+                        lineEdit->setValidator(new TextValidator(parent));
                     }
 
                     if (it_data->isString())
@@ -174,8 +189,9 @@ namespace Client
                         Q_ASSERT(false);
                     }
 
-                    lineEdit->setToolTip(Client::Employee::helpFields()[field]);
-                    lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
+                    lineEdit->setObjectName(field);
+                    lineEdit->setToolTip(toolTip);
+                    lineEdit->setPlaceholderText(placeholderText);
                     lineEdit->setSizePolicy(sizePolicyLine);
                     lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                     lineEdit->setAttribute(Qt::WA_MacShowFocusRect, true);
@@ -221,7 +237,7 @@ namespace Client
                 connect(restoreUser, SIGNAL(clicked()), parent, SLOT(onRestoreUserClicked()));
                 restoreUser->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
                 restoreUser->setObjectName("restoreUser");
-                deleteUser->setToolTip("Восстановить пользователя в базе данных");
+                restoreUser->setToolTip("Восстановить пользователя в базе данных");
                 restoreUser->setSizePolicy(sizePolicy);
                 restoreUser->setEnabled(true);
                 restoreUser->setVisible(false);
@@ -257,7 +273,6 @@ namespace Client
                     });
                 }
                 connect(valueSearch, SIGNAL(returnPressed()), this, SLOT(onSearchClicked()));
-                buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
 
                 QCompleter* completer = new QCompleter(_cache.getSearchWords(), valueSearch);
                 completer->setCaseSensitivity(Qt::CaseInsensitive);
@@ -366,6 +381,8 @@ namespace Client
         for (decltype(fieldNames.size()) i = 1, I = fieldNames.size(); i < I; ++i)
         {
             const auto& [field, name] = fieldNames[i];
+            const QString toolTip = Client::Employee::helpFields()[field];
+            QString placeholderText = toolTip;
 
             QLabel *label = new QLabel(this);
             label->setObjectName(field);
@@ -379,8 +396,8 @@ namespace Client
             {
                 QComboBox *comboBox = new QComboBox(this);
                 comboBox->setObjectName(field);
-                comboBox->setToolTip(Client::Employee::helpFields()[field]);
-                comboBox->setPlaceholderText(Client::Employee::helpFields()[field]);
+                comboBox->setToolTip(toolTip);
+                comboBox->setPlaceholderText(placeholderText);
                 if (field == Client::Employee::role())
                     comboBox->addItems(Client::Employee::getRoles());
                 else if (field == Client::Employee::sex())
@@ -395,7 +412,7 @@ namespace Client
                 QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
                 spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
                 spinBox->setObjectName(field);
-                spinBox->setToolTip(Client::Employee::helpFields()[field]);
+                spinBox->setToolTip(toolTip);
                 spinBox->setAccessibleDescription(Client::Employee::helpFields()[field]);
                 spinBox->setRange(0, 1000000);
                 spinBox->setValue(10000);
@@ -408,8 +425,15 @@ namespace Client
             {
                 QLineEdit *lineEdit = new QLineEdit(this);
 
-                if (field == Client::Employee::dateOfBirth() ||
-                    field == Client::Employee::dateOfHiring())
+                if (field == Client::Employee::name() ||
+                    field == Client::Employee::surname() ||
+                    field == Client::Employee::patronymic())
+                {
+                    connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+                    lineEdit->setValidator(new TextValidator(parent));
+                }
+                else if (field == Client::Employee::dateOfBirth() ||
+                         field == Client::Employee::dateOfHiring())
                 {
                     lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this) );
                 }
@@ -421,9 +445,24 @@ namespace Client
                 {
                     lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
                 }
+                else if (field == Client::Employee::workingHours())
+                {
+                    placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                    lineEdit->setValidator(new TextValidator(parent));
+                }
+                else if (field == Client::Employee::password())
+                {
+                    placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
+                    lineEdit->setEchoMode(QLineEdit::Password);
+                }
+                else if (field != Client::Employee::email())
+                {
+                    lineEdit->setValidator(new TextValidator(parent));
+                }
+
                 lineEdit->setObjectName(field);
-                lineEdit->setToolTip(Client::Employee::helpFields()[field]);
-                lineEdit->setPlaceholderText(Client::Employee::helpFields()[field]);
+                lineEdit->setToolTip(toolTip);
+                lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setSizePolicy(sizePolicyLine);
                 lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                 lineEdit->setClearButtonEnabled(true);
@@ -450,7 +489,7 @@ namespace Client
         connect(addUser, SIGNAL(clicked()), parent, SLOT(onAddUserClicked()));
         addUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
         addUser->setObjectName("addUser");
-        resetData->setToolTip("Добавить в базу данных нового пользователя");
+        addUser->setToolTip("Добавить в базу данных нового пользователя");
         addUser->setSizePolicy(sizePolicy);
 
         buttonLayout->addWidget(cancel, 0, 0, 1, 1);
@@ -621,5 +660,19 @@ namespace Client
 
             emit sendValueSearch(value->text());
         }
+    }
+
+    void TablePrivate::editingFinished()
+    {
+        QLineEdit* surname = findChild<QLineEdit*>(Client::Employee::surname());
+        QLineEdit* name = findChild<QLineEdit*>(Client::Employee::name());
+        QLineEdit* patronymic = findChild<QLineEdit*>(Client::Employee::patronymic());
+        QLineEdit* email = findChild<QLineEdit*>(Client::Employee::email());
+
+        if (!surname || !name || !patronymic || !email)
+            return;
+
+        const QString newEmail = Utils::CreateEmail({ surname->text(), name->text(), patronymic->text() });
+        email->setText(newEmail);
     }
 }

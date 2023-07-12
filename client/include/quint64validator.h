@@ -3,6 +3,14 @@
 
 #include <QValidator>
 
+class TextValidator : public QValidator
+{
+    Q_OBJECT
+public:
+    TextValidator(QObject *parent = nullptr);
+    QValidator::State validate(QString &input, int&) const override;
+};
+
 class UInt64Validator : public QValidator
 {
     Q_OBJECT

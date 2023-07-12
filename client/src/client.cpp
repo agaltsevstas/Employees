@@ -201,7 +201,7 @@ namespace Client
             {
                 case FIELD_ID :
                 {
-                    QRegularExpression regular ("^[0-9]{1,4}$");
+                    QRegularExpression regular("^[0-9]{1,4}$");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустой ID >> " + iValue + ", " + helpFields()[id()];
@@ -228,7 +228,7 @@ namespace Client
                 case FIELD_ROLE :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("(Бухгалтер|Водитель|Главный бухгалтер|Главный юрист-консультант|Грузчик|Директор|Кассир|Логист|"
+                    QRegularExpression regular("(Бухгалтер|Водитель|Главный бухгалтер|Главный юрист-консультант|Грузчик|Директор|Кассир|Логист|"
                                           "Менеджер по закупкам|Менеджер по продажам|Начальник отдела закупок|Начальник склада|Юрист|Менеджер по персоналу)");
                     if (iValue.isEmpty())
                     {
@@ -256,7 +256,7 @@ namespace Client
                 case FIELD_SURNAME :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
+                    QRegularExpression regular("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустая фамилия >> " + iValue + ", " + helpFields()[surname()];
@@ -283,7 +283,7 @@ namespace Client
                 case FIELD_NAME :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
+                    QRegularExpression regular("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустое имя >> " + iValue + ", " + helpFields()[name()];
@@ -310,7 +310,7 @@ namespace Client
                 case FIELD_PATRONYMIC :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
+                    QRegularExpression regular("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустое отчество >> " + iValue + ", " + helpFields()[patronymic()];
@@ -337,7 +337,7 @@ namespace Client
                 case FIELD_SEX :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular ("^(Муж|Жен)$");
+                    QRegularExpression regular("^(Муж|Жен)$");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустой пол >> " + iValue + ", " + helpFields()[sex()];
@@ -363,7 +363,8 @@ namespace Client
 
                 case FIELD_DATE_OF_BIRTH :
                 {
-                    QRegularExpression regular ("^(((((0[1-9]|[12][0-9]|30)[-/.])?(0[13-9]|1[012])|(31[-/.])?(0[13578]|1[02])|((0[1-9]|"
+                    Utils::FormatDateToPostgres(iValue);
+                    QRegularExpression regular("^(((((0[1-9]|[12][0-9]|30)[-/.])?(0[13-9]|1[012])|(31[-/.])?(0[13578]|1[02])|((0[1-9]|"
                                           "1[0-9]|2[0-8])[-/.])?02)[-/.])?[0-9]{4}|(29[-/.])?(02[-/.])?([0-9]{2}(([2468][048]|"
                                           "[02468][48])|[13579][26])|([13579][26]|[02468][048]|0[0-9]|1[0-6])00))$");
                     if (iValue.isEmpty())
@@ -407,7 +408,8 @@ namespace Client
 
                 case FIELD_PASSPORT :
                 {
-                    QRegularExpression regular ("^[0-9]{10}$");
+                    iValue.replace("-", "");
+                    QRegularExpression regular("^[0-9]{10}$");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустой паспорт >> " + iValue + ", " + helpFields()[passport()];
@@ -433,7 +435,8 @@ namespace Client
 
                 case FIELD_PHONE :
                 {
-                    QRegularExpression regular ("^[0-9]{10}$");
+                    iValue.replace("-", "");
+                    QRegularExpression regular("^[0-9]{10}$");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустой телефон >> " + iValue + ", " + helpFields()[phone()];
@@ -459,7 +462,8 @@ namespace Client
 
                 case FIELD_EMAIL :
                 {
-                    QRegularExpression regular ("^([a-z0-9]+)(\\.)([a-z0-9]+)(\\.)([a-z0-9]+)(@)(tradingcompany)(\\.)(ru)$");
+                    iValue = iValue.toLower();
+                    QRegularExpression regular("^([a-z0-9]+)(\\.)([a-z0-9]+)(\\.)([a-z0-9]+)(@)(tradingcompany)(\\.)(ru)$");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустая почта >> " + iValue + ", " + helpFields()[email()];
@@ -486,7 +490,7 @@ namespace Client
                 case FIELD_DATE_OF_HIRING :
                 {
                     Utils::FormatDateToPostgres(iValue);
-                    QRegularExpression regular ("^(((((0[1-9]|[12][0-9]|30)[-/.])?(0[13-9]|1[012])|(31[-/.])?(0[13578]|1[02])|((0[1-9]|"
+                    QRegularExpression regular("^(((((0[1-9]|[12][0-9]|30)[-/.])?(0[13-9]|1[012])|(31[-/.])?(0[13578]|1[02])|((0[1-9]|"
                                           "1[0-9]|2[0-8])[-/.])?02)[-/.])?[0-9]{4}|(29[-/.])?(02[-/.])?([0-9]{2}(([2468][048]|"
                                           "[02468][48])|[13579][26])|([13579][26]|[02468][048]|0[0-9]|1[0-6])00))$");
                     if (iValue.isEmpty())
@@ -514,7 +518,7 @@ namespace Client
 
                 case FIELD_WORKING_HOURS :
                 {
-                    QRegularExpression regular ("(((((Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье),*)+)|"
+                    QRegularExpression regular("(((((Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье),*)+)|"
                                                   "(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)-"
                                                   "(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье))="
                                                   "([0-1]?[0-9]|[2][0-3]):([0-5][0-9])-([0-1]?[0-9]|[2][0-3]):([0-5][0-9]);*)+");
@@ -543,8 +547,7 @@ namespace Client
 
                 case FIELD_SALARY :
                 {
-                    iValue = iValue.mid(1, iValue.length());
-                    QRegularExpression regular ("[0-9]+");
+                    QRegularExpression regular("[0-9]+");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустая зарплата >> " + iValue + ", " + helpFields()[salary()];
@@ -570,7 +573,7 @@ namespace Client
 
                 case FIELD_PASSWORD :
                 {
-                    QRegularExpression regular ("(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{6,}");
+                    QRegularExpression regular("(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{6,}");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустая пароль >> " + iValue + ", " + helpFields()[password()];

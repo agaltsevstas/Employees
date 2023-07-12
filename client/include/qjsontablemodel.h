@@ -36,13 +36,14 @@ public:
     void submitAll();
     bool checkField(int row, int column, const QString &ivalue) const;
     bool checkField(const QModelIndex &index, const QString &value) const;
-    inline void addRow(const QJsonObject &iUser) noexcept { _array.push_back(iUser); };
+    inline void addRow(const QJsonObject &iUser) noexcept { _array.push_back(iUser); emit layoutChanged(); };
     bool deleteRow(int row);
     void restoreRow(int row);
     bool canDeleteRow(int row);
     [[nodiscard]] QList<int> valueSearch(const QString &iValue) const noexcept;
     [[nodiscard]] QAbstractItemModel *relationModel(int column) const;
-    [[nodiscard]] inline qsizetype size() const noexcept { return _array.size(); }
+    [[nodiscard]] inline qsizetype rowsCount() const noexcept { return _array.size(); }
+    [[nodiscard]] inline qsizetype columnsCount() const noexcept { return _headers.size(); }
 
 Q_SIGNALS:
     void sendCreateRequest(const QByteArray &iRequest);

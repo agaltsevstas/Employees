@@ -21,7 +21,6 @@
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
-#include <QTableWidget>
 #include <QTimer>
 
 
@@ -428,6 +427,7 @@ namespace Client
             _stackedWidget->setCurrentWidget(_personalData);
             _stackedWidget->removeWidget(_userData);
             delete _userData;
+            _userData = nullptr;
         }
     }
 }

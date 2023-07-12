@@ -1,6 +1,19 @@
 #include "quint64validator.h"
+#include "utils.h"
 
 #include <QLineEdit>
+
+TextValidator::TextValidator(QObject *parent) : QValidator(parent)
+{
+
+}
+
+QValidator::State TextValidator::validate(QString &input, int&) const
+{
+    Utils::ToUpperandtolower(input);
+    return QValidator::Acceptable;
+}
+
 
 UInt64Validator::UInt64Validator(quint64 minimum, quint64 maximum, Mode mode, QObject *parent) :
     QValidator(parent),

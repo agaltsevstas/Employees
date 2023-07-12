@@ -1,17 +1,20 @@
-#include "client.h"
 #include "tableView.h"
+#include "client.h"
 #include "delegate.h"
 
+#include <QAbstractItemModel>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QHeaderView>
 #include <QLayout>
 #include <QLineEdit>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonTableModel>
+#include <QMessageBox>
 #include <QObject>
 #include <QResizeEvent>
-#include <QAbstractItemModel>
+#include <QTimer>
 
 
 namespace Client
@@ -88,32 +91,37 @@ namespace Client
             return false;
 
         QJsonObject record;
-        record.insert(Client::Employee::id(), _model->size());
+        record.insert(Client::Employee::id(), _model->rowsCount());
 
         const auto fieldNames = Client::Employee::getFieldNames();
+
         for (int i = 1, I = fieldNames.size(); i < I; ++i)
         {
-            QPair<QString, QString> field = fieldNames[i];
             bool result = false;
+            QPair<QString, QString> field = fieldNames[i];
             std::function<void(QWidget*)> handleLineEdit = [&](QWidget* widget)
             {
                 if (widget)
                 {
                     QString value;
-                    if (auto lineEdit = qobject_cast<const QLineEdit*>(widget))
+                    if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget))
                     {
                         value = lineEdit->text();
                     }
-                    else if (auto comboBox = qobject_cast<const QComboBox*>(widget))
+                    else if (const QComboBox* comboBox = qobject_cast<const QComboBox*>(widget))
                     {
                         value = comboBox->currentText();
                     }
+                    else if (const QDoubleSpinBox *spinBox = qobject_cast<const QDoubleSpinBox*>(widget))
+                    {
+                        value = spinBox->text();
+                    }
 
-                    if (_model->checkField(_model->size(), i, value))
+                    if (_model->checkField(_model->rowsCount(), i, value))
                     {
                         record.insert(field.first, value);
                         QPalette palette = widget->palette();
-                        palette.setColor(QPalette::Base, Qt::white);
+                        palette.setColor(QPalette::PlaceholderText, Qt::white);
                         palette.setColor(QPalette::Text, Qt::black);
                         widget->setPalette(palette);
                         result = true;
@@ -121,7 +129,7 @@ namespace Client
                     else
                     {
                         QPalette palette = widget->palette();
-                        palette.setColor(QPalette::Base, Qt::red);
+                        palette.setColor(QPalette::PlaceholderText, Qt::red);
                         palette.setColor(QPalette::Text, Qt::red);
                         widget->setPalette(palette);
                     }
@@ -135,6 +143,12 @@ namespace Client
         }
 
         _model->addRow(record);
+
+        const QString message = "Сотрудник успешно добавлен!";
+        QMessageBox information(QMessageBox::Icon::Information, tr("Сообщение"), message, QMessageBox::NoButton, this);
+        QTimer::singleShot(1000, &information, &QMessageBox::close);
+        information.exec();
+        qDebug() << "Сообщение: " << message;
         return true;
     }
 

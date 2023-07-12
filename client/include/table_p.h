@@ -12,8 +12,6 @@ class QJsonArray;
 
 namespace Client
 {
-    class Table;
-
     class TablePrivate final : public QWidget
     {
         Q_OBJECT
@@ -40,6 +38,7 @@ namespace Client
         void sendUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
         void onResetDataClicked();
         void onSearchClicked();
+        void editingFinished();
 
     private Q_SLOTS:
         void update();
