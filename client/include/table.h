@@ -26,7 +26,7 @@ namespace Client
         Q_OBJECT
 
     public:
-        Table(Requester* iRequester, QWidget *parent = nullptr);
+        explicit Table(Requester* iRequester, QWidget *parent = nullptr);
         ~Table();
 
     Q_SIGNALS:

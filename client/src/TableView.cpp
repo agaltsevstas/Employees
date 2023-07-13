@@ -12,6 +12,8 @@
 #include <QMessageBox>
 #include <QTimer>
 
+#include <QHeaderView>
+
 
 namespace Client
 {
@@ -27,13 +29,13 @@ namespace Client
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(10);
         setSizePolicy(sizePolicy);
-        setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+        setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContentsOnFirstShow);
         setSelectionBehavior(QAbstractItemView::SelectRows);
         setSelectionMode(QAbstractItemView::SingleSelection);
         setEditTriggers(QAbstractItemView::DoubleClicked);
-//        horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-//        horizontalHeader()->setCascadingSectionResizes(true);
-//        horizontalHeader()->setHighlightSections(false);
+        horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        horizontalHeader()->setCascadingSectionResizes(false);
+        horizontalHeader()->setHighlightSections(false);
     }
 
     void TableView::setEditStrategy(EditStrategy iStrategy) noexcept
@@ -65,15 +67,11 @@ namespace Client
     void TableView::setModel(QAbstractItemModel *model)
     {
         QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
+        horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
+        horizontalHeader()->setSectionResizeMode(10, QHeaderView::Interactive);
+        horizontalHeader()->setSectionResizeMode(12, QHeaderView::Interactive);
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
-        adjustSize();
     }
-
-//    void TableView::resizeEvent(QResizeEvent *event)
-//    {
-//        QTableView::resizeEvent(event);
-//        adjustSize();
-//    }
 
     void TableView::submitAll()
     {

@@ -93,7 +93,7 @@ namespace Client
 
     void Table::saveSettings()
     {
-        Session::getSession().Settings().setValue("centerTable", geometry().center());
+        Session::getSession().Settings().setValue("centerTable", geometry().center() - QPoint(width() / 2, height() / 2));
         if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
             Session::getSession().Settings().setValue("update", autoUpdate->isChecked());
     }
@@ -178,6 +178,7 @@ namespace Client
 
     void Table::onExitClicked()
     {
+        showNormal();
         close();           // Закрытие окна
         emit openDialog(); // Вызов главного окна
     }
@@ -272,7 +273,6 @@ namespace Client
                 connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
                 connect(_personalData, SIGNAL(sendClearSearch()), _tableView, SLOT(clearSearchChanged()));
                 _ui->splitter->addWidget(_tableView);
-    //            _tableView->horizontalHeader()->setSortIndicator(0, 0);
             }
         }
         else
@@ -287,7 +287,11 @@ namespace Client
     void Table::showDatabase()
     {
         QPushButton *showDatabase = qobject_cast<QPushButton*>(sender());
+        if (!showDatabase)
+            return;
+
         const bool isCheckable = showDatabase->isCheckable();
+        showDatabase->setCheckable(!isCheckable);
 
         if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
             createUser->setEnabled(!isCheckable);
@@ -310,7 +314,7 @@ namespace Client
             showDatabase->setText("Показать базу данных");
             _tableView->setHidden(true);
             _tableView->setParent(NULL);
-            adjustSize();
+            showNormal();
         }
         else
         {
@@ -318,7 +322,6 @@ namespace Client
             {
                 _tableView->setHidden(false);
                 _ui->splitter->addWidget(_tableView);
-                adjustSize();
             }
             else
             {
@@ -328,9 +331,9 @@ namespace Client
             }
 
             showDatabase->setText("Скрыть базу данных");
+            showFullScreen();
         }
 
-        showDatabase->setCheckable(!isCheckable);
     }
 
     void Table::updatePersonalData(const QByteArray &iData)

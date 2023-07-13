@@ -68,13 +68,13 @@ namespace Client
 
         connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iLogin)
         {
-                _dialog->password->setText(Session::getSession().Cache().getPassword(iLogin));
+            _dialog->password->setText(Session::getSession().Cache().getPassword(iLogin));
         });
     }
 
     void Dialog::saveSettings()
     {
-        Session::getSession().Settings().setValue("centerDialog", geometry().center());
+        Session::getSession().Settings().setValue("centerDialog", geometry().center() - QPoint(width() / 2, height() / 2));
     }
 
     void Dialog::updateLineEditStyleSheet()

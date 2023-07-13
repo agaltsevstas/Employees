@@ -7,7 +7,7 @@ class QJsonTableModel;
 
 namespace Client
 {
-    class TableView : public QTableView
+    class TableView final : public QTableView
     {
         Q_OBJECT
         Q_PROPERTY(bool sortingEnabled READ isSortingEnabled WRITE setSortingEnabled)
@@ -37,7 +37,6 @@ namespace Client
 
     private:
         void setModel(QAbstractItemModel *model) override;
-//        void resizeEvent(QResizeEvent *event) override;
 
     public Q_SLOTS:
         void valueSearchChanged(const QString &iValue);

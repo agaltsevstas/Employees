@@ -183,7 +183,7 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
             else
             {
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
-                QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
                 qDebug() << "Ошибка: " << message;
             }
@@ -191,7 +191,7 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
         else
         {
             QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
-            QTimer::singleShot(1000, &warning, &QMessageBox::close);
+            QTimer::singleShot(1500, &warning, &QMessageBox::close);
             warning.exec();
             qDebug() << "Ошибка: " << message;
         }
@@ -375,7 +375,7 @@ bool QJsonTableModel::createEmail(int row)
                                 else
                                 {
                                     QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
-                                    QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                                    QTimer::singleShot(1500, &warning, &QMessageBox::close);
                                     warning.exec();
                                     qDebug() << "Ошибка: " << message;
                                 }

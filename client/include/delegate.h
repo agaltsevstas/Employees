@@ -4,7 +4,7 @@
 #include <QStyledItemDelegate>
 
 
-class Delegate : public QStyledItemDelegate
+class Delegate final : public QStyledItemDelegate
 {
 
 public:

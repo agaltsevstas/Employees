@@ -117,7 +117,7 @@ namespace Client
                     if (it_data->isString())
                         comboBox->setCurrentText(it_data->toString());
                     comboBox->setSizePolicy(sizePolicy);
-                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;} QComboBox::focus {border: 4px solid #a5cdff;}"));
+                    comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                     dataLayout->addWidget(comboBox, i, 1, 1, 1);
                     _data.push_back({label, comboBox});
                 }
@@ -423,7 +423,7 @@ namespace Client
                 else if (field == Client::Employee::sex())
                     comboBox->addItems(Client::Employee::getSex());
                 comboBox->setSizePolicy(GetSizePolice());
-                comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;} QComboBox:focus {border: 4px solid #a5cdff;}"));
+                comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                 dataLayout->addWidget(comboBox, i, 1, 1, 1);
                 _data.push_back({label, comboBox});
             }

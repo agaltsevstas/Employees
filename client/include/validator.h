@@ -7,7 +7,7 @@ class TextValidator final : public QValidator
 {
     Q_OBJECT
 public:
-    TextValidator(QObject *parent = nullptr);
+    explicit TextValidator(QObject *parent = nullptr);
     QValidator::State validate(QString &input, int&) const override;
 };
 

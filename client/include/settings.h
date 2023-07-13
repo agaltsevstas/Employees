@@ -3,7 +3,7 @@
 
 #include <QSettings>
 
-class Settings : public QSettings
+class Settings final : public QSettings
 {
     Q_OBJECT
 
