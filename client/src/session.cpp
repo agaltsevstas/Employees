@@ -16,7 +16,7 @@ Session::~Session()
 
 }
 
-Session &Session::getSession() noexcept
+Session &Session::getSession()
 {
     static Session data;
     return data;

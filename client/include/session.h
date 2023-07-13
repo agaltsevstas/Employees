@@ -5,7 +5,7 @@
 class Session
 {
 public:
-    static Session &getSession() noexcept;
+    static Session &getSession();
     class Cache& Cache();
     class Settings& Settings();
 
