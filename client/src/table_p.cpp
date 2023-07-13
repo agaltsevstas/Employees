@@ -133,7 +133,7 @@ namespace Client
                     if (it_data->isDouble())
                         spinBox->setValue(it_data->toDouble());
                     spinBox->setSizePolicy(GetSizePolice());
-//                    spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
+                    spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                     dataLayout->addWidget(spinBox, i, 1, 1, 1);
                     _data.push_back({label, spinBox});
                 }
@@ -438,7 +438,7 @@ namespace Client
                 spinBox->setValue(10000);
                 spinBox->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
                 spinBox->setSizePolicy(GetSizePolice());
-                spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;}"));
+                spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                 dataLayout->addWidget(spinBox, i, 1, 1, 1);
                 _data.push_back({label, spinBox});
             }
