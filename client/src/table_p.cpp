@@ -4,6 +4,7 @@
 #include "cache.h"
 #include "client.h"
 #include "requester.h"
+#include "session.h"
 #include "utils.h"
 
 #include <LineEdit>
@@ -38,7 +39,6 @@ namespace Client
 
     TablePrivate::TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent) :
         QWidget(parent),
-        _cache(Cache::Instance()),
         _name(iName)
     {
         if (iData.isEmpty() || iPersonalPermissions.isEmpty() || iPermissions.isEmpty())
@@ -294,7 +294,7 @@ namespace Client
                 }
                 connect(valueSearch, SIGNAL(returnPressed()), this, SLOT(onSearchClicked()));
 
-                QCompleter* completer = new QCompleter(_cache.getSearchWords(), valueSearch);
+                QCompleter* completer = new QCompleter(Session::getSession().Cache().getSearchWords(), valueSearch);
                 completer->setCaseSensitivity(Qt::CaseInsensitive);
 
                 valueSearch->setCompleter(completer);
@@ -361,7 +361,6 @@ namespace Client
 
     TablePrivate::TablePrivate(const QString &iName, QWidget *parent) :
         QWidget(parent),
-        _cache(Cache::Instance()),
         _name(iName)
     {
         setEditStrategy(TablePrivate::EditStrategy::OnManualSubmit);
@@ -541,7 +540,7 @@ namespace Client
         {
             if (QStringListModel* model = qobject_cast<QStringListModel*>(value->completer()->model()))
             {
-                _cache.addSearchWords(model->stringList());
+                Session::getSession().Cache().addSearchWords(model->stringList());
             }
         }
     }

@@ -2,6 +2,7 @@
 #include "table_p.h"
 #include "client.h"
 #include "requester.h"
+#include "session.h"
 #include "tableView.h"
 #include "ui_table.h"
 
@@ -51,8 +52,7 @@ namespace Client
         QWidget(parent),
         _ui(new Ui::Table()),
         _stackedWidget(new QStackedWidget(_ui->groupBox)),
-        _requester(iRequester),
-        _settings(Settings::Instance())
+        _requester(iRequester)
     {
         _ui->setupUi(this);
         setPersonalData(_requester->getJson());
@@ -78,8 +78,8 @@ namespace Client
 
     void Table::loadSettings()
     {
-        auto update = _settings.value("update");
-        move(_settings.value("centerTable", qApp->primaryScreen()->availableGeometry().center()).toPoint());
+        auto update = Session::getSession().Settings().value("update");
+        move(Session::getSession().Settings().value("centerTable", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
         if (_personalData)
         {
@@ -93,9 +93,9 @@ namespace Client
 
     void Table::saveSettings()
     {
-        _settings.setValue("centerTable", geometry().center());
+        Session::getSession().Settings().setValue("centerTable", geometry().center());
         if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
-            _settings.setValue("update", autoUpdate->isChecked());
+            Session::getSession().Settings().setValue("update", autoUpdate->isChecked());
     }
 
     void Table::resizeEvent(QResizeEvent *event)

@@ -11,9 +11,7 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-class Cache;
 class QStatusBar;
-class Settings;
 
 namespace Client
 {
@@ -45,8 +43,6 @@ namespace Client
         Ui::Dialog *_dialog = nullptr;
         Table *_table = nullptr;
         QStatusBar *_status = nullptr;
-        Settings &_settings;
-        Cache &_cache;
         Requester *_requester = nullptr;
     };
 }

@@ -2,6 +2,7 @@
 #include "cache.h"
 #include "dialog.h"
 #include "requester.h"
+#include "session.h"
 #include "table.h"
 
 #include <QColor>
@@ -23,8 +24,6 @@ namespace Client
         QDialog(parent),
         _dialog(new Ui::Dialog),
         _status(new QStatusBar(this)),
-        _settings(Settings::Instance()),
-        _cache(Cache::Instance()),
         _requester(new Requester(this))
     {   
         _dialog->setupUi(this);
@@ -47,7 +46,7 @@ namespace Client
 
     void Dialog::loadSettings()
     {
-        QCompleter* completer = new QCompleter(_cache.getLogins(), _dialog->login);
+        QCompleter* completer = new QCompleter(Session::getSession().Cache().getLogins(), _dialog->login);
         completer->setCaseSensitivity(Qt::CaseInsensitive);
 
         _dialog->login->setCompleter(completer);
@@ -58,7 +57,7 @@ namespace Client
         _dialog->rememberMe->setChecked(true);
         _status->setSizePolicy(_dialog->authorization->sizePolicy());
         // Установка главного окна по центру экрана по умолчанию
-        move(_settings.value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
+        move(Session::getSession().Settings().value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
 //        QPixmap loginIcon(":/images/login.png");
 //        QPixmap passwordIcon(":/images/password.png");
@@ -69,13 +68,13 @@ namespace Client
 
         connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iLogin)
         {
-                _dialog->password->setText(_cache.getPassword(iLogin));
+                _dialog->password->setText(Session::getSession().Cache().getPassword(iLogin));
         });
     }
 
     void Dialog::saveSettings()
     {
-        _settings.setValue("centerDialog", geometry().center());
+        Session::getSession().Settings().setValue("centerDialog", geometry().center());
     }
 
     void Dialog::updateLineEditStyleSheet()
@@ -161,14 +160,14 @@ namespace Client
         const QString password = _dialog->password->text();
         if (_dialog->rememberMe->isChecked())
         {
-            if (_cache.findUser(login, password))
+            if (Session::getSession().Cache().findUser(login, password))
             {
                 QMessageBox::StandardButton reply = QMessageBox::question(this, "Пользователь с таким паролем уже существует", "Обновить пароль?", QMessageBox::Yes | QMessageBox::No);
                 if (reply == QMessageBox::Yes)
-                    _cache.addUser(login, password);
+                    Session::getSession().Cache().addUser(login, password);
             }
             else
-                _cache.addUser(login, password);
+                Session::getSession().Cache().addUser(login, password);
         }
 
         QString token = login + ":" + password;

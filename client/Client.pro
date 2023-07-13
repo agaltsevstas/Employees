@@ -44,6 +44,8 @@ HEADERS += \
     include/cache.h \
     include/delegate.h \
     include/lineedit.h \
+    include/logger.h \
+    include/session.h \
     include/settings.h \
     include/tableView.h \
     include/client.h \
@@ -61,6 +63,8 @@ SOURCES += \
     src/cache.cpp \
     src/delegate.cpp \
     src/lineedit.cpp \
+    src/logger.cpp \
+    src/session.cpp \
     src/settings.cpp \
     src/tableView.cpp \
     src/client.cpp \

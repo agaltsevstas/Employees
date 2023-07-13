@@ -4,11 +4,11 @@
 #include <QWidget>
 
 class QPushButton;
-class Settings;
 class QStackedWidget;
 class QGridLayout;
 class QLabel;
 class QItemSelection;
+class Settings;
 
 namespace Ui
 {
@@ -64,7 +64,6 @@ namespace Client
         TablePrivate *_userData = nullptr;
         TableView *_tableView = nullptr;
         Requester *_requester = nullptr;
-        Settings &_settings;
 
         friend class TablePrivate;
     };

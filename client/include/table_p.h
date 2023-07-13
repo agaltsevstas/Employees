@@ -47,7 +47,6 @@ namespace Client
         void update();
 
     private:
-        Cache &_cache;
         QString _name;
         EditStrategy _strategy = OnFieldChange;
         QList<QPair<QLabel*, QWidget*>> _data;

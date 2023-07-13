@@ -9,7 +9,6 @@ class QJsonDocument;
 class Cache
 {
 public:
-    static Cache &Instance() noexcept;
 
     [[nodiscard]] QStringList getLogins() const;
     [[nodiscard]] QString getPassword(const QString &iLogin) const;
@@ -20,6 +19,7 @@ public:
     void addSearchWords(const QStringList &iWords);
 
 private:
+    static Cache &Instance() noexcept;
     Cache();
     ~Cache();
 
@@ -43,6 +43,8 @@ private:
 
 private:
     QScopedPointer<QJsonDocument> _cache;
+
+    friend class Session;
 };
 
 #endif // CACHE_H
