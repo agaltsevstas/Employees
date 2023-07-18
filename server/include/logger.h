@@ -15,7 +15,6 @@ class Logger
 {
     Q_DISABLE_COPY(Logger);
     friend std::default_delete<Logger>;
-    friend class Session;
 
 public:
 
@@ -35,6 +34,11 @@ public:
     };
 
     /*!
+     * @brief Создание единственного объекта
+     */
+    static void Instance();
+
+    /*!
      * \brief Обработчик выводимых сообщения
      * \param iMessageType - тип сообщения
      * \param iContext - контекст
@@ -49,11 +53,6 @@ public:
     static void SetDebugLevel(DebugLevel iLevel);
 
 private:
-    /*!
-     * @brief Создание единственного объекта
-     */
-    static void Instance();
-
     Logger() {}
     ~Logger();
 

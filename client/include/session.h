@@ -1,9 +1,12 @@
 #ifndef SESSION_H
 #define SESSION_H
 
+#include "qglobal.h"
 
 class Session
 {
+    Q_DISABLE_COPY(Session);
+
 public:
     static Session &getSession();
     class Cache& Cache();
@@ -12,16 +15,6 @@ public:
 private:
     Session();
     ~Session();
-
-    /*!
-     * @brief Запрет копирования
-     */
-    Session(const Session&) = delete;
-
-    /*!
-     * @brief Запрет оператора присваивания
-     */
-    Session& operator=(Session&) = delete;
 };
 
 #endif // SESSION_H

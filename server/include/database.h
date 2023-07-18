@@ -23,6 +23,9 @@ namespace Server
         bool getPeronalData(const qint64 &iID, const QString &iRole, const QString &iUserName, QByteArray& oData);
         bool sendRequest(const QByteArray &iRequest);
         bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {});
+        bool inserIntoTable(const QVariantList &data); // Добавление записей в таблицу
+        bool inserIntoTable(const QString &fname, const QString &sname, const QString &nik); // Добавление записей в таблицу
+        bool removeRecord(const qint64 &iID); // Удаление записи из таблицы по id
         QSqlTableModel* createTableModel();
 
     private:
@@ -32,11 +35,6 @@ namespace Server
         void close();          // Закрытие базы данных
         bool createDataBase(); // Создание базы данных
         bool createTable();    // Создание базы таблицы в базе данных
-
-    public slots:
-        bool inserIntoTable(const QVariantList &data); // Добавление записей в таблицу
-        bool inserIntoTable(const QString &fname, const QString &sname, const QString &nik); // Добавление записей в таблицу
-        bool removeRecord(const int id); // Удаление записи из таблицы по её id
 
     private:
         QJsonArray _records;

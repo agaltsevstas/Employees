@@ -4,6 +4,7 @@ QT += sql
 QT += core network # Для работы с сетевыми классами
 QT += widgets
 QT += core5compat
+QT += httpserver
 CONFIG += c++20
 CONFIG -= app_bundle
 
@@ -40,39 +41,27 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
-    include/controller/authenticationservice.h \
+    include/authenticationservice.h \
+    include/httpserver.h \
     include/database.h \
     include/employee.h \
-    include/utils.h \
-    include/controller/authorizationcontroller.h \
-    include/controller/requestmapper.h
+    include/logger.h \
+    include/utils.h
 
 SOURCES += \
-    src/controller/authenticationservice.cpp \
+    src/authenticationservice.cpp \
     src/database.cpp \
     src/employee.cpp \
+    src/httpserver.cpp \
+    src/logger.cpp \
     src/main.cpp \
-    src/utils.cpp \
-    src/controller/authorizationcontroller.cpp \
-    src/controller/requestmapper.cpp
+    src/utils.cpp
 
 # PostgreSql
 LIBS += -L$$COMMON_LIBS_DIR \
         -lpq \
         -lpqxx
 
-OTHER_FILES += etc/* etc/docroot/* etc/templates/* etc/ssl/* logs/*
-
-DISTFILES += ../CHANGELOG.txt ../LICENSE.txt ../README.txt \
-    etc/ssl/README.txt
-
-#---------------------------------------------------------------------------------------
-# The following lines include the sources of the QtWebAppLib library
-#---------------------------------------------------------------------------------------
-
-include(QtWebApp/logging/logging.pri)
-include(QtWebApp/httpserver/httpserver.pri)
-include(QtWebApp/templateengine/templateengine.pri)
 include(qjsonwebtoken/qjsonwebtoken.pri)
 
 

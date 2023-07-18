@@ -46,17 +46,19 @@ namespace Client
 
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
     {
-        _model = new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this);
-        connect(_model, &QJsonTableModel::sendUpdateRequest, createData);
-        connect(_model, &QJsonTableModel::sendUpdateRequest, deleteData);
-        connect(_model, &QJsonTableModel::sendUpdateRequest, updateData);
-        setModel(_model);
+        setModel(_model = new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this));
+        connect(_model, SIGNAL(sendCreateRequest(const QByteArray&, const HandleResponse&)),
+                this, SIGNAL(sendCreateData(const QByteArray&, const HandleResponse&)));
+        connect(_model, SIGNAL(sendDeleteRequest(const QByteArray&, const HandleResponse&)),
+                this, SIGNAL(sendDeleteData(const QByteArray&, const HandleResponse&)));
+        connect(_model, SIGNAL(sendUpdateRequest(const QByteArray&, const HandleResponse&)),
+                this, SIGNAL(sendUpdateData(const QByteArray&, const HandleResponse&)));
+
     }
 
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase)
     {
-        _model = new QJsonTableModel(iName, QJsonDocument(iDatabase), this);
-        setModel(_model);
+        setModel(_model = new QJsonTableModel(iName, QJsonDocument(iDatabase), this));
     }
 
     const QAbstractItemModel *TableView::getModel() const noexcept
@@ -137,7 +139,6 @@ namespace Client
         }
 
         _model->addRow(record);
-
         const QString message = "Сотрудник успешно добавлен!";
         QMessageBox information(QMessageBox::Icon::Information, tr("Сообщение"), message, QMessageBox::NoButton, this);
         QTimer::singleShot(1000, &information, &QMessageBox::close);
@@ -157,8 +158,7 @@ namespace Client
             {
                 for (const auto &selectedRow : select->selectedRows())
                 {
-                    if (!_model->deleteRow(selectedRow.row()))
-                        return false;
+                    _model->deleteRow(selectedRow.row());
                 }
             }
         }

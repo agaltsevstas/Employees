@@ -8,6 +8,7 @@ class QJsonDocument;
 
 class Cache
 {
+    Q_DISABLE_COPY(Cache);
 public:
 
     [[nodiscard]] QStringList getLogins() const;
@@ -22,16 +23,6 @@ private:
     static Cache &Instance() noexcept;
     Cache();
     ~Cache();
-
-    /*!
-     * @brief Запрет копирования
-     */
-    Cache(const Cache&) = delete;
-
-    /*!
-     * @brief Запрет оператора присваивания
-     */
-    Cache& operator=(Cache&) = delete;
 
     bool findValue(const QString &iTable, const QString iKey, const QString &iValue) const;
     bool findValue(const QString &iTable, const QString &iValue) const;

@@ -24,6 +24,7 @@ namespace Client
     class Table : public QWidget
     {
         Q_OBJECT
+        typedef std::function<void(const bool, const QString&)> HandleResponse;
 
     public:
         explicit Table(Requester* iRequester, QWidget *parent = nullptr);
@@ -37,9 +38,9 @@ namespace Client
         void showDB(bool iResult, const QString &error);
         void showDatabase();
         void updatePersonalData(const QByteArray &iData);
-        void createData(const QByteArray &iData);
-        void deleteData(const QByteArray &iData);
-        void updateData(const QByteArray &iData);
+        void createData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void deleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void updateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void onRevertClicked();
         void onAutoUpdateClicked(bool isChecked);
         void onUpdateClicked();

@@ -11,6 +11,7 @@ namespace Client
     {
         Q_OBJECT
         Q_PROPERTY(bool sortingEnabled READ isSortingEnabled WRITE setSortingEnabled)
+        typedef std::function<void(const bool, const QString&)> HandleResponse;
 
     public:
         explicit TableView(QWidget *parent = nullptr);
@@ -28,11 +29,10 @@ namespace Client
         void restoreUser();
         [[nodiscard]] std::optional<bool> canDelete();
 
-        std::function<void(const QByteArray &iData)> createData;
-        std::function<void(const QByteArray &iData)> deleteData;
-        std::function<void(const QByteArray &iData)> updateData;
-
     Q_SIGNALS:
+        void sendCreateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void sendDeleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void sendUpdateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void getUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
 
     private:
@@ -43,10 +43,6 @@ namespace Client
         void clearSearchChanged();
 
     private:
-        const int _x = 0;
-        const int _y = 0;
-        const int _width = 800;  /// Ширина окна виджета и сцены
-        const int _height = 600; /// Высота окна виджета и сцены
         QList<int> _hiddenIndices;
         QJsonTableModel* _model = nullptr;
     };

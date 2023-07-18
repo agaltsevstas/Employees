@@ -133,32 +133,72 @@ bool QJsonTableModel::setPermissions(const QJsonObject &iPermissions)
 
 void QJsonTableModel::submitAll()
 {
+    QWidget* tableView = qobject_cast<QWidget*>(parent());
+    if (!tableView)
+        return;
+
     if (!_recordsCreatedCache.empty())
     {
-        sendCreateRequest(QJsonDocument(QJsonObject{{_name, _recordsCreatedCache}}).toJson());
-
-        while(!_recordsCreatedCache.empty())
-            _recordsCreatedCache.pop_back();
+        sendCreateRequest(QJsonDocument(QJsonObject{{_name, _recordsCreatedCache}}).toJson(), [&](const bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                while(!_recordsCreatedCache.empty())
+                    _recordsCreatedCache.pop_back();
+                qDebug() << "Пользователи успешно добавлены!";
+            }
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << error;
+            }
+        });
     }
     else
         qInfo() << "Пустые данные для создания!";
 
     if (!_recordsDeletedCache.empty())
     {
-        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, _recordsDeletedCache}}).toJson());
-
-        while(!_recordsDeletedCache.empty())
-             _recordsDeletedCache.pop_back();
+        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, _recordsDeletedCache}}).toJson(), [&](const bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                while (!_recordsDeletedCache.empty())
+                     _recordsDeletedCache.pop_back();
+                qDebug() << "Пользователи успешно удалены!";
+            }
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << error;
+            }
+        });
     }
     else
         qInfo() << "Пустые данные для удаления!";
 
     if (!_recordsUpdatedCache.empty())
     {
-        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, _recordsUpdatedCache}}).toJson());
-
-        while(!_recordsUpdatedCache.empty())
-             _recordsUpdatedCache.pop_back();
+        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, _recordsUpdatedCache}}).toJson(), [&](const bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                while (!_recordsUpdatedCache.empty())
+                     _recordsUpdatedCache.pop_back();
+                qDebug() << "Ваши данные успешно обновлены!";
+            }
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << error;
+            }
+        });
     }
     else
         qInfo() << "Пустые данные для обновления!";
@@ -172,7 +212,7 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
     const QString& field = _headers[column].first.first;
     QString message = value;
 
-    if (auto tableView = static_cast<QWidget*>(parent()))
+    if (auto tableView = qobject_cast<QWidget*>(parent()))
     {
         if (Client::Employee::checkField(field, message))
         {
@@ -205,8 +245,48 @@ bool QJsonTableModel::checkField(const QModelIndex &index, const QString &value)
     return checkField(index.row(), index.column(), value);
 }
 
-bool QJsonTableModel::deleteRow(int row)
+void QJsonTableModel::addRow(const QJsonObject &iUser)
 {
+    QWidget* tableView = qobject_cast<QWidget*>(parent());
+    if (!tableView)
+        return;
+
+    const qint64 id = iUser["id"].toInteger();
+
+    QJsonObject record;
+    record.insert(Client::Employee::id(), id);
+
+    if (_strategy == OnFieldChange)
+    {
+        sendCreateRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson(), [&](const bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                _array.push_back(iUser);
+                qDebug() << "Ваши данные успешно добавлены!";
+                emit layoutChanged();
+            }
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << error;
+            }
+        });
+    }
+    else if (_strategy == OnManualSubmit)
+    {
+        _recordsCreatedCache.push_back(iUser);
+    }
+};
+
+void QJsonTableModel::deleteRow(int row)
+{
+    QWidget* tableView = qobject_cast<QWidget*>(parent());
+    if (!tableView)
+        return;
+
     QJsonObject jsonObject = getJsonObject(row);
     const qint64 id = jsonObject["id"].toInteger();
 
@@ -215,8 +295,22 @@ bool QJsonTableModel::deleteRow(int row)
 
     if (_strategy == OnFieldChange)
     {
-        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
-        _array.removeAt(row); // TODO: Сделать проверку на успешное удаление
+        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson(), [&](const bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                _array.removeAt(row);
+                emit layoutChanged();
+                qDebug() << "Ваши данные успешно удалены!";
+            }
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << error;
+            }
+        });
     }
     else if (_strategy == OnManualSubmit)
     {
@@ -230,7 +324,7 @@ bool QJsonTableModel::deleteRow(int row)
                 {
                     if (object.value(Client::Employee::id()) == id)
                     {
-                        return true;
+                        return;
                     }
                 }
             }
@@ -239,8 +333,6 @@ bool QJsonTableModel::deleteRow(int row)
         if (!found)
             _recordsDeletedCache.push_back(record);
     }
-
-    return true;
 }
 
 void QJsonTableModel::restoreRow(int row)
@@ -281,7 +373,6 @@ QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
 {
     QList<int> hiddenIndices;
     QStringList values = iValue.split(" ");
-
 
     for (qsizetype i = 0, I = _array.count(); i < I; ++i)
     {
@@ -324,72 +415,73 @@ QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
 
 bool QJsonTableModel::createEmail(int row)
 {
-    if (auto tableView = static_cast<QWidget*>(parent()))
+    auto tableView = static_cast<QWidget*>(parent());
+    if (!tableView)
+        return false;
+
+    if (_array.at(row).isObject())
     {
-        if (_array.at(row).isObject())
+        QJsonObject rowObject = _array.at(row).toObject();
+        if (rowObject.contains("id") &&
+            rowObject.contains("surname") &&
+            rowObject.contains("name") &&
+            rowObject.contains("patronymic") &&
+            rowObject.contains("email"))
         {
-            QJsonObject rowObject = _array.at(row).toObject();
-            if (rowObject.contains("id") &&
-                rowObject.contains("surname") &&
-                rowObject.contains("name") &&
-                rowObject.contains("patronymic") &&
-                rowObject.contains("email"))
+            const QString surname = rowObject.take(Client::Employee::surname()).toString();
+            const QString name = rowObject.take(Client::Employee::name()).toString();
+            const QString patronymic = rowObject.take(Client::Employee::patronymic()).toString();
+            const QString email = rowObject.take(Client::Employee::email()).toString();
+
+            QString newEmail = Utils::CreateEmail(QVector<QString>{surname, name, patronymic});
+            const int column = std::distance(_headers.constBegin(), std::find_if(_headers.constBegin(), _headers.constEnd(), [&](const auto& header)
             {
-                const QString surname = rowObject.take(Client::Employee::surname()).toString();
-                const QString name = rowObject.take(Client::Employee::name()).toString();
-                const QString patronymic = rowObject.take(Client::Employee::patronymic()).toString();
-                const QString email = rowObject.take(Client::Employee::email()).toString();
+                return header.first.first == Client::Employee::email();
+            }));
 
-                QString newEmail = Utils::CreateEmail(QVector<QString>{surname, name, patronymic});
-                const int column = std::distance(_headers.constBegin(), std::find_if(_headers.constBegin(), _headers.constEnd(), [&](const auto& header)
+            while (true)
+            {
+                if (column > 0 && checkFieldOnDuplicate(row, column, newEmail))
                 {
-                    return header.first.first == Client::Employee::email();
-                }));
+                    if (newEmail != email)
+                        setData(index(row, column), newEmail);
 
-                while (true)
+                    break;
+                }
+                else
                 {
-                    if (column > 0 && checkFieldOnDuplicate(row, column, newEmail))
+                    while (true)
                     {
-                        if (newEmail != email)
-                            setData(index(row, column), newEmail);
+                        bool ok;
+                        QString message = QInputDialog::getText(tableView,
+                                                         tr("Предупреждение"),
+                                                         tr("Данная почта уже существует, измените почту:"),
+                                                         QLineEdit::Normal, newEmail, &ok);
+                        qDebug() << "Данная почта уже существует: " << newEmail;
 
-                        break;
-                    }
-                    else
-                    {
-                        while (true)
+                        if (ok)
                         {
-                            bool ok;
-                            QString message = QInputDialog::getText(tableView,
-                                                             tr("Предупреждение"),
-                                                             tr("Данная почта уже существует, измените почту:"),
-                                                             QLineEdit::Normal, newEmail, &ok);
-                            qDebug() << "Данная почта уже существует: " << newEmail;
-
-                            if (ok)
+                            if (Client::Employee::checkField(Client::Employee::email(), message))
                             {
-                                if (Client::Employee::checkField(Client::Employee::email(), message))
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
-                                    QTimer::singleShot(1500, &warning, &QMessageBox::close);
-                                    warning.exec();
-                                    qDebug() << "Ошибка: " << message;
-                                }
+                                break;
                             }
                             else
                             {
-                                return false;
+                                QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
+                                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                                warning.exec();
+                                qDebug() << "Ошибка: " << message;
                             }
+                        }
+                        else
+                        {
+                            return false;
                         }
                     }
                 }
-
-                return true;
             }
+
+            return true;
         }
     }
 
@@ -460,6 +552,10 @@ bool QJsonTableModel::checkRowOnDeleted(int row) const
 
 void QJsonTableModel::updateRecord(int index, const QString &columnName, const QString &value)
 {
+    QWidget* tableView = qobject_cast<QWidget*>(parent());
+    if (!tableView)
+        return;
+
     QJsonObject record;
     record.insert("id", index);
     record.insert("column", columnName);
@@ -467,7 +563,22 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
 
     if (_strategy == OnFieldChange)
     {
-        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
+        HandleResponse handleResponse = [&](const bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                /// TODO :
+            }
+            else
+            {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                warning.exec();
+                qDebug() << "Ошибка: " << error;
+            }
+        };
+
+        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson(), handleResponse);
     }
     else if (_strategy == OnManualSubmit)
     {

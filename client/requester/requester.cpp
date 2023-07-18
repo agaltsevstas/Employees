@@ -184,9 +184,7 @@ namespace Client
 
     Requester::~Requester()
     {
-//        delete _manager;
-        delete _requester;
-        delete _progress;
+
     }
 
     void Requester::printProgress(qint64 bytesReceived, qint64 bytesTotal)
@@ -256,7 +254,7 @@ namespace Client
                 QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
                 if (!variantCookies.isNull())
                 {
-                    QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
+                    QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie>>(variantCookies);
                     for (const auto& cookie : cookies)
                     {
                         if (cookie.name() == "refreshToken")

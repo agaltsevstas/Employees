@@ -5,6 +5,7 @@
 #include <QMutex>
 #include <QNetworkRequest>
 #include <QObject>
+#include <QScopedPointer>
 #include <QVariantMap>
 
 
@@ -41,7 +42,7 @@ namespace Client
         void setToken(const QString &iToken) { _token = iToken; }
         const QString getToken() const { return _token; }
         const QJsonDocument getJson() const { return _json; }
-        QProgressBar *getProgressBar() const { return _progress; }
+        QProgressBar *getProgressBar() const { return _progress.get(); }
 
     signals:
         void response(bool iResult); // Ответ на запрос
@@ -53,10 +54,10 @@ namespace Client
         QString _token;
         QNetworkAccessManager *_manager;
         QJsonDocument _json;
-        QProgressBar *_progress;
+        QScopedPointer<QProgressBar> _progress;
         QMutex mutex;
         class RequesterImpl;
-        RequesterImpl *_requester;
+        QScopedPointer<RequesterImpl> _requester;
         friend class RequesterImpl;
     };
 }

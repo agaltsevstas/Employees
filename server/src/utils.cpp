@@ -1,11 +1,16 @@
 #include "utils.h"
 
+#include <QDateTime>
+#include <QMap>
+#include <QPair>
+#include <QRegularExpression>
+#include <QTextStream>
 #include <boost/algorithm/string.hpp>
 
 namespace Utils
 {
     // Карта перевода из кириллицы в латиницу
-    const std::map<std::string, std::string> translitSymbols =
+    const QMap<QString, QString> translitSymbols =
     {
         {"а", "a"},
         {"б", "b"},
@@ -42,68 +47,52 @@ namespace Utils
         {"я", "ja"},
     };
 
-    std::string Translit(const std::string &iTextCyrillic)
+    QString Translit(const QString &iTextCyrillic) noexcept
     {
-        std::string textLatin;
-        for (size_t i = 0; i <= iTextCyrillic.length(); ++i)
+        QString textLatin;
+        for (const auto& letter : iTextCyrillic)
         {
-            char space = iTextCyrillic[i];
-            std::string letter = iTextCyrillic.substr(i, 2); // Кириллица = 2 байта
-            // Пробелы по-особенному считывает
-            if (space == ' ')
-                textLatin += " ";
-            else if (translitSymbols.find(letter) != translitSymbols.end())
-                textLatin += translitSymbols.find(letter)->second;
+            if (auto latinLetter = translitSymbols.find(letter); latinLetter != translitSymbols.end())
+                textLatin += latinLetter.value();
         }
         return textLatin;
     }
-    
-    std::string CreateEmail(const std::vector<std::string> &iAnthroponym)
+
+    QString CreateEmail(const QVector<QString> &iAnthroponym) noexcept
     {
-        std::string email;
+        QString email;
         for (auto part: iAnthroponym) // Фамилия, имя, отчество
         {
             ToUpperandtolower(part, 0);
             email += Translit(part) + ".";
         }
-        email.pop_back(); // Удаление лишней точки в конце
+        email.chop(1);
         return email += "@tradingcompany.ru";
     }
-    
-    std::vector<std::string> SplitString(std::string iSource, const std::string &iDelim)
+
+    QStringList SplitString(QString iSource, const QString &iDelim) noexcept
     {
-        std::vector<std::string> result;
-        iSource.erase(remove(iSource.begin(), iSource.end(), ' '), iSource.end()); // Удаление пробелов
-        boost::split(result, iSource, boost::is_any_of(iDelim));
-        return result;
+        return iSource.simplified().split(QRegularExpression("[" + iDelim + "]"));
     }
 
-    std::string LocalTime()
+    QString LocalTime() noexcept
     {
-        std::stringstream ss;
-        time_t t = std::time(nullptr);
-        auto tm = *localtime(&t);
-        ss << std::put_time(&tm, "%d.%m.%Y_%H:%M:%S");
-        return ss.str();
+        return QDateTime::currentDateTime().toString("yyyy.MM.dd_hh:mm:ss");
     }
 
-    std::string Date()
+    QString Date() noexcept
     {
-        std::stringstream ss;
-        time_t t = std::time(nullptr);
-        auto tm = *localtime(&t);
-        ss << std::put_time(&tm, "%d.%m.%Y");
-        return ss.str();
+        return QDateTime::currentDateTime().toString("yyyy.mm.dd");
     }
 
-    std::vector<int> FindAge(const std::vector<std::string> &iData, const std::vector<std::string> &iDateOfBirth)
+    QVector<int> FindAge(const QVector<QString> &iData, const QVector<QString> &iDateOfBirth)
     {
-        uint currentDay = atoi(iData[0].c_str());
-        uint currentMonth = atoi(iData[1].c_str());
-        uint currentYear = atoi(iData[2].c_str());
-        uint birthDay = atoi(iDateOfBirth[0].c_str());
-        uint birthMonth = atoi(iDateOfBirth[1].c_str());
-        uint birthYear = atoi(iDateOfBirth[2].c_str());
+        uint currentYear = iData.at(0).toUInt();
+        uint currentMonth = iData.at(1).toUInt();
+        uint currentDay = iData.at(2).toUInt();
+        uint birthDay = iDateOfBirth.at(0).toUInt();
+        uint birthMonth = iDateOfBirth.at(1).toUInt();
+        uint birthYear = iDateOfBirth.at(2).toUInt();
 
         const uint february = ((birthYear % 4) == 0) && (((birthYear % 100) != 0) || ((birthYear % 400) == 0)) ? 29 : 28;
         uint month[12] = { 31, february, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // Кол-во дней в 12 месяцах
@@ -120,49 +109,36 @@ namespace Utils
         int calculatedDay = currentDay - birthDay;
         int calculatedMonth = currentMonth - birthMonth;
         int calculatedYear = currentYear - birthYear;
-        const std::vector<int> age = { calculatedYear, calculatedMonth, calculatedDay };
+        const QVector<int> age = { calculatedYear, calculatedMonth, calculatedDay };
         return age;
     }
 
-    std::string ToUpperAndToLower(std::string iSource, uint iNumberUpper)
+    QString ToUpperAndToLower(const QString& iSource, uint iNumberUpper) noexcept
     {
-        if (iSource.empty())
+        if (iSource.isEmpty())
             return {};
-        
-        // Конвертирование кириллицы в wstd::string, чтобы перевести буквы нижнего регистра в верхний или обратно
-        std::wstring wstr = UTF8ToWstring(iSource);
-        for (size_t i = 0; i < iNumberUpper; ++i)
-            wstr[i] = towupper(wstr[i]);
-        transform(wstr.begin() + iNumberUpper, wstr.end(), wstr.begin() + iNumberUpper, std::towlower);
-        // Обратное конвертирование кириллицы в std::string
-        iSource = WstringToUtf8(wstr);
-        return iSource;
+
+        return iSource.left(iNumberUpper) + iSource.right(iNumberUpper + 1).toLower();
     }
 
-    void ToUpperandtolower(std::string &iSource, uint iNumberUpper)
+    void ToUpperandtolower(QString &iSource, uint iNumberUpper) noexcept
     {
-        if (iSource.empty())
+        const auto size = iSource.size();
+        if (!size)
             return;
-        
-        // Конвертирование кириллицы в wstd::string, чтобы перевести буквы нижнего регистра в верхний или обратно
-        std::wstring wstr = UTF8ToWstring(iSource);
-        for (size_t i = 0; i < iNumberUpper; ++i)
-            wstr[i] = towupper(wstr[i]);
-        transform(wstr.begin() + iNumberUpper, wstr.end(), wstr.begin() + iNumberUpper, std::towlower);
-        // Обратное конвертирование кириллицы в std::string
-        iSource = WstringToUtf8(wstr);
+
+        iSource = iSource.left(iNumberUpper).toUpper() + iSource.right(size - iNumberUpper).toLower();
     }
 
-    void FormatDateToPostgres(std::string &iData)
+    void FormatDateToPostgres(QString &iData)
     {
-        if (iData.empty() || iData.size() == 4)
+        if (iData.isEmpty() || iData.size() == 4)
             return;
 
-        const char* delimiters = "./-";
-        std::string day = std::strtok(const_cast<std::string&>(iData).data(), delimiters);
-        std::string month = std::strtok(nullptr, delimiters);
-        std::string year = std::strtok(nullptr, delimiters);
+        QStringList result = iData.split(QRegularExpression("[./-]"));
+        if (result.size() != 3)
+            return;
 
-        iData = year + "-" + month + "-" + day;
+        iData = result[2] + "-" + result[1] + "-" + result[0];
     }
 }

@@ -64,37 +64,37 @@ namespace Server
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
 
-        const QString request = "SELECT "
-                                "employee.id, "
-                                "role.code, "
-                                "role.name as role, "
-                                "employee.surname, "
-                                "employee.name, "
-                                "employee.patronymic, "
-                                "employee.sex, "
-                                "employee.date_of_birth, "
-                                "employee.passport, "
-                                "employee.phone, "
-                                "employee.email, "
-                                "employee.date_of_hiring, "
-                                "employee.working_hours, "
-                                "employee.salary, "
-                                "employee.password "
-                                "FROM employee LEFT JOIN role ON employee.role_id = role.id "
-                                "WHERE employee.email = '" + userName + "@tradingcompany.ru' AND employee.password = '" + password +"';";
-
         QSqlQuery query(_db);
-        if (!query.exec(request))
+        query.prepare("SELECT "
+                      "employee.id, "
+                      "role.code, "
+                      "role.name as role, "
+                      "employee.surname, "
+                      "employee.name, "
+                      "employee.patronymic, "
+                      "employee.sex, "
+                      "employee.date_of_birth, "
+                      "employee.passport, "
+                      "employee.phone, "
+                      "employee.email, "
+                      "employee.date_of_hiring, "
+                      "employee.working_hours, "
+                      "employee.salary, "
+                      "employee.password "
+                      "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                      "WHERE employee.email = :userName AND employee.password = :password;");
+        query.bindValue(":userName", userName + "@tradingcompany.ru");
+        query.bindValue(":password", password);
+        if (!query.exec())
         {
             qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
             return false;
         }
 
         QJsonObject record;
-
         if (query.next())
         {
-            query >> _employee;
+//            query >> _employee;
 
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
@@ -104,47 +104,18 @@ namespace Server
                     oRole = query.value(i).toString();
                     continue;
                 }
-                else if (query.record().fieldName(i) == QString::fromStdString(Employee::ID()))
+                else if (query.record().fieldName(i) == Employee::id())
                 {
                     oID = query.value(i).toString();
                     continue;
                 }
+
                 record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
             }
         }
 
-        oData = QJsonDocument(QJsonObject{{QString::fromStdString(Employee::EmployeeTable()), record}}).toJson();
+        oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), record}}).toJson();
         return true;
-
-//        try
-//        {
-//            for (const auto &object: _vectorObjects)
-//            {
-//                std::string emailCheck, loginCheck;
-//                emailCheck = loginCheck = object->_email;
-//                loginCheck.erase(loginCheck.find('@'), loginCheck.size()); // Получение логина от почты
-//                if (login == emailCheck || login == loginCheck)
-//                {
-//                    isLoginFound = true;
-//                    break;
-//                }
-//            }
-
-//            for (auto object: _vectorObjects)
-//            {
-//                if (isLoginFound && password == object->_password)
-//                {
-//                    LOGIN(object);
-//                    CheckParameters(object.get(), true);
-//                    object->Functional();
-//                    LOGOUT(object);
-
-//                    AccountLogin(); // Рекурсия
-//                }
-//            }
-//        }
-
-        return false;
     }
 
     bool DataBase::getPeronalData(const qint64 &iID, const QString &iRole, const QString &iUserName, QByteArray& oData)
@@ -154,24 +125,26 @@ namespace Server
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
 
-        const QString request = "SELECT role.name as role, "
-                                "employee.surname, "
-                                "employee.name, "
-                                "employee.patronymic, "
-                                "employee.sex, "
-                                "employee.date_of_birth, "
-                                "employee.passport, "
-                                "employee.phone, "
-                                "employee.email, "
-                                "employee.date_of_hiring, "
-                                "employee.working_hours, "
-                                "employee.salary, "
-                                "employee.password "
-                                "FROM employee LEFT JOIN role ON employee.role_id = role.id "
-                                "WHERE employee.id = " + QString::number(iID) + " AND role.code = '" + iRole + "' AND employee.email = '" + userName + "@tradingcompany.ru';";
-
         QSqlQuery query(_db);
-        if (!query.exec(request))
+        query.prepare("SELECT role.name as role, "
+                      "employee.surname, "
+                      "employee.name, "
+                      "employee.patronymic, "
+                      "employee.sex, "
+                      "employee.date_of_birth, "
+                      "employee.passport, "
+                      "employee.phone, "
+                      "employee.email, "
+                      "employee.date_of_hiring, "
+                      "employee.working_hours, "
+                      "employee.salary, "
+                      "employee.password "
+                      "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                      "WHERE employee.id = :id AND role.code = :role AND employee.email = :userName;");
+        query.bindValue(":id", iID);
+        query.bindValue(":role", iRole);
+        query.bindValue(":userName", userName + "@tradingcompany.ru");
+        if (!query.exec())
         {
             qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
             return false;
@@ -181,7 +154,7 @@ namespace Server
 
         if (query.next())
         {
-            query >> _employee;
+//            query >> _employee;
 
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
@@ -190,7 +163,7 @@ namespace Server
             }
         }
 
-        oData = QJsonDocument(QJsonObject{{QString::fromStdString(Employee::EmployeeTable()), record}}).toJson();
+        oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), record}}).toJson();
         return true;
     }
 
@@ -311,9 +284,8 @@ namespace Server
         }
 
         qInfo() << "Попытка создать базу данных" << DATABASE_NAME;
-        const QString str = "create database " DATABASE_NAME " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'";
         QSqlQuery query(_db);
-        if (!query.exec(str))
+        if (!query.exec("create database " DATABASE_NAME " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'"))
         {
             qCritical() << "Ошибка: " << query.lastError().text() << ", база данных не создалась";
             QMessageBox::critical(this,  "Ошибка!", "База данных " + QString(DATABASE_NAME) + " не создалась");
@@ -327,23 +299,21 @@ namespace Server
 
     bool DataBase::createTable()
     {
-        QSqlQuery query;
-        const QString table = "CREATE TABLE IF NOT EXISTS employee(id serial primary key, "
-                              "position text NOT NULL, "
-                              "surname text NOT NULL, "
-                              "name text NOT NULL, "
-                              "patronymic text NOT NULL, "
-                              "sex varchar(3) NOT NULL, "
-                              "dateOfBirth date NOT NULL, "
-                              "passport bigint NOT NULL, "
-                              "phone bigint NOT NULL, "
-                              "email text NOT NULL, "
-                              "dateOfHiring date NOT NULL, "
-                              "workingHours text NOT NULL, "
-                              "salary money NOT NULL, "
-                              "password varchar(128) NOT NULL)";
-
-        if (!query.exec(table))
+        QSqlQuery query(_db);
+        if (!query.exec("CREATE TABLE IF NOT EXISTS employee(id serial primary key, "
+                        "position text NOT NULL, "
+                        "surname text NOT NULL, "
+                        "name text NOT NULL, "
+                        "patronymic text NOT NULL, "
+                        "sex varchar(3) NOT NULL, "
+                        "dateOfBirth date NOT NULL, "
+                        "passport bigint NOT NULL, "
+                        "phone bigint NOT NULL, "
+                        "email text NOT NULL, "
+                        "dateOfHiring date NOT NULL, "
+                        "workingHours text NOT NULL, "
+                        "salary money NOT NULL, "
+                        "password varchar(128) NOT NULL);"))
         {
             qCritical() << "Ошибка: " << query.lastError().text() << ", таблица не создалась";
             return false;
@@ -393,34 +363,22 @@ namespace Server
         data.append(sname);
         data.append(nik);
 
-        if (inserIntoTable(data))
-            return true;
-        else
-            return false;
+        return inserIntoTable(data);
     }
 
-    /* Метод для удаления записи из таблицы
-     * */
-    bool DataBase::removeRecord(const int id)
+    bool DataBase::removeRecord(const qint64 &iID)
     {
-        // Удаление строки из базы данных будет производитсья с помощью SQL-запроса
-        QSqlQuery query;
+        QSqlQuery query(_db);
 
-        // Удаление производим по id записи, который передается в качестве аргумента функции
-//        query.prepare("DELETE FROM " TABLE " WHERE id= :ID ;");
-//        query.bindValue(":ID", id);
+        query.prepare("DELETE FROM employee WHERE id = :id;");
+        query.bindValue(":ID", iID);
 
-//        // Выполняем удаление
-//        if (!query.exec())
-//        {
-//            qDebug() << "error delete row " << TABLE;
-//            qDebug() << query.lastError().text();
-//            return false;
-//        }
-//        else
-//        {
-//            return true;
-//        }
-        return false;
+        if (!query.exec())
+        {
+            qDebug() << query.lastError().text();
+            return false;
+        }
+
+        return true;
     }
 }

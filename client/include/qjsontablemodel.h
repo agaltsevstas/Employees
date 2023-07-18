@@ -17,6 +17,7 @@ class JsonTableModel;
 class QJsonTableModel final : public QAbstractTableModel
 {
     Q_OBJECT
+    typedef std::function<void(const bool, const QString&)> HandleResponse;
 
 public:
     QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent = nullptr);
@@ -36,8 +37,8 @@ public:
     void submitAll();
     bool checkField(int row, int column, const QString &ivalue) const;
     bool checkField(const QModelIndex &index, const QString &value) const;
-    inline void addRow(const QJsonObject &iUser) noexcept { _array.push_back(iUser); emit layoutChanged(); };
-    bool deleteRow(int row);
+    void addRow(const QJsonObject &iUser);
+    void deleteRow(int row);
     void restoreRow(int row);
     bool canDeleteRow(int row);
     [[nodiscard]] QList<int> valueSearch(const QString &iValue) const noexcept;
@@ -46,9 +47,9 @@ public:
     [[nodiscard]] inline qsizetype columnsCount() const noexcept { return _headers.size(); }
 
 Q_SIGNALS:
-    void sendCreateRequest(const QByteArray &iRequest);
-    void sendDeleteRequest(const QByteArray &iRequest);
-    void sendUpdateRequest(const QByteArray &iRequest);
+    void sendCreateRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+    void sendDeleteRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+    void sendUpdateRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
 
 private:
     void setJsonObject(const QModelIndex &index, const QJsonObject &iJsonObject);

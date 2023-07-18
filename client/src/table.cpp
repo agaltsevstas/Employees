@@ -265,9 +265,9 @@ namespace Client
                 _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
                 if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
                     _tableView->setEditStrategy(autoUpdate->isChecked() ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
-                _tableView->createData = std::bind(&Table::createData, this, std::placeholders::_1);
-                _tableView->deleteData = std::bind(&Table::deleteData, this, std::placeholders::_1);
-                _tableView->updateData = std::bind(&Table::updateData, this, std::placeholders::_1);
+                connect(_tableView, &TableView::sendCreateData, this, &Table::createData);
+                connect(_tableView, &TableView::sendDeleteData, this, &Table::deleteData);
+                connect(_tableView, &TableView::sendUpdateData, this, &Table::updateData);
                 connect(_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
                                                       SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
                 connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
@@ -312,16 +312,25 @@ namespace Client
         if (isCheckable)
         {
             showDatabase->setText("Показать базу данных");
-            _tableView->setHidden(true);
-            _tableView->setParent(NULL);
-            showNormal();
+
+            if (_tableView)
+            {
+                _tableView->setHidden(true);
+                _tableView->setParent(NULL);
+                if (_tableView->getModel())
+                    showNormal();
+            }
         }
         else
         {
+            showDatabase->setText("Скрыть базу данных");
+
             if (_tableView)
             {
                 _tableView->setHidden(false);
                 _ui->splitter->addWidget(_tableView);
+                if (_tableView->getModel())
+                    showFullScreen();
             }
             else
             {
@@ -330,8 +339,6 @@ namespace Client
                 _requester->sendRequest("showDatabase", handleResponse);
             }
 
-            showDatabase->setText("Скрыть базу данных");
-            showFullScreen();
         }
 
     }
@@ -346,33 +353,18 @@ namespace Client
         _requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
     }
 
-    void Table::createData(const QByteArray &iData)
+    void Table::createData(const QByteArray &iData, const HandleResponse &handleResponse)
     {
-        Requester::HandleResponse handleResponse = [](const bool iResult, const QString &error)
-        {
-            qDebug() << (iResult ? "Пользователи успешно добавлены!" : ("Ошибка: " + error));
-        };
-
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::POST, iData);
     }
 
-    void Table::deleteData(const QByteArray &iData)
+    void Table::deleteData(const QByteArray &iData, const HandleResponse &handleResponse)
     {
-        Requester::HandleResponse handleResponse = [](const bool iResult, const QString &error)
-        {
-            qDebug() << (iResult ? "Пользователи успешно удалены!" : ("Ошибка: " + error));
-        };
-
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::DELETE, iData);
     }
 
-    void Table::updateData(const QByteArray &iData)
+    void Table::updateData(const QByteArray &iData, const HandleResponse &handleResponse)
     {
-        Requester::HandleResponse handleResponse = [](const bool iResult, const QString &error)
-        {
-            qDebug() << (iResult ? "Поле базы данных успешно обновлено!" : ("Ошибка: " + error));
-        };
-
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
     }
 
@@ -381,10 +373,8 @@ namespace Client
         if (!_userData)
         {
             _userData = new TablePrivate("newEmployee", this);
-            connect(_tableView,
-                    SIGNAL(getUserData(const QString &, const std::function<void(QWidget*)>&)),
-                    _userData,
-                    SLOT(sendUserData(const QString &, const std::function<void(QWidget*)>&)));
+            connect(_tableView, SIGNAL(getUserData(const QString &, const std::function<void(QWidget*)>&)),
+                    _userData, SLOT(sendUserData(const QString &, const std::function<void(QWidget*)>&)));
         }
 
         _stackedWidget->addWidget(_userData);
