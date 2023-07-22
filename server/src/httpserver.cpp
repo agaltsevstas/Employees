@@ -379,7 +379,7 @@ namespace Server
             }
         }
 
-        return QHttpServerResponse("Content-Type", "application/json");
+        return QHttpServerResponse(QHttpServerResponse::StatusCode::Ok);
     }
 
     void HttpServer::HttpServerImpl::_start()
@@ -505,16 +505,16 @@ namespace Server
                 if (json.isObject())
                 {
                     const QJsonObject object = json.object();
-                    if (auto table = object.constFind("employee"); table != object.constEnd())
+                    if (auto table = object.constFind(Employee::employeeTable()); table != object.constEnd())
                     {
                         if (table->isObject())
                         {
                             const QJsonObject subobject = table->toObject();
-                            if (auto id = subobject.constFind("id"); id != subobject.constEnd())
+                            if (auto id = subobject.constFind(Employee::id()); id != subobject.constEnd())
                             {
                                 Tree tree;
                                 tree.type = Tree::Type::DELETE;
-                                tree.table = "employee";
+                                tree.table = Employee::employeeTable().toUtf8();
                                 tree.id = id->toString().toUtf8();
                                 _trees.push_back(tree);
                                 return true;
@@ -538,7 +538,7 @@ namespace Server
                         {
                             Tree tree;
                             tree.type = Tree::Type::PATCH;
-                            tree.table = "employee";
+                            tree.table = Employee::employeeTable().toUtf8();
                             /// Может быть updatePersonalData или updateDatabase
                             tree.id = (id != subobject.constEnd()) ? QByteArray::number(id->toInteger()) : QByteArray::number(_server._authenticationService->getID());
                             tree.column = column->toString().toUtf8();
@@ -554,7 +554,7 @@ namespace Server
                 if (json.isObject())
                 {
                     const QJsonObject object = json.object();
-                    if (auto table = object.constFind("employee"); table != object.constEnd())
+                    if (auto table = object.constFind(Employee::employeeTable()); table != object.constEnd())
                     {
                         if (table->isObject())
                         {
@@ -584,7 +584,7 @@ namespace Server
         if (!parseData())
             return false;
 
-        if (iTable == "permission")
+        if (iTable == Employee::permissionTable())
         {
             QByteArray request = "SELECT show_db FROM " + iTable +
                       " JOIN role ON " + iTable + ".id = role.id "
@@ -597,7 +597,7 @@ namespace Server
                 return false;
             }
         }
-        else if (iTable == "personal_data_permission" || iTable == "database_permission")
+        else if (iTable == Employee::personalDataPermissionTable() || iTable == Employee::databasePermissionTable())
         {
             for (const auto& tree : _trees)
             {

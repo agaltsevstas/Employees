@@ -55,18 +55,19 @@ namespace Client
         _requester(iRequester)
     {
         _ui->setupUi(this);
+        setObjectName("Table");
         setPersonalData(_requester->getJson());
 
         QSizePolicy sizePolicy = GetSizePolice();
         setSizePolicy(sizePolicy);
 
+        _stackedWidget->setObjectName(QString::fromUtf8("stackedWidget"));
         _stackedWidget->setSizePolicy(sizePolicy);
         _stackedWidget->addWidget(_personalData);
         _stackedWidget->setCurrentWidget(_personalData);
 
         _ui->gridLayout->addWidget(_stackedWidget, 0, 0, 1, 1);
-
-        loadSettings();
+        _ui->gridLayout->addWidget(new QProgressBar(_requester->getProgressBar()), 1, 0, 1, 1);
     }
 
     Table::~Table()
@@ -160,6 +161,18 @@ namespace Client
                                                 QJsonDocument(permissions.toObject()),
                                                 this);
                 connect(_personalData, SIGNAL(sendRequest(const QByteArray&)), this, SLOT(updatePersonalData(const QByteArray&)));
+
+                if (_stackedWidget && _stackedWidget->currentWidget() &&
+                    _stackedWidget->currentWidget() != _personalData)
+                {
+                    auto currentWidget = _stackedWidget->currentWidget();
+                    _stackedWidget->removeWidget(currentWidget);
+                    _stackedWidget->addWidget(_personalData);
+                    _stackedWidget->setCurrentWidget(_personalData);
+                    delete currentWidget;
+                }
+
+                loadSettings();
             }
         }
         else
@@ -215,7 +228,7 @@ namespace Client
             {
                 qDebug() << "Ваши данные успешно обновлены!";
                 setPersonalData(_requester->getJson());
-                if (_tableView->getModel())
+                if (_tableView && _tableView->getModel())
                 {
                     Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
                     _requester->sendRequest("showDatabase", handleResponse);
@@ -273,6 +286,10 @@ namespace Client
                 connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
                 connect(_personalData, SIGNAL(sendClearSearch()), _tableView, SLOT(clearSearchChanged()));
                 _ui->splitter->addWidget(_tableView);
+            }
+            else
+            {
+                _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
             }
         }
         else

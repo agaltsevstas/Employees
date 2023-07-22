@@ -107,7 +107,7 @@ namespace Server
                 else if (query.record().fieldName(i) == Employee::id())
                 {
                     oID = query.value(i).toString();
-                    continue;
+//                    continue;
                 }
 
                 record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
@@ -115,6 +115,7 @@ namespace Server
         }
 
         oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), record}}).toJson();
+        qInfo() << oData;
         return true;
     }
 
@@ -126,7 +127,9 @@ namespace Server
             userName.remove(index, userName.size()); // Получение логина от почты
 
         QSqlQuery query(_db);
-        query.prepare("SELECT role.name as role, "
+        query.prepare("SELECT "
+                      "employee.id, "
+                      "role.name as role, "
                       "employee.surname, "
                       "employee.name, "
                       "employee.patronymic, "

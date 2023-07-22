@@ -5,14 +5,13 @@
 #include <QAbstractItemModel>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QHeaderView>
 #include <QLineEdit>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonTableModel>
 #include <QMessageBox>
 #include <QTimer>
-
-#include <QHeaderView>
 
 
 namespace Client
@@ -46,19 +45,13 @@ namespace Client
 
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
     {
-        setModel(_model = new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this));
-        connect(_model, SIGNAL(sendCreateRequest(const QByteArray&, const HandleResponse&)),
-                this, SIGNAL(sendCreateData(const QByteArray&, const HandleResponse&)));
-        connect(_model, SIGNAL(sendDeleteRequest(const QByteArray&, const HandleResponse&)),
-                this, SIGNAL(sendDeleteData(const QByteArray&, const HandleResponse&)));
-        connect(_model, SIGNAL(sendUpdateRequest(const QByteArray&, const HandleResponse&)),
-                this, SIGNAL(sendUpdateData(const QByteArray&, const HandleResponse&)));
+        setModel(new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this));
 
     }
 
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase)
     {
-        setModel(_model = new QJsonTableModel(iName, QJsonDocument(iDatabase), this));
+        setModel(new QJsonTableModel(iName, QJsonDocument(iDatabase), this));
     }
 
     const QAbstractItemModel *TableView::getModel() const noexcept
@@ -68,11 +61,20 @@ namespace Client
 
     void TableView::setModel(QAbstractItemModel *model)
     {
+        if (_model)
+            delete _model;
+
         QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
+        sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
         horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(10, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(12, QHeaderView::Interactive);
-        sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
+        connect(_model, SIGNAL(sendCreateRequest(const QByteArray&, const HandleResponse&)),
+                this, SIGNAL(sendCreateData(const QByteArray&, const HandleResponse&)));
+        connect(_model, SIGNAL(sendDeleteRequest(const QByteArray&, const HandleResponse&)),
+                this, SIGNAL(sendDeleteData(const QByteArray&, const HandleResponse&)));
+        connect(_model, SIGNAL(sendUpdateRequest(const QByteArray&, const HandleResponse&)),
+                this, SIGNAL(sendUpdateData(const QByteArray&, const HandleResponse&)));
     }
 
     void TableView::submitAll()

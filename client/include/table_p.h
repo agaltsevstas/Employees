@@ -38,13 +38,12 @@ namespace Client
         void sendUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
         void onResetDataClicked();
         void onSearchClicked();
+
+    private Q_SLOTS:
         void createEmail();
 
     private Q_SLOTS:
-        void _createEmail();
-
-    private Q_SLOTS:
-        void update();
+        void update(const QString &iValue);
 
     private:
         QString _name;

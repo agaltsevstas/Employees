@@ -47,6 +47,7 @@ namespace Client
             return;
         }
 
+        setObjectName(QString::fromUtf8("personalData"));
         QSizePolicy sizePolicy = GetSizePolice();
         setSizePolicy(sizePolicy);
         setMinimumHeight(700);
@@ -83,7 +84,7 @@ namespace Client
         sizePolicyLine.setHorizontalStretch(1);
 
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (decltype(fieldNames.size()) i = 0, I = fieldNames.size(); i < I; ++i)
+        for (qsizetype i = 0, I = fieldNames.size(); i < I; ++i)
         {
             const auto& [field, name] = fieldNames[i];
             const QString toolTip = Client::Employee::helpFields()[field];
@@ -94,7 +95,7 @@ namespace Client
 
             auto it_data = object_data.find(field);
             auto it_permissions = object_permissions.find(field);
-            if (it_data != object_data.end() && it_permissions != object_permissions.end())
+            if (it_data != object_data.end())
             {
                 QLabel *label = new QLabel(name, this);
                 label->setObjectName(field);
@@ -102,10 +103,13 @@ namespace Client
                 label->setSizePolicy(sizePolicy);
                 dataLayout->addWidget(label, i, 0, 1, 1);
 
+                QWidget* widget = nullptr;
+
                 if (field == Client::Employee::role() ||
                     field == Client::Employee::sex())
                 {
                     QComboBox *comboBox = new QComboBox(this);
+                    connect(comboBox, SIGNAL(editTextChanged(const QString &)), this, SLOT(update(const QString &)));
                     comboBox->setObjectName(field);
                     comboBox->setToolTip(toolTip);
                     comboBox->setPlaceholderText(placeholderText);
@@ -113,17 +117,22 @@ namespace Client
                         comboBox->addItems(Client::Employee::getRoles());
                     else if (field == Client::Employee::sex())
                         comboBox->addItems(Client::Employee::getSex());
-
                     if (it_data->isString())
+                    {
+                        comboBox->blockSignals(true);
                         comboBox->setCurrentText(it_data->toString());
+                        comboBox->blockSignals(false);
+                    }
+                    else
+                        Q_ASSERT(false);
                     comboBox->setSizePolicy(sizePolicy);
                     comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
-                    dataLayout->addWidget(comboBox, i, 1, 1, 1);
-                    _data.push_back({label, comboBox});
+                    widget = comboBox;
                 }
                 else if (field == Client::Employee::salary())
                 {
                     QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
+                    connect(spinBox, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
                     spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
                     spinBox->setObjectName(field);
                     spinBox->setToolTip(toolTip);
@@ -131,63 +140,90 @@ namespace Client
                     spinBox->setRange(0, 1000000);
                     spinBox->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
                     if (it_data->isDouble())
+                    {
+                        spinBox->blockSignals(true);
                         spinBox->setValue(it_data->toDouble());
+                        spinBox->blockSignals(false);
+                    }
+                    else
+                        Q_ASSERT(false);
                     spinBox->setSizePolicy(GetSizePolice());
                     spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
-                    dataLayout->addWidget(spinBox, i, 1, 1, 1);
-                    _data.push_back({label, spinBox});
+                    widget = spinBox;
                 }
                 else
                 {
                     QLineEdit *lineEdit = nullptr;
 
-                    if (field == Client::Employee::name() ||
-                        field == Client::Employee::surname() ||
-                        field == Client::Employee::patronymic())
+                    if (field == Client::Employee::id())
                     {
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(_createEmail()));
+                        lineEdit->setValidator(new QIntValidator(0, std::numeric_limits<int>::max(), this));
+                        lineEdit->setEnabled(false);
+                    }
+                    else if (field == Client::Employee::name() ||
+                             field == Client::Employee::surname() ||
+                             field == Client::Employee::patronymic())
+                    {
+                        lineEdit = new QLineEdit(this);
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
                         lineEdit->setValidator(new TextValidator(parent));
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::dateOfBirth() ||
-                        field == Client::Employee::dateOfHiring())
+                             field == Client::Employee::dateOfHiring())
                     {
                         lineEdit = new QLineEdit(this);
-                        lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this) );
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this));
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::passport())
                     {
                         lineEdit = new QLineEdit(this);
-                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this) );
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this));
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::phone())
                     {
                         lineEdit = new QLineEdit(this);
-                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this) );
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this));
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::workingHours())
                     {
                         placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
                         lineEdit = new QLineEdit(this);
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
                         lineEdit->setValidator(new TextValidator(parent));
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::password())
                     {
                         placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
                         lineEdit = new QLineEdit(this);
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
                         lineEdit->setEchoMode(QLineEdit::Password);
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::email())
                     {
                         lineEdit = new LineEdit(false, this);
                         connect(lineEdit, SIGNAL(startingFocus()), this, SLOT(createEmail()));
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        lineEdit->setClearButtonEnabled(true);
                     }
                     else
                     {
                         lineEdit = new QLineEdit(this);
+                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
                         lineEdit->setValidator(new TextValidator(parent));
+                        lineEdit->setClearButtonEnabled(true);
                     }
 
+                    lineEdit->blockSignals(true);
                     if (it_data->isString())
                     {
                         lineEdit->setText(it_data.value().toString());
@@ -201,25 +237,23 @@ namespace Client
                         Q_ASSERT(false);
                     }
 
-                    if (it_permissions->isString())
-                    {
-                        lineEdit->setEnabled(it_permissions->toString() == "write");
-                    }
-                    else
-                    {
-                        Q_ASSERT(false);
-                    }
-
+                    lineEdit->blockSignals(false);
                     lineEdit->setObjectName(field);
                     lineEdit->setToolTip(toolTip);
                     lineEdit->setPlaceholderText(placeholderText);
                     lineEdit->setSizePolicy(sizePolicyLine);
                     lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                     lineEdit->setAttribute(Qt::WA_MacShowFocusRect, true);
-                    lineEdit->setClearButtonEnabled(true);
-                    dataLayout->addWidget(lineEdit, i, 1, 1, 1);
-                    _data.push_back({label,lineEdit});
+                    widget = lineEdit;
                 }
+
+                if (it_permissions != object_permissions.end() && it_permissions->isString())
+                {
+                    widget->setEnabled(it_permissions->toString() == "write");
+                }
+
+                dataLayout->addWidget(widget, i, 1, 1, 1);
+                _data.push_back({label, widget});
             }
         }
 
@@ -317,7 +351,6 @@ namespace Client
         autoUpdate->setObjectName("autoUpdate");
         autoUpdate->setToolTip("Автоматически отправлять данные на сервер");
         autoUpdate->setSizePolicy(sizePolicy);
-        autoUpdate->setChecked(true);
         buttonLayout->addWidget(autoUpdate, 0, 0, 1, buttonLayout->columnCount() / 2);
 
         QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
@@ -354,9 +387,6 @@ namespace Client
         setLayout(gridLayout);
 
         setEditStrategy(autoUpdate->isChecked() ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
-
-        buttonLayout->addWidget(new QProgressBar(qobject_cast<const Table*>(parent)->_requester->getProgressBar()), buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
-
         adjustSize();
     }
 
@@ -364,6 +394,7 @@ namespace Client
         QWidget(parent),
         _name(iName)
     {
+        setObjectName(QString::fromUtf8("userData"));
         setEditStrategy(TablePrivate::EditStrategy::OnManualSubmit);
         QSizePolicy sizePolicy = GetSizePolice();
 
@@ -579,13 +610,26 @@ namespace Client
         }
     }
 
-    void TablePrivate::update()
+    void TablePrivate::update(const QString &iValue)
     {
-        QLineEdit *lineEdit = qobject_cast<QLineEdit*>(sender());
-        if (!lineEdit)
+        if (_data.empty())
             return;
 
-        auto found = std::find_if(std::begin(_data), std::end(_data), [&lineEdit](const auto& data) { return data.second == lineEdit; });
+        QString value;
+        if (auto lineEdit = qobject_cast<const QLineEdit*>(sender()))
+        {
+            value = lineEdit->text();
+        }
+        else if (auto comboBox = qobject_cast<const QComboBox*>(sender()))
+        {
+            value = comboBox->currentText();
+        }
+        else if (auto *spinBox = qobject_cast<const QDoubleSpinBox*>(sender()))
+        {
+            value = spinBox->text();
+        }
+
+        auto found = std::find_if(std::begin(_data), std::end(_data), [this](const auto& data) { return data.second == sender(); });
         if (found == std::end(_data))
         {
             Q_ASSERT(false);
@@ -600,18 +644,8 @@ namespace Client
                 return field.second == columnRus;
             })->first;
 
-        QString value;
-        if (auto lineEdit = qobject_cast<const QLineEdit*>(widget))
-        {
-            value = lineEdit->text();
-        }
-        else if (auto comboBox = qobject_cast<const QComboBox*>(widget))
-        {
-            value = comboBox->currentText();
-        }
-
         record.insert("column", columnEng);
-        record.insert("value", value);
+        record.insert("value", iValue);
 
         if (_strategy == OnFieldChange)
         {
@@ -630,7 +664,7 @@ namespace Client
                         if (object.value("column") == columnEng)
                         {
                             found = true;
-                            if (object.value("value") != value)
+                            if (object.value("value") != iValue)
                             {
                                 _recordsCache->replace(i, record);
                                 break;
@@ -644,8 +678,7 @@ namespace Client
                 _recordsCache->push_back(record);
         }
 
-        lineEdit->clearFocus();
-        lineEdit->deselect();
+        widget->clearFocus();
     }
 
     void TablePrivate::submitAll()
@@ -707,13 +740,5 @@ namespace Client
 
         const QString newEmail = Utils::CreateEmail({ surname->text(), name->text(), patronymic->text() });
         email->setText(newEmail);
-    }
-
-    void TablePrivate::_createEmail()
-    {
-        if (_name == Employee::employeeTable())
-            return;
-
-        createEmail();
     }
 }

@@ -23,7 +23,7 @@ public: JsonTableModel(const QString &iHeader, const QStringList& iData, QObject
        _header(iHeader),
        _data(iData)
     {
-
+        setObjectName("jsonTableModel");
     }
 
 private:
@@ -70,6 +70,7 @@ private:
 QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent) :
     QAbstractTableModel(parent), _name(iName)
 {
+    setObjectName("jsonTableModel");
     setDatabase(iDatabase);
     setPermissions(iPermissions);
 }
@@ -77,6 +78,7 @@ QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDat
 QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, QObject *parent) :
     QAbstractTableModel(parent), _name(iName)
 {
+    setObjectName("jsonTableModel");
     setDatabase(iDatabase);
 }
 

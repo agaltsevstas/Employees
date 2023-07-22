@@ -5,7 +5,7 @@
 #include <QFile>
 #include <QThread>
 
-#define DIRECTORY "../settings/"
+#define DIRECTORY "../log/"
 
 Logger::DebugLevel Logger::_debugLevel = Logger::DebugLevel::DEBUG_LEVEL_DISABLED; // Определение уровня подробности лога
 QString Logger::_infoBuffer;                                                   // Определение буфер хранения информационных сообщений
