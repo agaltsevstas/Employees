@@ -23,7 +23,7 @@ public:
     QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent = nullptr);
     QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, QObject *parent = nullptr);
 
-    enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
+    enum EditStrategy {OnFieldChange, OnManualSubmit};
 
     void setEditStrategy(EditStrategy iStrategy) noexcept;
     inline EditStrategy egetEitStrategy() const noexcept { return _strategy; }

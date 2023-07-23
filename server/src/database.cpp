@@ -115,7 +115,6 @@ namespace Server
         }
 
         oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), record}}).toJson();
-        qInfo() << oData;
         return true;
     }
 

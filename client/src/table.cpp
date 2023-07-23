@@ -160,7 +160,7 @@ namespace Client
                                                 QJsonDocument(personal_permissions.toObject()),
                                                 QJsonDocument(permissions.toObject()),
                                                 this);
-                connect(_personalData, SIGNAL(sendRequest(const QByteArray&)), this, SLOT(updatePersonalData(const QByteArray&)));
+                connect(_personalData, &TablePrivate::sendRequest, this, &Table::updatePersonalData);
 
                 if (_stackedWidget && _stackedWidget->currentWidget() &&
                     _stackedWidget->currentWidget() != _personalData)
@@ -360,13 +360,8 @@ namespace Client
 
     }
 
-    void Table::updatePersonalData(const QByteArray &iData)
+    void Table::updatePersonalData(const QByteArray &iData, const HandleResponse &handleResponse)
     {
-        Requester::HandleResponse handleResponse = [](const bool iResult, const QString &error)
-        {
-            qDebug() << (iResult ? "Ваши данные успешно обновлены!" : ("Ошибка: " + error));
-        };
-
         _requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
     }
 
@@ -390,8 +385,7 @@ namespace Client
         if (!_userData)
         {
             _userData = new TablePrivate("newEmployee", this);
-            connect(_tableView, SIGNAL(getUserData(const QString &, const std::function<void(QWidget*)>&)),
-                    _userData, SLOT(sendUserData(const QString &, const std::function<void(QWidget*)>&)));
+            connect(_tableView, &TableView::getUserData, _userData, &TablePrivate::sendUserData);
         }
 
         _stackedWidget->addWidget(_userData);

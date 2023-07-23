@@ -37,7 +37,7 @@ namespace Client
         void selectionChanged(const QItemSelection &, const QItemSelection &);
         void showDB(bool iResult, const QString &error);
         void showDatabase();
-        void updatePersonalData(const QByteArray &iData);
+        void updatePersonalData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void createData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void deleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void updateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);

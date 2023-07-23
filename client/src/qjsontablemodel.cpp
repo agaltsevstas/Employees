@@ -565,7 +565,7 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
 
     if (_strategy == OnFieldChange)
     {
-        HandleResponse handleResponse = [&](const bool iResult, const QString &error)
+        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson(), [&](const bool iResult, const QString &error)
         {
             if (iResult)
             {
@@ -578,9 +578,7 @@ void QJsonTableModel::updateRecord(int index, const QString &columnName, const Q
                 warning.exec();
                 qDebug() << "Ошибка: " << error;
             }
-        };
-
-        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson(), handleResponse);
+        });
     }
     else if (_strategy == OnManualSubmit)
     {

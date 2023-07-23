@@ -44,17 +44,17 @@ HEADERS += \
     include/authenticationservice.h \
     include/httpserver.h \
     include/database.h \
-    include/employee.h \
     include/logger.h \
+    include/server.h \
     include/utils.h
 
 SOURCES += \
     src/authenticationservice.cpp \
     src/database.cpp \
-    src/employee.cpp \
     src/httpserver.cpp \
     src/logger.cpp \
     src/main.cpp \
+    src/server.cpp \
     src/utils.cpp
 
 # PostgreSql

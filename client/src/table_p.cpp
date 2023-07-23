@@ -1,9 +1,7 @@
-#include "table.h"
 #include "table_p.h"
 #include "ui_table.h"
 #include "cache.h"
 #include "client.h"
-#include "requester.h"
 #include "session.h"
 #include "utils.h"
 
@@ -19,12 +17,14 @@
 #include <QJsonObject>
 #include <QLineEdit>
 #include <QLabel>
+#include <QMessageBox>
 #include <QProgressBar>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <Validator>
 #include <QStringListModel>
+#include <QTimer>
 
 
 namespace Client
@@ -98,7 +98,6 @@ namespace Client
             if (it_data != object_data.end())
             {
                 QLabel *label = new QLabel(name, this);
-                label->setObjectName(field);
                 label->setFont(fontLabel);
                 label->setSizePolicy(sizePolicy);
                 dataLayout->addWidget(label, i, 0, 1, 1);
@@ -128,6 +127,8 @@ namespace Client
                     comboBox->setSizePolicy(sizePolicy);
                     comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                     widget = comboBox;
+
+                    _dataCache.push_back({field, comboBox->currentText()});
                 }
                 else if (field == Client::Employee::salary())
                 {
@@ -150,6 +151,8 @@ namespace Client
                     spinBox->setSizePolicy(GetSizePolice());
                     spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                     widget = spinBox;
+
+                    _dataCache.push_back({field, spinBox->text()});
                 }
                 else
                 {
@@ -245,6 +248,9 @@ namespace Client
                     lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                     lineEdit->setAttribute(Qt::WA_MacShowFocusRect, true);
                     widget = lineEdit;
+                    widget->clearFocus();
+
+                    _dataCache.push_back({field, lineEdit->text()});
                 }
 
                 if (it_permissions != object_permissions.end() && it_permissions->isString())
@@ -253,7 +259,6 @@ namespace Client
                 }
 
                 dataLayout->addWidget(widget, i, 1, 1, 1);
-                _data.push_back({label, widget});
             }
         }
 
@@ -395,7 +400,6 @@ namespace Client
         _name(iName)
     {
         setObjectName(QString::fromUtf8("userData"));
-        setEditStrategy(TablePrivate::EditStrategy::OnManualSubmit);
         QSizePolicy sizePolicy = GetSizePolice();
 
         QGridLayout *gridLayout = new QGridLayout(this);
@@ -436,7 +440,6 @@ namespace Client
             QString placeholderText = toolTip;
 
             QLabel *label = new QLabel(this);
-            label->setObjectName(field);
             label->setFont(fontLabel);
             label->setSizePolicy(GetSizePolice());
             label->setText(name);
@@ -456,7 +459,8 @@ namespace Client
                 comboBox->setSizePolicy(GetSizePolice());
                 comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                 dataLayout->addWidget(comboBox, i, 1, 1, 1);
-                _data.push_back({label, comboBox});
+
+                _dataCache.push_back({field, comboBox->currentText()});
             }
             else if (field == Client::Employee::salary())
             {
@@ -471,7 +475,8 @@ namespace Client
                 spinBox->setSizePolicy(GetSizePolice());
                 spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                 dataLayout->addWidget(spinBox, i, 1, 1, 1);
-                _data.push_back({label, spinBox});
+
+                _dataCache.push_back({field, spinBox->text()});
             }
             else
             {
@@ -531,7 +536,8 @@ namespace Client
                 lineEdit->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                 lineEdit->setClearButtonEnabled(true);
                 dataLayout->addWidget(lineEdit, i, 1, 1, 1);
-                _data.push_back({label, lineEdit});
+
+                _dataCache.push_back({field, lineEdit->text()});
             }
         }
 
@@ -583,112 +589,180 @@ namespace Client
         if (iStrategy != _strategy)
         {
             _strategy = iStrategy;
-            if (_strategy == OnFieldChange)
-            {
-                submitAll();
-                _recordsCache.reset();
-            }
-            else if (_strategy == OnManualSubmit)
-            {
+            if (!_recordsCache)
                 _recordsCache.reset(new QJsonArray());
-            }
+            else if (_strategy == OnFieldChange)
+                submitAll();
         }
     }
 
-    void TablePrivate::sendUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit)
+    void TablePrivate::sendUserData(const QString &iFieldName, const HandleField &handleField)
     {
-        if (!handleLineEdit)
+        if (!handleField)
             return;
 
-        for (const auto &[label, lineEdit] : _data)
+        const auto fieldNames = Client::Employee::getFieldNames();
+        for (decltype(fieldNames.size()) i = 1, I = fieldNames.size(); i < I; ++i)
         {
-            if (lineEdit->objectName() == iFieldName)
+            if (fieldNames[i].first == iFieldName)
             {
-                handleLineEdit(lineEdit);
-                return;
+                auto widget = findChild<QWidget*>(fieldNames[i].first);
+
+                QString value;
+                if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
+                {
+                    value = lineEdit->text();
+                }
+                else if (auto comboBox = qobject_cast<QComboBox*>(widget))
+                {
+                    value = comboBox->currentText();
+                }
+                else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                {
+                    value = spinBox->text();
+                }
+
+                if (handleField(value))
+                {
+                    QPalette palette = widget->palette();
+                    palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
+                    palette.setColor(QPalette::Text, Qt::black);
+                    widget->setPalette(palette);
+                }
+                else
+                {
+                    QPalette palette = widget->palette();
+                    palette.setColor(QPalette::PlaceholderText, Qt::red);
+                    palette.setColor(QPalette::Text, Qt::red);
+                    widget->setPalette(palette);
+                    return;
+                }
             }
         }
     }
 
     void TablePrivate::update(const QString &iValue)
     {
-        if (_data.empty())
+        if (_dataCache.empty())
             return;
 
-        QString value;
-        if (auto lineEdit = qobject_cast<const QLineEdit*>(sender()))
-        {
-            value = lineEdit->text();
-        }
-        else if (auto comboBox = qobject_cast<const QComboBox*>(sender()))
-        {
-            value = comboBox->currentText();
-        }
-        else if (auto *spinBox = qobject_cast<const QDoubleSpinBox*>(sender()))
-        {
-            value = spinBox->text();
-        }
-
-        auto found = std::find_if(std::begin(_data), std::end(_data), [this](const auto& data) { return data.second == sender(); });
-        if (found == std::end(_data))
+        auto widget = qobject_cast<QWidget*>(sender());
+        const QString objectName = widget->objectName();
+        auto fieldName = std::find_if(_dataCache.constBegin(), _dataCache.constEnd(), [&objectName](const auto& data) { return data.first == objectName; });
+        if (fieldName == _dataCache.constEnd())
         {
             Q_ASSERT(false);
             return;
         }
 
-        const auto& [label, widget] = *found;
-        const QString& columnRus = label->text();
+        const auto& [field, name] = *fieldName;
         QJsonObject record;
-        auto columnEng = std::find_if(std::begin(Client::Employee::getFieldNames()), std::end(Client::Employee::getFieldNames()), [&columnRus](const auto& field)
-            {
-                return field.second == columnRus;
-            })->first;
-
-        record.insert("column", columnEng);
+        record.insert("column", field);
         record.insert("value", iValue);
 
-        if (_strategy == OnFieldChange)
+        bool found = false;
+        for (decltype(_recordsCache->size()) i = 0, I = _recordsCache->size(); i < I; ++i)
         {
-            sendRequest(QJsonDocument(QJsonObject{{_name, record}}).toJson());
-        }
-        else if (_strategy == OnManualSubmit)
-        {
-            bool found = false;
-            for (decltype(_recordsCache->size()) i = 0, I = _recordsCache->size(); i < I; ++i)
+            if (_recordsCache->at(i).isObject())
             {
-                if (_recordsCache->at(i).isObject())
+                const QJsonObject object = _recordsCache->at(i).toObject();
+                if (object.contains("column") && object.contains("value"))
                 {
-                    const QJsonObject object = _recordsCache->at(i).toObject();
-                    if (object.contains("column") && object.contains("value"))
+                    if (object.value("column") == field)
                     {
-                        if (object.value("column") == columnEng)
+                        found = true;
+                        if (object.value("value") != iValue)
                         {
-                            found = true;
-                            if (object.value("value") != iValue)
-                            {
-                                _recordsCache->replace(i, record);
-                                break;
-                            }
+                            _recordsCache->replace(i, record);
+                            break;
                         }
                     }
                 }
             }
-
-            if (!found)
-                _recordsCache->push_back(record);
         }
 
-        widget->clearFocus();
+        if (!found)
+            _recordsCache->push_back(record);
+
+        if (_strategy == OnFieldChange)
+            submitAll();
+        else
+            widget->clearFocus();
     }
 
     void TablePrivate::submitAll()
     {
         if (_recordsCache && !_recordsCache->empty())
         {
-            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson());
+            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson(), [&](const bool iResult, const QString &error)
+            {
+                if (iResult)
+                {
+                    while (_recordsCache->count())
+                    {
+                        if (_recordsCache->last().isObject())
+                        {
+                            const QJsonObject object = _recordsCache->last().toObject();
+                            if (object.contains("column") && object.contains("value"))
+                            {
+                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&object](const auto& data) { return data.first == object.value("column"); });
+                                if (fieldName == _dataCache.end())
+                                {
+                                    Q_ASSERT(false);
+                                    return;
+                                }
 
-            while(_recordsCache->count())
-                 _recordsCache->pop_back();
+                                fieldName->second = object.value("value").toString();
+                                _recordsCache->pop_back();
+                            }
+                        }
+                    }
+
+                    qInfo() << "Ваши данные успешно обновлены!";
+                }
+                else
+                {
+                    for (qsizetype i = _recordsCache->size() - 1; i >= 0; --i)
+                    {
+                        if (_recordsCache->at(i).isObject())
+                        {
+                            const QJsonObject object = _recordsCache->at(i).toObject();
+                            if (object.contains("column") && object.contains("value"))
+                            {
+                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&object](const auto& data) { return data.first == object.value("column"); });
+                                if (fieldName == _dataCache.end())
+                                {
+                                    Q_ASSERT(false);
+                                    return;
+                                }
+
+                                if (auto widget = findChild<QWidget*>(fieldName->first))
+                                {
+                                    widget->blockSignals(true);
+                                    if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
+                                    {
+                                        lineEdit->setText(fieldName->second);
+                                    }
+                                    else if (auto comboBox = qobject_cast<QComboBox*>(widget))
+                                    {
+                                        comboBox->setCurrentText(fieldName->second);
+                                    }
+                                    else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                                    {
+                                        spinBox->setValue(fieldName->second.toDouble());
+                                    }
+                                    widget->blockSignals(false);
+                                }
+                            }
+                        }
+                    }
+
+                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, this);
+                    QTimer::singleShot(1500, &warning, &QMessageBox::close);
+                    warning.exec();
+                    qDebug() << "Ошибка: " << error;
+                }
+            });
         }
         else
             qInfo() << "Пустые данные!";
@@ -696,19 +770,22 @@ namespace Client
 
     void TablePrivate::onResetDataClicked()
     {
-        for (auto& [_, widget]: _data)
+        for(qsizetype i = 0, I = _dataCache.size(); i < I; ++i)
         {
-            if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
+            if (auto widget = findChild<QWidget*>(_dataCache[i].first))
             {
-                lineEdit->clear();
-            }
-            else if (auto comboBox = qobject_cast<QComboBox*>(widget))
-            {
-                comboBox->clear();
-            }
-            else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
-            {
-                spinBox->setValue(10000);
+                if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
+                {
+                    lineEdit->clear();
+                }
+                else if (auto comboBox = qobject_cast<QComboBox*>(widget))
+                {
+                    comboBox->setCurrentIndex(-1);
+                }
+                else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                {
+                    spinBox->setValue(10000);
+                }
             }
         }
     }

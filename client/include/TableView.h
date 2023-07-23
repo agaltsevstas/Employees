@@ -12,11 +12,12 @@ namespace Client
         Q_OBJECT
         Q_PROPERTY(bool sortingEnabled READ isSortingEnabled WRITE setSortingEnabled)
         typedef std::function<void(const bool, const QString&)> HandleResponse;
+        typedef std::function<bool(const QString&)> HandleField;
 
     public:
         explicit TableView(QWidget *parent = nullptr);
 
-        enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
+        enum EditStrategy {OnFieldChange, OnManualSubmit};
 
         void setEditStrategy(EditStrategy iStrategy) noexcept;
         void setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
@@ -33,7 +34,7 @@ namespace Client
         void sendCreateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void sendDeleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
         void sendUpdateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
-        void getUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
+        void getUserData(const QString &iFieldName, const HandleField&);
 
     private:
         void setModel(QAbstractItemModel *model) override;

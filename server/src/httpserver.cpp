@@ -281,7 +281,8 @@ namespace Server
                             "employee.working_hours, "
                             "employee.salary, "
                             "employee.password "
-                            "FROM employee LEFT JOIN role ON employee.role_id = role.id;", data1, Employee::employeeTable().toUtf8()))
+                            "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                            "WHERE employee.id != " + QByteArray::number(_authenticationService->getID()) + ";", data1, Employee::employeeTable().toUtf8()))
         {
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }

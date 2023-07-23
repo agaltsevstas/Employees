@@ -15,6 +15,8 @@ namespace Client
     class TablePrivate final : public QWidget
     {
         Q_OBJECT
+        typedef std::function<bool(const QString&)> HandleField;
+        typedef std::function<void(const bool, const QString&)> HandleResponse;
 
     public:
         TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent = nullptr);
@@ -22,7 +24,7 @@ namespace Client
         explicit TablePrivate(const QString &iName, QWidget *parent = nullptr);
         ~TablePrivate();
 
-        enum EditStrategy {OnFieldChange, OnRowChange, OnManualSubmit};
+        enum EditStrategy {OnFieldChange, OnManualSubmit};
 
         void setEditStrategy(EditStrategy iStrategy);
         [[nodiscard]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
@@ -30,12 +32,12 @@ namespace Client
         void submitAll();
 
     Q_SIGNALS:
-        void sendRequest(const QByteArray &iRequest);
+        void sendRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
         void sendValueSearch(const QString &iValue);
         void sendClearSearch();
 
     public Q_SLOTS:
-        void sendUserData(const QString &iFieldName, const std::function<void(QWidget*)>& handleLineEdit);
+        void sendUserData(const QString &iFieldName, const HandleField &handleField = Q_NULLPTR);
         void onResetDataClicked();
         void onSearchClicked();
 
@@ -48,7 +50,7 @@ namespace Client
     private:
         QString _name;
         EditStrategy _strategy = OnFieldChange;
-        QList<QPair<QLabel*, QWidget*>> _data;
+        QList<QPair<QString, QString>> _dataCache;
         QScopedPointer<QJsonArray> _recordsCache;
     };
 }

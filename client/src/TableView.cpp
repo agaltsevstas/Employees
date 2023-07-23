@@ -97,44 +97,16 @@ namespace Client
         {
             bool result = false;
             QPair<QString, QString> field = fieldNames[i];
-            std::function<void(QWidget*)> handleLineEdit = [&](QWidget* widget)
+            emit getUserData(field.first, [&](const QString& iValue)->bool
             {
-                if (widget)
+                if (_model->checkField(_model->rowsCount(), i, iValue))
                 {
-                    QString value;
-                    if (const QLineEdit* lineEdit = qobject_cast<const QLineEdit*>(widget))
-                    {
-                        value = lineEdit->text();
-                    }
-                    else if (const QComboBox* comboBox = qobject_cast<const QComboBox*>(widget))
-                    {
-                        value = comboBox->currentText();
-                    }
-                    else if (const QDoubleSpinBox *spinBox = qobject_cast<const QDoubleSpinBox*>(widget))
-                    {
-                        value = spinBox->text();
-                    }
-
-                    if (_model->checkField(_model->rowsCount(), i, value))
-                    {
-                        record.insert(field.first, value);
-                        QPalette palette = widget->palette();
-                        palette.setColor(QPalette::PlaceholderText, Qt::white);
-                        palette.setColor(QPalette::Text, Qt::black);
-                        widget->setPalette(palette);
-                        result = true;
-                    }
-                    else
-                    {
-                        QPalette palette = widget->palette();
-                        palette.setColor(QPalette::PlaceholderText, Qt::red);
-                        palette.setColor(QPalette::Text, Qt::red);
-                        widget->setPalette(palette);
-                    }
+                    record.insert(field.first, iValue);
+                    return result = true;
                 }
-            };
 
-            emit getUserData(field.first, handleLineEdit);
+                return false;
+            });
 
             if (!result)
                 return false;
