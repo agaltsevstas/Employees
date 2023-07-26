@@ -66,8 +66,6 @@ namespace Client
 
         QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
-        setItemDelegateForColumn(7, new Delegate(this));
-        setItemDelegateForColumn(8, new Delegate(this));
         horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(10, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(12, QHeaderView::Interactive);
@@ -91,7 +89,7 @@ namespace Client
             return false;
 
         QJsonObject record;
-        record.insert(Client::Employee::id(), QString::number(_model->rowsCount() + 1)); // + 1 потому что текущего пользователя нет в БД
+        record.insert(Client::Employee::id(), QString::number(_model->rowsCount() + 2)); // + 2 потому что текущего пользователя нет в БД
 
         const auto fieldNames = Client::Employee::getFieldNames();
 

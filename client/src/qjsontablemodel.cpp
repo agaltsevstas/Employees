@@ -286,7 +286,7 @@ bool QJsonTableModel::checkField(const QModelIndex &index, const QString &value)
 
 void QJsonTableModel::addRow(const QJsonObject &iUser)
 {
-    const qint64 size = _array.size();
+    const qint64 size = _array.size() + 2;
     for (auto it = iUser.constBegin(); it != iUser.constEnd(); ++it)
     {
         QJsonObject record;
@@ -576,7 +576,7 @@ bool QJsonTableModel::checkRowOnCreated(int row) const
     return false;
 }
 
-bool QJsonTableModel::checkRowOnUpdated(const QModelIndex &index) const
+bool QJsonTableModel::checkFieldOnUpdated(const QModelIndex &index) const
 {
     const auto& [field, name] = _headers[index.column()].first;
     const auto value = getJsonObject(index.row())[field];
@@ -735,7 +735,7 @@ QVariant QJsonTableModel::data(const QModelIndex &index, int role) const
                 return QColor(Qt::red);
             if (checkRowOnCreated(index.row()))
                 return QColor(Qt::blue);
-            if (checkRowOnUpdated(index))
+            if (checkFieldOnUpdated(index))
                 return QColor(Qt::green);
         }
         case Qt::EditRole:

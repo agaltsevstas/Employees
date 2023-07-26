@@ -177,8 +177,17 @@ namespace Server
     void AuthenticationService::removeToken()
     {
         if (_selectedIndex < 0)
+        {
             return;
-
-        _tokens.remove(_selectedIndex);
+        }
+        else if (_selectedIndex == 0 && _tokens.size() == 1)
+        {
+            _tokens.clear();
+            _selectedIndex = -1;
+        }
+        else
+        {
+            _tokens.remove(_selectedIndex);
+        }
     }
 }

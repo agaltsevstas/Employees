@@ -108,7 +108,7 @@ namespace Client
                     field == Client::Employee::sex())
                 {
                     QComboBox *comboBox = new QComboBox(this);
-                    connect(comboBox, SIGNAL(editTextChanged(const QString &)), this, SLOT(update(const QString &)));
+                    connect(comboBox, SIGNAL(currentTextChanged(const QString &)), this, SLOT(update(const QString &)));
                     comboBox->setObjectName(field);
                     comboBox->setToolTip(toolTip);
                     comboBox->setPlaceholderText(placeholderText);

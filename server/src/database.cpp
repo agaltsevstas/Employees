@@ -28,11 +28,6 @@ namespace Server
 
     DataBase::~DataBase()
     {
-        close();
-    }
-
-    void DataBase::close()
-    {
         _db.close();
     }
 
@@ -115,9 +110,10 @@ namespace Server
         return true;
     }
 
-    bool DataBase::getPeronalData(const qint64 &iID, const QString &iRole, const QString &iUserName, QByteArray& oData)
+    bool DataBase::getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData)
     {
-        QString userName = iUserName;
+        QString userName = QString::fromUtf8(iUserName);
+        QString role = QString::fromUtf8(iRole);
         qsizetype index = userName.indexOf('@');
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
@@ -141,7 +137,7 @@ namespace Server
                       "FROM employee LEFT JOIN role ON employee.role_id = role.id "
                       "WHERE employee.id = :id AND role.code = :role AND employee.email = :userName;");
         query.bindValue(":id", iID);
-        query.bindValue(":role", iRole);
+        query.bindValue(":role", role);
         query.bindValue(":userName", userName + "@tradingcompany.ru");
         if (!query.exec())
         {
@@ -297,21 +293,26 @@ namespace Server
     bool DataBase::createTable()
     {
         QSqlQuery query(_db);
-        if (!query.exec("CREATE TABLE IF NOT EXISTS employee("
-                        "id serial primary key, "
-                        "position text NOT NULL, "
-                        "surname text NOT NULL, "
-                        "name text NOT NULL, "
-                        "patronymic text NOT NULL, "
-                        "sex varchar(3) NOT NULL, "
-                        "dateOfBirth date NOT NULL, "
-                        "passport bigint NOT NULL, "
-                        "phone bigint NOT NULL, "
-                        "email text NOT NULL, "
-                        "dateOfHiring date NOT NULL, "
-                        "workingHours text NOT NULL, "
-                        "salary money NOT NULL, "
-                        "password varchar(128) NOT NULL);"))
+        if (!query.exec("CREATE TABLE IF NOT EXISTS public.employee"
+                        "(id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),"
+                        "role_id integer NOT NULL,"
+                        "surname text COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "name text COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "patronymic text COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "sex character varying(3) COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "date_of_birth date NOT NULL,"
+                        "passport bigint NOT NULL,"
+                        "phone bigint NOT NULL,"
+                        "email text COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "date_of_hiring date NOT NULL,"
+                        "working_hours text COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "salary numeric(10,2) NOT NULL,"
+                        "password character varying(128) COLLATE pg_catalog.\"default\" NOT NULL,"
+                        "CONSTRAINT employee_pkey PRIMARY KEY (id),"
+                        "CONSTRAINT role_pkey FOREIGN KEY (role_id)"
+                        "REFERENCES public.role (id) MATCH SIMPLE"
+                        "ON UPDATE NO ACTION"
+                        "ON DELETE NO ACTION)"))
         {
             qCritical() << "Ошибка: " << query.lastError().text() << ", таблица не создалась";
             return false;
@@ -361,19 +362,19 @@ namespace Server
                       ":salary, "
                       ":password);");
 
-        query.bindValue(":id", QString::fromUtf8(iData[Employee::id()]).toUInt());
+        query.bindValue(":id", QString::fromUtf8(iData[Employee::id()]));
         query.bindValue(":role_name", QString::fromUtf8(iData[Employee::role()]));
         query.bindValue(":surname", QString::fromUtf8(iData[Employee::surname()]));
         query.bindValue(":name", QString::fromUtf8(iData[Employee::name()]));
         query.bindValue(":patronymic", QString::fromUtf8(iData[Employee::patronymic()]));
         query.bindValue(":sex", QString::fromUtf8(iData[Employee::sex()]));
         query.bindValue(":date_of_birth", QString::fromUtf8(iData[Employee::dateOfBirth()]));
-        query.bindValue(":passport", QString::fromUtf8(iData[Employee::passport()]).toULongLong());
-        query.bindValue(":phone", QString::fromUtf8(iData[Employee::phone()]).toULongLong());
+        query.bindValue(":passport", QString::fromUtf8(iData[Employee::passport()]));
+        query.bindValue(":phone", QString::fromUtf8(iData[Employee::phone()]));
         query.bindValue(":email", QString::fromUtf8(iData[Employee::email()]));
         query.bindValue(":date_of_hiring", QString::fromUtf8(iData[Employee::dateOfHiring()]));
         query.bindValue(":working_hours", QString::fromUtf8(iData[Employee::workingHours()]));
-        query.bindValue(":salary", QString::fromUtf8(iData[Employee::salary()]).toDouble());
+        query.bindValue(":salary", QString::fromUtf8(iData[Employee::salary()]).toDouble()); // numeric как-то по особому обрабатывает
         query.bindValue(":password", QString::fromUtf8(iData[Employee::password()]));
         if (!query.exec())
         {
@@ -406,21 +407,18 @@ namespace Server
         const QString value = QString::fromUtf8(iValue);
 
         QSqlQuery query(_db);
-        if (iColumn == Employee::passport() ||
-            iColumn == Employee::phone())
+        if (column == Employee::role())
         {
-            query.prepare("UPDATE employee SET passport = :value WHERE id = :ID;");
-            query.bindValue(":column", column);
-            query.bindValue(":value", value);
-            query.bindValue(":ID", iID);
+            query.prepare("UPDATE employee SET role_id = (select role.id FROM role WHERE role.name = :value) "
+                          "FROM role WHERE employee.role_id = role.id "
+                          "AND employee.id = :ID");
         }
         else
         {
-            query.prepare("UPDATE employee SET :column = ':value' WHERE id = :ID;");
-            query.bindValue(":column", column);
-            query.bindValue(":value", value);
-            query.bindValue(":ID", iID);
+            query.prepare("UPDATE employee SET " + column + " = :value WHERE id = :ID;");
         }
+        query.bindValue(":value", value);
+        query.bindValue(":ID", iID);
 
         if (!query.exec())
         {

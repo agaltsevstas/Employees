@@ -61,7 +61,7 @@ private:
     bool checkFieldOnDuplicate(int row, int column, QString &iValue) const;
     bool checkRowOnDeleted(int row) const;
     bool checkRowOnCreated(int row) const;
-    bool checkRowOnUpdated(const QModelIndex &index) const;
+    bool checkFieldOnUpdated(const QModelIndex &index) const;
 
 private:
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;

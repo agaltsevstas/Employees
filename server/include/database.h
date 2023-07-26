@@ -20,7 +20,7 @@ namespace Server
         ~DataBase();
         bool connectToDataBase(); // Подключение к базе данных
         bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData);
-        bool getPeronalData(const qint64 &iID, const QString &iRole, const QString &iUserName, QByteArray& oData);
+        bool getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData);
         bool sendRequest(const QByteArray &iRequest);
         bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {});
         bool insertRecord(const QMap<QString, QByteArray> &iData); // Добавление записи в таблицу
@@ -31,8 +31,6 @@ namespace Server
     private:
         /// Внутренние методы для работы с базой данных
         bool open();           // Открытие базы данных
-        bool restore();        // Восстановление базы данных
-        void close();          // Закрытие базы данных
         bool createDataBase(); // Создание базы данных
         bool createTable();    // Создание базы таблицы в базе данных
 

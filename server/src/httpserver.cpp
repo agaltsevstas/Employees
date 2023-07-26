@@ -95,6 +95,10 @@ namespace Server
             {
                  _callback.reset(new Callback(_server, iCallback));
             }
+            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), TCallBack>)
+            {
+                _callback.reset(new Callback(_server, iCallback, std::ref(_trees)));
+            }
             else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), TCallBack>)
             {
                 _callback.reset(new Callback(_server, iCallback, std::ref(_trees), _request.method()));
@@ -122,7 +126,7 @@ namespace Server
         HttpServerImpl(QObject* parent = nullptr) :
           _host(SERVER_HOSTNAME),
           _port(SERVER_PORT),
-          _authenticationService(new AuthenticationService(parent))
+          _authenticationService(parent)
         {
 
         }
@@ -138,7 +142,7 @@ namespace Server
         QHttpServerResponse _updateDatabase(QQueue<Tree>& iTrees, QHttpServerRequest::Method iMethod);
 
     private:
-        AuthenticationService *_authenticationService;
+        AuthenticationService _authenticationService;
 
     private:
         QString _host;
@@ -162,7 +166,7 @@ namespace Server
                     QString id, role;
                     if (oData && db->authentication(userName, password, id, role, *oData))
                     {
-                        _authenticationService->authentication(id, userName, role);
+                        _authenticationService.authentication(id, userName, role);
                         return true;
                     }
                 }
@@ -171,7 +175,7 @@ namespace Server
             {
                 QByteArray token = QByteArray::fromBase64(authentication.mid(7));
                 qint64 exp;
-                if (_authenticationService->checkAuthentication(token, exp))
+                if (_authenticationService.checkAuthentication(token, exp))
                     return true;
             }
         }
@@ -184,7 +188,7 @@ namespace Server
         for (const auto& request: QList<QByteArray>{
                                    "DROP TABLE IF EXISTS tmp;",
                                    "SELECT * INTO tmp FROM " + Employee::permissionTable().toUtf8() + ";",
-                                   "DELETE FROM tmp WHERE tmp.role_id NOT IN (SELECT id FROM role WHERE role.code = '" + _authenticationService->getRole() +"'); ",
+                                   "DELETE FROM tmp WHERE tmp.role_id NOT IN (SELECT id FROM role WHERE role.code = '" + _authenticationService.getRole() +"'); ",
                                    "ALTER TABLE tmp DROP COLUMN id, DROP COLUMN role_id;",
                                    "SELECT * FROM tmp;"})
         {
@@ -227,7 +231,7 @@ namespace Server
                              "JOIN action AS working_hours ON p.working_hours = working_hours.id "
                              "JOIN action AS salary ON p.salary = salary.id "
                              "JOIN action AS password ON p.password = password.id "
-                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole() + "';", data2, Employee::personalDataPermissionTable().toUtf8()))
+                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService.getRole() + "';", data2, Employee::personalDataPermissionTable().toUtf8()))
         {
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
@@ -239,18 +243,14 @@ namespace Server
 
     QHttpServerResponse HttpServer::HttpServerImpl::_logout()
     {
-        _authenticationService->logout();
+        _authenticationService.logout();
         return QHttpServerResponse(QHttpServerResponse::StatusCode::ResetContent);
     }
 
     QHttpServerResponse HttpServer::HttpServerImpl::_showPersonalData()
     {
-        const qint64 id = _authenticationService->getID();
-        const QString username = _authenticationService->getUserName();
-        const QString role = _authenticationService->getRole();
-
         QByteArray data;
-        if (!db->getPeronalData(id, role, username, data))
+        if (!db->getPeronalData(_authenticationService.getID(), _authenticationService.getRole(), _authenticationService.getUserName(), data))
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
 
         return QHttpServerResponse(data);
@@ -274,7 +274,7 @@ namespace Server
                             "employee.salary, "
                             "employee.password "
                             "FROM employee LEFT JOIN role ON employee.role_id = role.id "
-                            "WHERE employee.id != " + QByteArray::number(_authenticationService->getID()) + ";", data1, Employee::employeeTable().toUtf8()))
+                            "WHERE employee.id != " + QByteArray::number(_authenticationService.getID()) + ";", data1, Employee::employeeTable().toUtf8()))
         {
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
@@ -308,7 +308,7 @@ namespace Server
                              "JOIN action AS working_hours ON p.working_hours = working_hours.id "
                              "JOIN action AS salary ON p.salary = salary.id "
                              "JOIN action AS password ON p.password = password.id "
-                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService->getRole() + "';", data2, Employee::databasePermissionTable().toUtf8()))
+                             "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService.getRole() + "';", data2, Employee::databasePermissionTable().toUtf8()))
         {
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
@@ -323,25 +323,7 @@ namespace Server
             Tree tree = iTrees.front();
             iTrees.pop_front();
 
-            QByteArray request;
-            if (tree.column == Employee::role())
-            {
-                request = "UPDATE " + tree.table + " SET role_id = (select role.id FROM role WHERE role.name = '" + tree.value +  "') "
-                          "FROM role WHERE employee.role_id = role.id "
-                          "AND employee.id = " + tree.id + " "
-                          "AND employee.email = '" + _authenticationService->getUserName() + "' "
-                          "AND role.code = '" + _authenticationService->getRole() + "';";
-            }
-            else
-            {
-                request = "UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' "
-                          "FROM role WHERE employee.role_id = role.id "
-                          "AND employee.id = " + tree.id + " "
-                          "AND employee.email = '" + _authenticationService->getUserName() + "' "
-                          "AND role.code = '" + _authenticationService->getRole() + "';";
-            }
-
-            if (!db->sendRequest(request))
+            if (!db->updateRecord(tree.id.toULongLong(), tree.column, tree.value))
                 return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
 
@@ -482,7 +464,7 @@ namespace Server
         _server.afterRequest([this](QHttpServerResponse &&response)
         {
             if (response.statusCode() != QHttpServerResponse::StatusCode::ResetContent)
-                response.addHeader("Set-Cookie", _authenticationService->getCookie());
+                response.addHeader("Set-Cookie", _authenticationService.getCookie());
             return std::move(response);
         });
     }
@@ -639,19 +621,19 @@ namespace Server
             {
                 request = "SELECT show_db FROM " + iTable +
                           " JOIN role ON " + iTable + ".id = role.id "
-                          "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND show_db = true;";
+                          "WHERE role.code = '" + _server._authenticationService.getRole() + "' AND show_db = true;";
             }
             else if (_request.method() == QHttpServerRequest::Method::Post)
             {
                 request = "SELECT create_user FROM " + iTable +
                           " JOIN role ON " + iTable + ".id = role.id "
-                          "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND create_user = true;";
+                          "WHERE role.code = '" + _server._authenticationService.getRole() + "' AND create_user = true;";
             }
             else if (_request.method() == QHttpServerRequest::Method::Delete)
             {
                 request = "SELECT delete_user FROM " + iTable +
                           " JOIN role ON " + iTable + ".id = role.id "
-                          "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND delete_user = true;";
+                          "WHERE role.code = '" + _server._authenticationService.getRole() + "' AND delete_user = true;";
             }
 
             QByteArray data;
@@ -670,7 +652,7 @@ namespace Server
                 {
                     QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
                                          "JOIN action ON permission." + tree.column + " = action.id "
-                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService->getRole() + "' AND action.code = 'write';";
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' AND action.code = 'write';";
 
                     QByteArray data;
                     if (!db->sendRequest(request, data))
@@ -686,7 +668,7 @@ namespace Server
                 {
                     QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
                                          "JOIN action ON permission." + tree.column + " = action.id "
-                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService->getRole() + "' AND (action.code = 'read' OR action.code = 'write');";
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' AND (action.code = 'read' OR action.code = 'write');";
 
                     QByteArray data;
                     if (!db->sendRequest(request, data))
@@ -708,9 +690,10 @@ namespace Server
 
 
     HttpServer::HttpServer(QObject* parent) :
-        QObject(parent)
+        QObject(parent),
+        _server(new HttpServerImpl(this))
     {
-        (new HttpServerImpl(this))->_start();
+        _server->_start();
     }
 
     HttpServer::~HttpServer()
