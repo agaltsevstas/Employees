@@ -18,7 +18,6 @@ namespace Server
         ~HttpServer();
     private:
         class HttpServerImpl;
-        HttpServerImpl* _server;
         friend class HttpServerImpl;
         template <class TCallBack> friend class Permission;
     };

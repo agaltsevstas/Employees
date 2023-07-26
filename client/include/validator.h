@@ -28,7 +28,6 @@ public:
     inline quint64 top() const noexcept { return _max; }
     void setBottom(quint64 min) noexcept;
     void setTop(quint32 max) noexcept;
-
     void setRange(quint32 min, quint32 max) noexcept;
 
     QValidator::State validate(QString &input, int&) const override;

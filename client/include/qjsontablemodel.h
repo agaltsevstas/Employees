@@ -56,10 +56,12 @@ private:
     [[nodiscard]] QJsonObject getJsonObject(int row) const;
     bool isSortColumn(int column) const;
     bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder) const;
-    void updateRecord(int index, const QString &columnName, const QString &value);
+    void updateRecord(int index, const QString &iColumnName, const QString &iValue);
     bool createEmail(int row);
     bool checkFieldOnDuplicate(int row, int column, QString &iValue) const;
     bool checkRowOnDeleted(int row) const;
+    bool checkRowOnCreated(int row) const;
+    bool checkRowOnUpdated(const QModelIndex &index) const;
 
 private:
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -75,7 +77,7 @@ private:
     EditStrategy _strategy = OnFieldChange;
     QList<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
-    QJsonArray _recordsCreatedCache, _recordsDeletedCache, _recordsUpdatedCache;
+    QJsonArray _recordsCache, _recordsCreatedCache, _recordsDeletedCache, _recordsUpdatedCache;
 
     friend class Delegate;
 };

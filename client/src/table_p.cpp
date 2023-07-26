@@ -83,15 +83,15 @@ namespace Client
         QSizePolicy sizePolicyLine = GetSizePolice();
         sizePolicyLine.setHorizontalStretch(1);
 
+        const QJsonObject object_data = iData.object(); // обязательно нужно определить
+        const QJsonObject object_permissions = iPersonalPermissions.object(); // обязательно нужно определить
+
         const auto fieldNames = Client::Employee::getFieldNames();
         for (qsizetype i = 0, I = fieldNames.size(); i < I; ++i)
         {
             const auto& [field, name] = fieldNames[i];
             const QString toolTip = Client::Employee::helpFields()[field];
             QString placeholderText = toolTip;
-
-            const QJsonObject object_data = iData.object(); // обязательно нужно определить
-            const QJsonObject object_permissions = iPersonalPermissions.object(); // обязательно нужно определить
 
             auto it_data = object_data.find(field);
             auto it_permissions = object_permissions.find(field);
@@ -433,7 +433,7 @@ namespace Client
         sizePolicyLine.setHorizontalStretch(1);
 
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (decltype(fieldNames.size()) i = 1, I = fieldNames.size(); i < I; ++i)
+        for (qsizetype i = 1, I = fieldNames.size(); i < I; ++i)
         {
             const auto& [field, name] = fieldNames[i];
             const QString toolTip = Client::Employee::helpFields()[field];
@@ -602,7 +602,7 @@ namespace Client
             return;
 
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (decltype(fieldNames.size()) i = 1, I = fieldNames.size(); i < I; ++i)
+        for (qsizetype i = 1, I = fieldNames.size(); i < I; ++i)
         {
             if (fieldNames[i].first == iFieldName)
             {
@@ -643,7 +643,9 @@ namespace Client
 
     void TablePrivate::update(const QString &iValue)
     {
-        if (_dataCache.empty())
+        const auto id = findChild<const QLineEdit*>(Client::Employee::id());
+
+        if (!id || _dataCache.empty())
             return;
 
         auto widget = qobject_cast<QWidget*>(sender());
@@ -657,6 +659,7 @@ namespace Client
 
         const auto& [field, name] = *fieldName;
         QJsonObject record;
+        record.insert(Client::Employee::id(), id->text().toLongLong());
         record.insert("column", field);
         record.insert("value", iValue);
 
@@ -686,8 +689,8 @@ namespace Client
 
         if (_strategy == OnFieldChange)
             submitAll();
-        else
-            widget->clearFocus();
+
+        widget->clearFocus();
     }
 
     void TablePrivate::submitAll()

@@ -23,9 +23,9 @@ namespace Server
         bool getPeronalData(const qint64 &iID, const QString &iRole, const QString &iUserName, QByteArray& oData);
         bool sendRequest(const QByteArray &iRequest);
         bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {});
-        bool inserIntoTable(const QVariantList &data); // Добавление записей в таблицу
-        bool inserIntoTable(const QString &fname, const QString &sname, const QString &nik); // Добавление записей в таблицу
-        bool removeRecord(const qint64 &iID); // Удаление записи из таблицы по id
+        bool insertRecord(const QMap<QString, QByteArray> &iData); // Добавление записи в таблицу
+        bool deleteRecord(const qint64 &iID); // Удаление записи из таблицы по id
+        bool updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue); // Обновление записи из таблицы по id
         QSqlTableModel* createTableModel();
 
     private:

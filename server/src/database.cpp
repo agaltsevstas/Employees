@@ -1,5 +1,4 @@
 #include "database.h"
-#include "utils.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -19,7 +18,6 @@
 #define DATABASE_PORT      5432           // Порт
 #define DATABASE_NAME     "employees"     // Название базы данных
 
-/// TODO: сделать методы update, get, where...
 
 namespace Server
 {
@@ -94,8 +92,6 @@ namespace Server
         QJsonObject record;
         if (query.next())
         {
-//            query >> _employee;
-
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
             {
@@ -107,6 +103,7 @@ namespace Server
                 else if (query.record().fieldName(i) == Employee::id())
                 {
                     oID = query.value(i).toString();
+                    /// Добавил вывод ID
 //                    continue;
                 }
 
@@ -156,8 +153,6 @@ namespace Server
 
         if (query.next())
         {
-//            query >> _employee;
-
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
             {
@@ -302,7 +297,8 @@ namespace Server
     bool DataBase::createTable()
     {
         QSqlQuery query(_db);
-        if (!query.exec("CREATE TABLE IF NOT EXISTS employee(id serial primary key, "
+        if (!query.exec("CREATE TABLE IF NOT EXISTS employee("
+                        "id serial primary key, "
                         "position text NOT NULL, "
                         "surname text NOT NULL, "
                         "name text NOT NULL, "
@@ -325,55 +321,106 @@ namespace Server
         return this->open();
     }
 
-    bool DataBase::inserIntoTable(const QVariantList &data)
+    bool DataBase::insertRecord(const QMap<QString, QByteArray> &iData)
     {
-        /* Запрос SQL формируется из QVariantList,
-         * в который передаются данные для вставки в таблицу.
-         * */
-        QSqlQuery query;
-        QSqlDatabase::database().commit();
-        /* В начале SQL запрос формируется с ключами,
-         * которые потом связываются методом bindValue
-         * для подстановки данных из QVariantList
-         * */
-//        query.prepare("INSERT INTO " TABLE " ( " TABLE_FNAME ", "
-//                                                 TABLE_SNAME ", "
-//                                                 TABLE_NIK " ) "
-//                      "VALUES (:FName, :SName, :Nik)");
-//        query.bindValue(":FName",       data[0].toString());
-//        query.bindValue(":SName",       data[1].toString());
-//        query.bindValue(":Nik",         data[2].toString());
+        if (iData.size() != 14)
+        {
+            qWarning() << "Недостаточно данных для выполнения запроса";
+            return false;
+        }
 
-        // После чего выполняется запросом методом exec()
-//        if (!query.exec())
-//        {
-//            qDebug() << "error insert into " << TABLE;
-//            qDebug() << query.lastError().text();
-//            return false;
-//        }
-//        else
-//        {
-//            return true;
-//        }
-        return false;
+        QSqlQuery query(_db);
+        query.prepare("INSERT INTO public.employee ("
+                      "id, "
+                      "role_id, "
+                      "surname, "
+                      "name, "
+                      "patronymic, "
+                      "sex, "
+                      "date_of_birth, "
+                      "passport, "
+                      "phone, "
+                      "email, "
+                      "date_of_hiring, "
+                      "working_hours, "
+                      "salary, "
+                      "password) "
+                      "OVERRIDING SYSTEM VALUE VALUES ("
+                      ":id, "
+                      "(SELECT role.id FROM role WHERE role.name = :role_name), "
+                      ":surname, "
+                      ":name, "
+                      ":patronymic, "
+                      ":sex, "
+                      ":date_of_birth, "
+                      ":passport, "
+                      ":phone, "
+                      ":email, "
+                      ":date_of_hiring, "
+                      ":working_hours, "
+                      ":salary, "
+                      ":password);");
+
+        query.bindValue(":id", QString::fromUtf8(iData[Employee::id()]).toUInt());
+        query.bindValue(":role_name", QString::fromUtf8(iData[Employee::role()]));
+        query.bindValue(":surname", QString::fromUtf8(iData[Employee::surname()]));
+        query.bindValue(":name", QString::fromUtf8(iData[Employee::name()]));
+        query.bindValue(":patronymic", QString::fromUtf8(iData[Employee::patronymic()]));
+        query.bindValue(":sex", QString::fromUtf8(iData[Employee::sex()]));
+        query.bindValue(":date_of_birth", QString::fromUtf8(iData[Employee::dateOfBirth()]));
+        query.bindValue(":passport", QString::fromUtf8(iData[Employee::passport()]).toULongLong());
+        query.bindValue(":phone", QString::fromUtf8(iData[Employee::phone()]).toULongLong());
+        query.bindValue(":email", QString::fromUtf8(iData[Employee::email()]));
+        query.bindValue(":date_of_hiring", QString::fromUtf8(iData[Employee::dateOfHiring()]));
+        query.bindValue(":working_hours", QString::fromUtf8(iData[Employee::workingHours()]));
+        query.bindValue(":salary", QString::fromUtf8(iData[Employee::salary()]).toDouble());
+        query.bindValue(":password", QString::fromUtf8(iData[Employee::password()]));
+        if (!query.exec())
+        {
+            qDebug() << query.lastError().text();
+            return false;
+        }
+
+        return true;
     }
 
-    bool DataBase::inserIntoTable(const QString &fname, const QString &sname, const QString &nik)
-    {
-        QVariantList data;
-        data.append(fname);
-        data.append(sname);
-        data.append(nik);
-
-        return inserIntoTable(data);
-    }
-
-    bool DataBase::removeRecord(const qint64 &iID)
+    bool DataBase::deleteRecord(const qint64 &iID)
     {
         QSqlQuery query(_db);
 
-        query.prepare("DELETE FROM employee WHERE id = :id;");
+        query.prepare("DELETE FROM employee WHERE id = :ID;");
         query.bindValue(":ID", iID);
+
+        if (!query.exec())
+        {
+            qDebug() << query.lastError().text();
+            return false;
+        }
+
+        return true;
+    }
+
+    bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue)
+    {
+        const QString column = QString::fromUtf8(iColumn);
+        const QString value = QString::fromUtf8(iValue);
+
+        QSqlQuery query(_db);
+        if (iColumn == Employee::passport() ||
+            iColumn == Employee::phone())
+        {
+            query.prepare("UPDATE employee SET passport = :value WHERE id = :ID;");
+            query.bindValue(":column", column);
+            query.bindValue(":value", value);
+            query.bindValue(":ID", iID);
+        }
+        else
+        {
+            query.prepare("UPDATE employee SET :column = ':value' WHERE id = :ID;");
+            query.bindValue(":column", column);
+            query.bindValue(":value", value);
+            query.bindValue(":ID", iID);
+        }
 
         if (!query.exec())
         {

@@ -16,15 +16,6 @@ namespace Server
 {
     struct Tree
     {
-        enum class Type
-        {
-            POST,
-            GET,
-            PATCH,
-            DELETE
-        };
-
-        Type type;
         QByteArray table;
         QByteArray id;
         QByteArray column;
@@ -104,15 +95,16 @@ namespace Server
             {
                  _callback.reset(new Callback(_server, iCallback));
             }
-            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), TCallBack>)
+            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), TCallBack>)
             {
-                _callback.reset(new Callback(_server, iCallback, std::ref(_trees)));
+                _callback.reset(new Callback(_server, iCallback, std::ref(_trees), _request.method()));
             }
         }
 
         QHttpServerResponse check(const QByteArray &iTable);
 
     private:
+        bool parseObject(const QJsonValue& iTable);
         bool parseData();
         bool _check(const QByteArray &iTable);
 
@@ -143,7 +135,7 @@ namespace Server
         QHttpServerResponse _showPersonalData();
         QHttpServerResponse _showDatabase();
         QHttpServerResponse _updatePersonalData(QQueue<Tree>& iTrees);
-        QHttpServerResponse _updateDatabase(QQueue<Tree>& iTrees);
+        QHttpServerResponse _updateDatabase(QQueue<Tree>& iTrees, QHttpServerRequest::Method iMethod);
 
     private:
         AuthenticationService *_authenticationService;
@@ -332,7 +324,7 @@ namespace Server
             iTrees.pop_front();
 
             QByteArray request;
-            if (tree.column == "role")
+            if (tree.column == Employee::role())
             {
                 request = "UPDATE " + tree.table + " SET role_id = (select role.id FROM role WHERE role.name = '" + tree.value +  "') "
                           "FROM role WHERE employee.role_id = role.id "
@@ -356,26 +348,49 @@ namespace Server
         return QHttpServerResponse(QHttpServerResponse::StatusCode::Ok);
     }
 
-    QHttpServerResponse HttpServer::HttpServerImpl::_updateDatabase(QQueue<Tree>& iTrees)
+    QHttpServerResponse HttpServer::HttpServerImpl::_updateDatabase(QQueue<Tree>& iTrees, QHttpServerRequest::Method iMethod)
     {
-        while (!iTrees.empty())
+        if (iMethod == QHttpServerRequest::Method::Post)
         {
-            Tree tree = iTrees.front();
-            iTrees.pop_front();
+            QMap<QString, QByteArray> data;
+            const auto fieldNames = Employee::getFieldNames();
+            while (!iTrees.empty())
+            {
+                Tree tree = iTrees.front();
+                iTrees.pop_front();
 
-            if (tree.type == Tree::Type::POST)
+                auto fieldName = std::find_if(fieldNames.constBegin(), fieldNames.constEnd(), [&tree](const auto& fieldName)
+                {
+                    return fieldName.first == tree.column;
+                });
+                if (fieldName == fieldNames.constEnd())
+                    return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
+
+                data[tree.column] = tree.value;
+            }
+
+            if (!db->insertRecord(data))
+                return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
+        }
+        else if (iMethod == QHttpServerRequest::Method::Delete)
+        {
+            while (!iTrees.empty())
             {
-                if (!db->sendRequest("UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' WHERE id = " + tree.id +  ";"))
+                Tree tree = iTrees.front();
+                iTrees.pop_front();
+
+                if (!db->deleteRecord(tree.id.toULongLong()))
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
             }
-            else if (tree.type == Tree::Type::DELETE)
+        }
+        else if (iMethod == QHttpServerRequest::Method::Patch)
+        {
+            while (!iTrees.empty())
             {
-                if (!db->removeRecord(tree.id.toLongLong()))
-                    return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
-            }
-            else if (tree.type == Tree::Type::PATCH)
-            {
-                if (!db->sendRequest("UPDATE " + tree.table + " SET " + tree.column + " = '" + tree.value +  "' WHERE id = " + tree.id +  ";"))
+                Tree tree = iTrees.front();
+                iTrees.pop_front();
+
+                if (!db->updateRecord(tree.id.toULongLong(), tree.column, tree.value))
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
             }
         }
@@ -435,7 +450,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", QHttpServerResponder::StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_showDatabase).check("permission");
+            return Permission(*this, request, &HttpServer::HttpServerImpl::_showDatabase).check(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updatePersonalData", [&](const QHttpServerRequest &request)
@@ -443,7 +458,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", QHttpServerResponder::StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).check("personal_data_permission");
+            return Permission(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).check(Employee::personalDataPermissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", [&](const QHttpServerRequest &request)
@@ -451,7 +466,17 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", QHttpServerResponder::StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check("database_permission");
+            switch (request.method())
+            {
+            case QHttpServerRequest::Method::Post:
+                return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check(Employee::permissionTable().toUtf8());
+            case QHttpServerRequest::Method::Delete:
+                return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check(Employee::permissionTable().toUtf8());
+            case QHttpServerRequest::Method::Patch:
+                return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check(Employee::databasePermissionTable().toUtf8());
+            default:
+                return QHttpServerResponse(QHttpServerResponder::StatusCode::BadRequest);
+            }
         });
 
         _server.afterRequest([this](QHttpServerResponse &&response)
@@ -478,6 +503,36 @@ namespace Server
     }
 
     template <class TCallBack>
+    bool Permission<TCallBack>::parseObject(const QJsonValue& iTable)
+    {
+        if (iTable.isObject())
+        {
+            const QJsonObject subobject = iTable.toObject();
+            if (subobject.contains(Employee::id()) &&
+                subobject.contains("column") &&
+                subobject.contains("value"))
+            {
+                Tree tree;
+                tree.table = Employee::employeeTable().toUtf8();
+                tree.id = QByteArray::number(subobject.value(Employee::id()).toInteger());
+                tree.column = subobject.value("column").toString().toUtf8();
+                tree.value = subobject.value("value").toString().toUtf8();
+
+                if (tree.column == Employee::passport() ||
+                    tree.column == Employee::phone())
+                {
+                    tree.value.replace("-", "");
+                }
+
+                _trees.push_back(tree);
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    template <class TCallBack>
     bool Permission<TCallBack>::parseData()
     {
         if (_request.method() == QHttpServerRequest::Method::Get)
@@ -497,53 +552,18 @@ namespace Server
 //                    _response.setStatus(403, parseError.errorString().toUtf8());
             }
 
-            if (_request.method() == QHttpServerRequest::Method::Post)
-            {
-                return true;
-            }
             else if (_request.method() == QHttpServerRequest::Method::Delete)
             {
-                if (json.isObject())
-                {
-                    const QJsonObject object = json.object();
-                    if (auto table = object.constFind(Employee::employeeTable()); table != object.constEnd())
-                    {
-                        if (table->isObject())
-                        {
-                            const QJsonObject subobject = table->toObject();
-                            if (auto id = subobject.constFind(Employee::id()); id != subobject.constEnd())
-                            {
-                                Tree tree;
-                                tree.type = Tree::Type::DELETE;
-                                tree.table = Employee::employeeTable().toUtf8();
-                                tree.id = id->toString().toUtf8();
-                                _trees.push_back(tree);
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            else if (_request.method() == QHttpServerRequest::Method::Patch)
-            {
-                auto parseObject = [this](const QJsonValue& iTable)->bool
+                auto parseData = [this](const QJsonValue& iTable)->bool
                 {
                     if (iTable.isObject())
                     {
                         const QJsonObject subobject = iTable.toObject();
-                        auto id = subobject.constFind("id");
-                        auto column = subobject.constFind("column");
-                        auto value = subobject.constFind("value");
-                        if (value != subobject.constEnd() &&
-                            column != subobject.constEnd())
+                        if (subobject.contains(Employee::id()))
                         {
                             Tree tree;
-                            tree.type = Tree::Type::PATCH;
                             tree.table = Employee::employeeTable().toUtf8();
-                            /// Может быть updatePersonalData или updateDatabase
-                            tree.id = (id != subobject.constEnd()) ? QByteArray::number(id->toInteger()) : QByteArray::number(_server._authenticationService->getID());
-                            tree.column = column->toString().toUtf8();
-                            tree.value = value->toString().toUtf8();
+                            tree.id = QByteArray::number(subobject.value(Employee::id()).toInteger());
                             _trees.push_back(tree);
                             return true;
                         }
@@ -555,15 +575,42 @@ namespace Server
                 if (json.isObject())
                 {
                     const QJsonObject object = json.object();
-                    if (auto table = object.constFind(Employee::employeeTable()); table != object.constEnd())
+                    if (object.contains(Employee::employeeTable()))
                     {
-                        if (table->isObject())
+                        auto table = object.value(Employee::employeeTable());
+                        if (table.isObject())
                         {
-                            return parseObject(*table);
+                            return parseData(table);
                         }
-                        else if (table->isArray())
+                        else if (table.isArray())
                         {
-                            for (const auto& subtable: table->toArray())
+                            for (const auto& subtable: table.toArray())
+                            {
+                                if (!parseData(subtable))
+                                    return false;
+                            }
+
+                            return true;
+                        }
+                    }
+                }
+            }
+            else if (_request.method() == QHttpServerRequest::Method::Post ||
+                     _request.method() == QHttpServerRequest::Method::Patch)
+            {
+                if (json.isObject())
+                {
+                    const QJsonObject object = json.object();
+                    if (object.contains(Employee::employeeTable()))
+                    {
+                        auto table = object.value(Employee::employeeTable());
+                        if (table.isObject())
+                        {
+                            return parseObject(table);
+                        }
+                        else if (table.isArray())
+                        {
+                            for (const auto& subtable: table.toArray())
                             {
                                 if (!parseObject(subtable))
                                     return false;
@@ -587,9 +634,25 @@ namespace Server
 
         if (iTable == Employee::permissionTable())
         {
-            QByteArray request = "SELECT show_db FROM " + iTable +
-                      " JOIN role ON " + iTable + ".id = role.id "
-                      "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND show_db = true;";
+            QByteArray request;
+            if (_request.method() == QHttpServerRequest::Method::Get)
+            {
+                request = "SELECT show_db FROM " + iTable +
+                          " JOIN role ON " + iTable + ".id = role.id "
+                          "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND show_db = true;";
+            }
+            else if (_request.method() == QHttpServerRequest::Method::Post)
+            {
+                request = "SELECT create_user FROM " + iTable +
+                          " JOIN role ON " + iTable + ".id = role.id "
+                          "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND create_user = true;";
+            }
+            else if (_request.method() == QHttpServerRequest::Method::Delete)
+            {
+                request = "SELECT delete_user FROM " + iTable +
+                          " JOIN role ON " + iTable + ".id = role.id "
+                          "WHERE role.code = '" + _server._authenticationService->getRole() + "' AND delete_user = true;";
+            }
 
             QByteArray data;
             if (!db->sendRequest(request, data))
@@ -598,25 +661,46 @@ namespace Server
                 return false;
             }
         }
-        else if (iTable == Employee::personalDataPermissionTable() || iTable == Employee::databasePermissionTable())
+        else if (iTable == Employee::personalDataPermissionTable() ||
+                 iTable == Employee::databasePermissionTable())
         {
-            for (const auto& tree : _trees)
+            if (_request.method() == QHttpServerRequest::Method::Patch)
             {
-                QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
-                          "JOIN action ON permission." + tree.column + " = action.id "
-                          "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService->getRole() + "' AND action.code = 'write'";
-
-                QByteArray data;
-                if (!db->sendRequest(request, data))
+                for (const auto& tree : _trees)
                 {
-                    qWarning() << "Ошибка прав доступа";
-                    return false;
+                    QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
+                                         "JOIN action ON permission." + tree.column + " = action.id "
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService->getRole() + "' AND action.code = 'write';";
+
+                    QByteArray data;
+                    if (!db->sendRequest(request, data))
+                    {
+                        qWarning() << "Ошибка прав доступа";
+                        return false;
+                    }
+                }
+            }
+            else if (_request.method() == QHttpServerRequest::Method::Get)
+            {
+                for (const auto& tree : _trees)
+                {
+                    QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
+                                         "JOIN action ON permission." + tree.column + " = action.id "
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService->getRole() + "' AND (action.code = 'read' OR action.code = 'write');";
+
+                    QByteArray data;
+                    if (!db->sendRequest(request, data))
+                    {
+                        qWarning() << "Ошибка прав доступа";
+                        return false;
+                    }
                 }
             }
         }
         else
         {
             qDebug() << "...";
+            return false;
         }
 
         return true;
@@ -624,10 +708,9 @@ namespace Server
 
 
     HttpServer::HttpServer(QObject* parent) :
-        QObject(parent),
-        _server(new HttpServerImpl(this))
+        QObject(parent)
     {
-        _server->_start();
+        (new HttpServerImpl(this))->_start();
     }
 
     HttpServer::~HttpServer()
