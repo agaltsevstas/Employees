@@ -134,20 +134,20 @@ namespace Client
             };
         }
 
-        static QString id()           { return "id"; }
-        static QString role()         { return "role"; }
-        static QString surname()      { return "surname"; }
-        static QString name()         { return "name"; }
-        static QString patronymic()   { return "patronymic"; }
-        static QString sex()          { return "sex"; }
-        static QString dateOfBirth()  { return "date_of_birth"; }
-        static QString passport()     { return "passport"; }
-        static QString phone()        { return "phone"; }
-        static QString email()        { return "email"; }
-        static QString dateOfHiring() { return "date_of_hiring"; }
-        static QString workingHours() { return "working_hours"; }
-        static QString salary()       { return "salary"; }
-        static QString password()     { return "password"; }
+        static QString id() noexcept           { return "id"; }
+        static QString role() noexcept         { return "role"; }
+        static QString surname() noexcept      { return "surname"; }
+        static QString name() noexcept         { return "name"; }
+        static QString patronymic() noexcept   { return "patronymic"; }
+        static QString sex() noexcept          { return "sex"; }
+        static QString dateOfBirth() noexcept  { return "date_of_birth"; }
+        static QString passport() noexcept     { return "passport"; }
+        static QString phone() noexcept        { return "phone"; }
+        static QString email() noexcept        { return "email"; }
+        static QString dateOfHiring() noexcept { return "date_of_hiring"; }
+        static QString workingHours() noexcept { return "working_hours"; }
+        static QString salary() noexcept       { return "salary"; }
+        static QString password() noexcept     { return "password"; }
 
         /*!
          * @brief Проверка полей на повреждение/перезапись данных
@@ -155,10 +155,10 @@ namespace Client
          */
 
         static bool checkField(const QString &iField, QString &iValue);
-        static QString employeeTable() { return "employee"; }
-        static QString permissionTable() { return "permission"; }
-        static QString personalDataPermissionTable() { return "personal_data_permission"; }
-        static QString databasePermissionTable() { return "database_permission"; }
+        static QString employeeTable() noexcept { return "employee"; }
+        static QString permissionTable() noexcept { return "permission"; }
+        static QString personalDataPermissionTable() noexcept { return "personal_data_permission"; }
+        static QString databasePermissionTable() noexcept { return "database_permission"; }
 
         [[nodiscard]] static QList<QString> getTables() noexcept
         {
@@ -194,127 +194,7 @@ namespace Client
             QString stringValue;
         };
 
-        /// Карта параметров и оберток инициализаций полей
-        const QMap<QString, std::function<void(Employee&, const QString&)>> _setParameters =
-        {
-            {id(),           nullptr},
-            {role(),         &Employee::SetRole},
-            {surname(),      &Employee::SetSurname},
-            {name(),         &Employee::SetName},
-            {patronymic(),   &Employee::SetPatronymic},
-            {sex(),          &Employee::SetSex},
-            {dateOfBirth(),  &Employee::SetDateOfBirth},
-            {passport(),     &Employee::SetPassport},
-            {phone(),        &Employee::SetPhone},
-            {email(),        &Employee::SetEmail},
-            {dateOfHiring(), &Employee::SetDateOfHiring},
-            {workingHours(), &Employee::SetWorkingHours},
-            {salary(),       &Employee::SetSalary},
-            {password(),     &Employee::SetPassword}
-        };
-
-        /// Карта полей с их статусом
-        QMap<Field, Status> _fieldStatus
-        {
-            {FIELD_ID,             ST_EMPTY},
-            {FIELD_ROLE,           ST_EMPTY},
-            {FIELD_SURNAME,        ST_EMPTY},
-            {FIELD_NAME,           ST_EMPTY},
-            {FIELD_PATRONYMIC,     ST_EMPTY},
-            {FIELD_SEX,            ST_EMPTY},
-            {FIELD_DATE_OF_BIRTH,  ST_EMPTY},
-            {FIELD_PASSPORT,       ST_EMPTY},
-            {FIELD_PHONE,          ST_EMPTY},
-            {FIELD_EMAIL,          ST_EMPTY},
-            {FIELD_DATE_OF_HIRING, ST_EMPTY},
-            {FIELD_WORKING_HOURS,  ST_EMPTY},
-            {FIELD_SALARY,         ST_EMPTY},
-            {FIELD_PASSWORD,       ST_EMPTY},
-        };
-
-    public:
-        virtual ~Employee() {}
-
-        /*!
-         * @brief Перегрузка оператора = (присваивания).
-         * Запись данных из одного объекта в другой
-         * @param object - объект
-         * @return Измененный объект
-         */
-        const Employee& operator = (const Employee &object) noexcept;
-
-        /*!
-         * @brief Перегрузка оператора << (вывода).
-         * Вывод полей объекта
-         * @param ioOut - поток вывода
-         * @param object - объект
-         * @return Поток вывода
-         */
-        friend QDataStream& operator << (QDataStream &ioOut, const Employee &object) noexcept;
-
-        /*!
-         * @brief Перегрузка оператора == (сравнения).
-         * Сравнение двух объектов на равенство
-         * @param first - первый объект
-         * @param second - второй объект
-         * @return Логическое значение
-         */
-        friend bool operator == (const Employee &first, const Employee &second) noexcept;
-
     private:
-        uint32_t _id = 0;       /// ID
-        QString _role;         /// Должность
-        QString _surname;      /// Фамилия
-        QString _name;         /// Имя
-        QString _patronymic;   /// Отчество
-        QString _sex;          /// Пол
-        QString _dateOfBirth;  /// Дата рождения
-        uint64_t _passport = 0; /// Паспорт
-        uint64_t _phone = 0;    /// Телефон
-        QString _email;        /// Почта
-        QString _dateOfHiring; /// Дата принятия на работу
-        QString _workingHours; /// Часы работы
-        uint32_t _salary = 0;   /// Зарплата
-        QString _password;     /// Пароль
-
-        /*!
-         * @brief Инициализация полей
-         * @param Значение поля
-         */
-        void SetId(const QString &iID) noexcept;
-        void SetRole(const QString &iRole) noexcept;
-        void SetSurname(const QString &iSurname) noexcept;
-        void SetName(const QString &iName) noexcept;
-        void SetPatronymic(const QString &iPatronymic) noexcept;
-        void SetSex(const QString &iSex) noexcept;
-        void SetDateOfBirth(const QString &iDateOfBirth) noexcept;
-        void SetPhone(const QString &iPhone) noexcept;
-        void SetEmail(const QString &iEmail) noexcept;
-        void SetDateOfHiring(const QString &iDateOfHiring) noexcept;
-        void SetWorkingHours(const QString &iWorkingHours) noexcept;
-        void SetPassport(const QString &iPassport) noexcept;
-        void SetSalary(const QString &iSalary) noexcept;
-        void SetPassword(const QString &iPassword) noexcept;
-
-        /*!
-         * @brief Изменение статуса полей на перезапись/дублирование данных
-         */
-        void ChangeStatusRole() noexcept;
-        void ChangeStatusSurname() noexcept;
-        void ChangeStatusName() noexcept;
-        void ChangeStatusPatronymic() noexcept;
-        void ChangeStatusSex() noexcept;
-        void ChangeStatusDateOfBirth() noexcept;
-        /// @param canOverwrite - true-перезапись/false-дублирование
-        void ChangeStatusPassport(const bool canOverwrite = false) noexcept;
-        /// @param canOverwrite - true-перезапись/false-дублирование
-        void ChangeStatusPhone(const bool canOverwrite = false) noexcept;
-        /// @param canOverwrite - true-перезапись/false-дублирование
-        void ChangeStatusEmail(const bool canOverwrite) noexcept;
-        void ChangeStatusDateOfHiring() noexcept;
-        void ChangeStatusWorkingHours() noexcept;
-        void ChangeStatusSalary() noexcept;
-        void ChangeStatusPassword() noexcept;
 
         /*!
          * @details Валидация данных.

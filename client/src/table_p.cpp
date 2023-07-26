@@ -644,7 +644,6 @@ namespace Client
     void TablePrivate::update(const QString &iValue)
     {
         const auto id = findChild<const QLineEdit*>(Client::Employee::id());
-
         if (!id || _dataCache.empty())
             return;
 

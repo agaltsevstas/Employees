@@ -493,7 +493,9 @@ bool QJsonTableModel::checkFieldOnDuplicate(int row, int column, QString &iValue
     const QString& field = _headers[column].first.first;
     const QString& fieldName = _headers[column].first.second;
 
-    if (field == "passport" || field == "phone" || field == "email")
+    if (field == Client::Employee::passport() ||
+        field == Client::Employee::phone() ||
+        field == Client::Employee::email())
     {
         qsizetype size = _array.count();
         for (decltype(size) i = 0; i < size; ++i)

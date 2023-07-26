@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(Logger::messageHandler);
 
     db = new Server::DataBase();
-    db->connectToDataBase();
+    db->connect();
 
     Server::HttpServer::Start(&app);
 

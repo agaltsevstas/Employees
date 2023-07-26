@@ -323,6 +323,9 @@ namespace Server
             Tree tree = iTrees.front();
             iTrees.pop_front();
 
+            if (!db->checkFieldOnDuplicate(tree.column, tree.value))
+                return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
+
             if (!db->updateRecord(tree.id.toULongLong(), tree.column, tree.value))
                 return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
@@ -348,6 +351,9 @@ namespace Server
                 if (fieldName == fieldNames.constEnd())
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
 
+                if (!db->checkFieldOnDuplicate(tree.column, tree.value))
+                    return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
+
                 data[tree.column] = tree.value;
             }
 
@@ -371,6 +377,9 @@ namespace Server
             {
                 Tree tree = iTrees.front();
                 iTrees.pop_front();
+
+                if (!db->checkFieldOnDuplicate(tree.column, tree.value))
+                    return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
 
                 if (!db->updateRecord(tree.id.toULongLong(), tree.column, tree.value))
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);

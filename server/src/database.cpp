@@ -31,7 +31,7 @@ namespace Server
         _db.close();
     }
 
-    bool DataBase::connectToDataBase()
+    bool DataBase::connect()
     {
         _db = QSqlDatabase::addDatabase("QPSQL");
         _db.setHostName(DATABASE_HOSTNAME);
@@ -49,7 +49,32 @@ namespace Server
         }
     }
 
-    bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData)
+    bool DataBase::checkFieldOnDuplicate(const QByteArray &iColumn, const QByteArray &iValue) const
+    {
+        const QString column = QString::fromUtf8(iColumn);
+        const QString value = QString::fromUtf8(iValue);
+
+        if (column == Employee::passport() ||
+            column == Employee::phone() ||
+            column == Employee::email())
+        {
+            QSqlQuery query(_db);
+            query.prepare("SELECT * FROM employee WHERE " + column + " = :value;");
+            query.bindValue(":value", value);
+
+            if (!query.exec())
+            {
+                qWarning() << "Ошибка: " << query.lastError().text();
+                return false;
+            }
+
+            return query.size() == 0;
+        }
+
+        return true;
+    }
+
+    bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData) const
     {
         QString userName = iUserName;
         QString password = QString(QCryptographicHash::hash(iPassword, QCryptographicHash::Md5).toHex());
@@ -110,7 +135,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData)
+    bool DataBase::getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData) const
     {
         QString userName = QString::fromUtf8(iUserName);
         QString role = QString::fromUtf8(iRole);
@@ -141,7 +166,7 @@ namespace Server
         query.bindValue(":userName", userName + "@tradingcompany.ru");
         if (!query.exec())
         {
-            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            qWarning() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
@@ -160,7 +185,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::sendRequest(const QByteArray &iRequest)
+    bool DataBase::sendRequest(const QByteArray &iRequest) const
     {
         const QString request = QString::fromUtf8(iRequest);
         QSqlQuery query(_db);
@@ -173,7 +198,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable)
+    bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable) const
     {
         const QString request = QString::fromUtf8(iRequest);
         QSqlQuery query(_db);
@@ -237,7 +262,7 @@ namespace Server
         return !oData.isEmpty();
     }
 
-    QSqlTableModel* DataBase::createTableModel()
+    const QSqlTableModel* DataBase::createTableModel()
     {
         QSqlTableModel* table = new QSqlTableModel(this, _db);
         table->setTable("employee");
@@ -322,7 +347,7 @@ namespace Server
         return this->open();
     }
 
-    bool DataBase::insertRecord(const QMap<QString, QByteArray> &iData)
+    bool DataBase::insertRecord(const QMap<QString, QByteArray> &iData) const
     {
         if (iData.size() != 14)
         {
@@ -385,7 +410,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::deleteRecord(const qint64 &iID)
+    bool DataBase::deleteRecord(const qint64 &iID) const
     {
         QSqlQuery query(_db);
 
@@ -398,10 +423,10 @@ namespace Server
             return false;
         }
 
-        return true;
+        return query.size() > 0;
     }
 
-    bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue)
+    bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue) const
     {
         const QString column = QString::fromUtf8(iColumn);
         const QString value = QString::fromUtf8(iValue);
@@ -426,6 +451,6 @@ namespace Server
             return false;
         }
 
-        return true;
+        return query.size() > 0;
     }
 }

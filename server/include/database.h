@@ -16,17 +16,19 @@ namespace Server
         Q_OBJECT
     public:
 
-        explicit DataBase(QWidget *parent = 0);
+        explicit DataBase(QWidget *parent = nullptr);
         ~DataBase();
-        bool connectToDataBase(); // Подключение к базе данных
-        bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData);
-        bool getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData);
-        bool sendRequest(const QByteArray &iRequest);
-        bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {});
-        bool insertRecord(const QMap<QString, QByteArray> &iData); // Добавление записи в таблицу
-        bool deleteRecord(const qint64 &iID); // Удаление записи из таблицы по id
-        bool updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue); // Обновление записи из таблицы по id
-        QSqlTableModel* createTableModel();
+        bool connect(); // Подключение к базе данных
+
+        bool checkFieldOnDuplicate(const QByteArray &iColumn, const QByteArray &iValue) const;
+        bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData) const;
+        bool getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData) const;
+        bool sendRequest(const QByteArray &iRequest) const;
+        bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {}) const;
+        bool insertRecord(const QMap<QString, QByteArray> &iData) const; // Добавление записи в таблицу
+        bool deleteRecord(const qint64 &iID) const; // Удаление записи из таблицы по id
+        bool updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue) const; // Обновление записи из таблицы по id
+        const QSqlTableModel* createTableModel();
 
     private:
         /// Внутренние методы для работы с базой данных
@@ -36,7 +38,7 @@ namespace Server
 
     private:
         QJsonArray _records;
-        QSqlDatabase _db; // Объект базы данных
+        QSqlDatabase _db;
         Employee _employee;
     };
 }
