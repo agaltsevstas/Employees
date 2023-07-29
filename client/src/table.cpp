@@ -202,7 +202,10 @@ namespace Client
             _personalData->setEditStrategy(isChecked ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
 
         if (_tableView)
+        {
             _tableView->setEditStrategy(isChecked ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
+            _tableView->selectionModel()->clearSelection();
+        }
 
         if (QPushButton* update = _personalData->findChild<QPushButton*>("update"))
         {
@@ -314,10 +317,10 @@ namespace Client
             createUser->setEnabled(!isCheckable);
 
         if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
-            deleteUser->setEnabled(!isCheckable);
+            deleteUser->setEnabled(!isCheckable && _tableView && _tableView->selectionModel()->hasSelection());
 
         if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
-            restoreUser->setEnabled(!isCheckable);
+            restoreUser->setEnabled(!isCheckable && _tableView && _tableView->selectionModel()->hasSelection());
 
         if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
             search->setEnabled(!isCheckable);
@@ -394,16 +397,8 @@ namespace Client
 
     void Table::onDeleteUserClicked()
     {
-        if (!_tableView->deleteUser())
-        {
-
-        }
-
-        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"))
-            deleteUser->setVisible(false);
-
-        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"))
-            restoreUser->setVisible(true);
+        _tableView->deleteUser();
+        _tableView->selectionModel()->clearSelection();
     }
 
     void Table::onRestoreUserClicked()

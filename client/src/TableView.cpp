@@ -43,6 +43,14 @@ namespace Client
             _model->setEditStrategy(static_cast<QJsonTableModel::EditStrategy>(iStrategy));
     }
 
+    TableView::EditStrategy TableView::getEditStrategy() const noexcept
+    {
+        if (_model)
+            return static_cast<TableView::EditStrategy>(_model->getEditStrategy());
+
+        return EditStrategy::OnFieldChange;
+    }
+
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
     {
         setModel(new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this));
@@ -89,17 +97,14 @@ namespace Client
             return false;
 
         QJsonObject record;
-        record.insert(Client::Employee::id(), QString::number(_model->rowsCount() + 2)); // + 2 потому что текущего пользователя нет в БД
-
         const auto fieldNames = Client::Employee::getFieldNames();
-
         for (int i = 1, I = fieldNames.size(); i < I; ++i)
         {
             bool result = false;
             QPair<QString, QString> field = fieldNames[i];
             emit getUserData(field.first, [&](const QString& iValue)->bool
             {
-                if (_model->checkField(_model->rowsCount(), i, iValue))
+                if (_model->checkField(_model->rowCount(), i, iValue))
                 {
                     record.insert(field.first, iValue);
                     return result = true;
@@ -113,6 +118,8 @@ namespace Client
         }
 
         _model->addRow(record);
+        selectionModel()->clearSelection();
+
         const QString message = "Сотрудник успешно добавлен!";
         QMessageBox information(QMessageBox::Icon::Information, tr("Сообщение"), message, QMessageBox::NoButton, this);
         QTimer::singleShot(1000, &information, &QMessageBox::close);
@@ -134,6 +141,8 @@ namespace Client
                 {
                     _model->deleteRow(selectedRow.row());
                 }
+
+                return true;
             }
         }
 

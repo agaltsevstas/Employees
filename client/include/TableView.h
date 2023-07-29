@@ -20,6 +20,7 @@ namespace Client
         enum EditStrategy {OnFieldChange, OnManualSubmit};
 
         void setEditStrategy(EditStrategy iStrategy) noexcept;
+        EditStrategy getEditStrategy() const noexcept;
         void setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
         void setModel(const QString& iName, const QJsonDocument &iDatabase);
         [[nodiscard]] const QAbstractItemModel *getModel() const noexcept;

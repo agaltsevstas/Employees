@@ -707,7 +707,10 @@ namespace Client
                             const QJsonObject object = _recordsCache->last().toObject();
                             if (object.contains("column") && object.contains("value"))
                             {
-                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&object](const auto& data) { return data.first == object.value("column"); });
+                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&object](const auto& data)
+                                {
+                                    return data.first == object.value("column");
+                                });
                                 if (fieldName == _dataCache.end())
                                 {
                                     Q_ASSERT(false);
@@ -724,7 +727,7 @@ namespace Client
                 }
                 else
                 {
-                    for (qsizetype i = _recordsCache->size() - 1; i >= 0; --i)
+                    for (qsizetype i =  0, I = _recordsCache->size(); i < I; ++i)
                     {
                         if (_recordsCache->at(i).isObject())
                         {

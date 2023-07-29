@@ -49,18 +49,15 @@ namespace Server
         }
     }
 
-    bool DataBase::checkFieldOnDuplicate(const QByteArray &iColumn, const QByteArray &iValue) const
+    bool DataBase::checkFieldOnDuplicate(const QByteArray &iColumn, const QVariant &iValue) const
     {
-        const QString column = QString::fromUtf8(iColumn);
-        const QString value = QString::fromUtf8(iValue);
-
-        if (column == Employee::passport() ||
-            column == Employee::phone() ||
-            column == Employee::email())
+        if (iColumn == Employee::passport() ||
+            iColumn == Employee::phone() ||
+            iColumn == Employee::email())
         {
             QSqlQuery query(_db);
-            query.prepare("SELECT * FROM employee WHERE " + column + " = :value;");
-            query.bindValue(":value", value);
+            query.prepare("SELECT * FROM employee WHERE " + iColumn + " = :value;");
+            query.bindValue(":value", iValue.toString());
 
             if (!query.exec())
             {
@@ -347,7 +344,7 @@ namespace Server
         return this->open();
     }
 
-    bool DataBase::insertRecord(const QMap<QString, QByteArray> &iData) const
+    bool DataBase::insertRecord(const QMap<QString, QVariant> &iData) const
     {
         if (iData.size() != 14)
         {
@@ -387,20 +384,20 @@ namespace Server
                       ":salary, "
                       ":password);");
 
-        query.bindValue(":id", QString::fromUtf8(iData[Employee::id()]));
-        query.bindValue(":role_name", QString::fromUtf8(iData[Employee::role()]));
-        query.bindValue(":surname", QString::fromUtf8(iData[Employee::surname()]));
-        query.bindValue(":name", QString::fromUtf8(iData[Employee::name()]));
-        query.bindValue(":patronymic", QString::fromUtf8(iData[Employee::patronymic()]));
-        query.bindValue(":sex", QString::fromUtf8(iData[Employee::sex()]));
-        query.bindValue(":date_of_birth", QString::fromUtf8(iData[Employee::dateOfBirth()]));
-        query.bindValue(":passport", QString::fromUtf8(iData[Employee::passport()]));
-        query.bindValue(":phone", QString::fromUtf8(iData[Employee::phone()]));
-        query.bindValue(":email", QString::fromUtf8(iData[Employee::email()]));
-        query.bindValue(":date_of_hiring", QString::fromUtf8(iData[Employee::dateOfHiring()]));
-        query.bindValue(":working_hours", QString::fromUtf8(iData[Employee::workingHours()]));
-        query.bindValue(":salary", QString::fromUtf8(iData[Employee::salary()]).toDouble()); // numeric как-то по особому обрабатывает
-        query.bindValue(":password", QString::fromUtf8(iData[Employee::password()]));
+        query.bindValue(":id", iData[Employee::id()].toULongLong());
+        query.bindValue(":role_name", iData[Employee::role()].toString());
+        query.bindValue(":surname", iData[Employee::surname()].toString());
+        query.bindValue(":name", iData[Employee::name()].toString());
+        query.bindValue(":patronymic", iData[Employee::patronymic()].toString());
+        query.bindValue(":sex", iData[Employee::sex()].toString());
+        query.bindValue(":date_of_birth", iData[Employee::dateOfBirth()].toString());
+        query.bindValue(":passport", iData[Employee::passport()].toULongLong());
+        query.bindValue(":phone", iData[Employee::phone()].toULongLong());
+        query.bindValue(":email", iData[Employee::email()].toString());
+        query.bindValue(":date_of_hiring", iData[Employee::dateOfHiring()].toString());
+        query.bindValue(":working_hours", iData[Employee::workingHours()].toString());
+        query.bindValue(":salary", iData[Employee::salary()].toDouble()); // numeric как-то по особому обрабатывает
+        query.bindValue(":password", iData[Employee::password()].toString());
         if (!query.exec())
         {
             qDebug() << query.lastError().text();
@@ -416,23 +413,19 @@ namespace Server
 
         query.prepare("DELETE FROM employee WHERE id = :ID;");
         query.bindValue(":ID", iID);
-
         if (!query.exec())
         {
             qDebug() << query.lastError().text();
             return false;
         }
 
-        return query.size() > 0;
+        return true;
     }
 
-    bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QByteArray &iValue) const
+    bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QVariant &iValue) const
     {
-        const QString column = QString::fromUtf8(iColumn);
-        const QString value = QString::fromUtf8(iValue);
-
         QSqlQuery query(_db);
-        if (column == Employee::role())
+        if (iColumn == Employee::role())
         {
             query.prepare("UPDATE employee SET role_id = (select role.id FROM role WHERE role.name = :value) "
                           "FROM role WHERE employee.role_id = role.id "
@@ -440,17 +433,16 @@ namespace Server
         }
         else
         {
-            query.prepare("UPDATE employee SET " + column + " = :value WHERE id = :ID;");
+            query.prepare("UPDATE employee SET " + iColumn + " = :value WHERE id = :ID;");
         }
-        query.bindValue(":value", value);
+        query.bindValue(":value", iValue.toString());
         query.bindValue(":ID", iID);
-
         if (!query.exec())
         {
             qDebug() << query.lastError().text();
             return false;
         }
 
-        return query.size() > 0;
+        return true;
     }
 }

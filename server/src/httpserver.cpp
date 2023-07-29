@@ -17,9 +17,9 @@ namespace Server
     struct Tree
     {
         QByteArray table;
-        QByteArray id;
+        qint64 id;
         QByteArray column;
-        QByteArray value;
+        QVariant value;
     };
 
     template <class Arg, class ... Args>
@@ -326,7 +326,7 @@ namespace Server
             if (!db->checkFieldOnDuplicate(tree.column, tree.value))
                 return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
 
-            if (!db->updateRecord(tree.id.toULongLong(), tree.column, tree.value))
+            if (!db->updateRecord(tree.id, tree.column, tree.value))
                 return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
 
@@ -337,7 +337,7 @@ namespace Server
     {
         if (iMethod == QHttpServerRequest::Method::Post)
         {
-            QMap<QString, QByteArray> data;
+            QMap<QString, QVariant> data;
             const auto fieldNames = Employee::getFieldNames();
             while (!iTrees.empty())
             {
@@ -367,7 +367,7 @@ namespace Server
                 Tree tree = iTrees.front();
                 iTrees.pop_front();
 
-                if (!db->deleteRecord(tree.id.toULongLong()))
+                if (!db->deleteRecord(tree.id))
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
             }
         }
@@ -381,7 +381,7 @@ namespace Server
                 if (!db->checkFieldOnDuplicate(tree.column, tree.value))
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
 
-                if (!db->updateRecord(tree.id.toULongLong(), tree.column, tree.value))
+                if (!db->updateRecord(tree.id, tree.column, tree.value))
                     return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
             }
         }
@@ -505,14 +505,14 @@ namespace Server
             {
                 Tree tree;
                 tree.table = Employee::employeeTable().toUtf8();
-                tree.id = QByteArray::number(subobject.value(Employee::id()).toInteger());
+                tree.id = subobject.value(Employee::id()).toInteger();
                 tree.column = subobject.value("column").toString().toUtf8();
-                tree.value = subobject.value("value").toString().toUtf8();
+                tree.value = subobject.value("value");
 
                 if (tree.column == Employee::passport() ||
                     tree.column == Employee::phone())
                 {
-                    tree.value.replace("-", "");
+                    tree.value = tree.value.toByteArray().replace("-", "");
                 }
 
                 _trees.push_back(tree);
@@ -554,7 +554,7 @@ namespace Server
                         {
                             Tree tree;
                             tree.table = Employee::employeeTable().toUtf8();
-                            tree.id = QByteArray::number(subobject.value(Employee::id()).toInteger());
+                            tree.id = subobject.value(Employee::id()).toInt();
                             _trees.push_back(tree);
                             return true;
                         }
@@ -601,10 +601,32 @@ namespace Server
                         }
                         else if (table.isArray())
                         {
-                            for (const auto& subtable: table.toArray())
+                            for (const auto& subTable: table.toArray())
                             {
-                                if (!parseObject(subtable))
+                                if (subTable.isObject())
+                                {
+                                    if (!parseObject(subTable))
+                                        return false;
+                                }
+                                else if (subTable.isArray())
+                                {
+                                    for (const auto& sub2Table: subTable.toArray())
+                                    {
+                                        if (sub2Table.isObject())
+                                        {
+                                            if (!parseObject(sub2Table))
+                                                return false;
+                                        }
+                                        else
+                                        {
+                                            return false;
+                                        }
+                                    }
+                                }
+                                else
+                                {
                                     return false;
+                                }
                             }
 
                             return true;
