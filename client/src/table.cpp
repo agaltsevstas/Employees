@@ -398,7 +398,6 @@ namespace Client
     void Table::onDeleteUserClicked()
     {
         _tableView->deleteUser();
-        _tableView->selectionModel()->clearSelection();
     }
 
     void Table::onRestoreUserClicked()

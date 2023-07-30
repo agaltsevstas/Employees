@@ -204,33 +204,18 @@ namespace Server
 
         QByteArray data2;
         if (!db->sendRequest("SELECT "
-                             "role.code AS role, "
-                             "surname.code AS surname, "
-                             "name.code AS name, "
-                             "patronymic.code AS patronymic, "
-                             "sex.code AS sex, "
-                             "date_of_birth.code AS date_of_birth, "
-                             "passport.code AS passport, "
-                             "phone.code AS phone, "
-                             "email.code AS email, "
-                             "date_of_hiring.code AS date_of_hiring, "
-                             "working_hours.code AS working_hours, "
-                             "salary.code AS salary, "
-                             "password.code AS password "
-                             "FROM " + Employee::personalDataPermissionTable().toUtf8() + " AS p "
-                             "JOIN action AS role ON p.role = role.id "
-                             "JOIN action AS surname ON p.surname = surname.id "
-                             "JOIN action AS name ON p.name = name.id "
-                             "JOIN action AS patronymic ON p.patronymic = patronymic.id "
-                             "JOIN action AS sex ON p.sex = sex.id "
-                             "JOIN action AS date_of_birth ON p.date_of_birth = date_of_birth.id "
-                             "JOIN action AS passport ON p.passport = passport.id "
-                             "JOIN action AS phone ON p.phone = phone.id "
-                             "JOIN action AS email ON p.email = email.id "
-                             "JOIN action AS date_of_hiring ON p.date_of_hiring = date_of_hiring.id "
-                             "JOIN action AS working_hours ON p.working_hours = working_hours.id "
-                             "JOIN action AS salary ON p.salary = salary.id "
-                             "JOIN action AS password ON p.password = password.id "
+                             "p.surname, "
+                             "p.name, "
+                             "p.patronymic, "
+                             "p.sex, "
+                             "p.date_of_birth, "
+                             "p.passport, "
+                             "p.phone, "
+                             "p.email, "
+                             "p.date_of_hiring, "
+                             "p.working_hours, "
+                             "p.salary, "
+                             "p.password FROM " + Employee::personalDataPermissionTable().toUtf8() + " AS p "
                              "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService.getRole() + "';", data2, Employee::personalDataPermissionTable().toUtf8()))
         {
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
@@ -281,33 +266,18 @@ namespace Server
 
         QByteArray data2;
         if (!db->sendRequest("SELECT "
-                             "role.code AS role, "
-                             "surname.code AS surname, "
-                             "name.code AS name, "
-                             "patronymic.code AS patronymic, "
-                             "sex.code AS sex, "
-                             "date_of_birth.code AS date_of_birth, "
-                             "passport.code AS passport, "
-                             "phone.code AS phone, "
-                             "email.code AS email, "
-                             "date_of_hiring.code AS date_of_hiring, "
-                             "working_hours.code AS working_hours, "
-                             "salary.code AS salary, "
-                             "password.code AS password "
-                             "FROM " + Employee::databasePermissionTable().toUtf8() + " AS p "
-                             "JOIN action AS role ON p.role = role.id "
-                             "JOIN action AS surname ON p.surname = surname.id "
-                             "JOIN action AS name ON p.name = name.id "
-                             "JOIN action AS patronymic ON p.patronymic = patronymic.id "
-                             "JOIN action AS sex ON p.sex = sex.id "
-                             "JOIN action AS date_of_birth ON p.date_of_birth = date_of_birth.id "
-                             "JOIN action AS passport ON p.passport = passport.id "
-                             "JOIN action AS phone ON p.phone = phone.id "
-                             "JOIN action AS email ON p.email = email.id "
-                             "JOIN action AS date_of_hiring ON p.date_of_hiring = date_of_hiring.id "
-                             "JOIN action AS working_hours ON p.working_hours = working_hours.id "
-                             "JOIN action AS salary ON p.salary = salary.id "
-                             "JOIN action AS password ON p.password = password.id "
+                             "p.surname, "
+                             "p.name, "
+                             "p.patronymic, "
+                             "p.sex, "
+                             "p.date_of_birth, "
+                             "p.passport, "
+                             "p.phone, "
+                             "p.email, "
+                             "p.date_of_hiring, "
+                             "p.working_hours, "
+                             "p.salary, "
+                             "p.password FROM " + Employee::databasePermissionTable().toUtf8() + " AS p "
                              "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService.getRole() + "';", data2, Employee::databasePermissionTable().toUtf8()))
         {
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
@@ -682,9 +652,8 @@ namespace Server
                 for (const auto& tree : _trees)
                 {
                     QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
-                                         "JOIN action ON permission." + tree.column + " = action.id "
-                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' AND action.code = 'write';";
-
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' "
+                                         "AND permission." + tree.column + " = 'write';";
                     QByteArray data;
                     if (!db->sendRequest(request, data))
                     {
@@ -698,9 +667,8 @@ namespace Server
                 for (const auto& tree : _trees)
                 {
                     QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
-                                         "JOIN action ON permission." + tree.column + " = action.id "
-                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' AND (action.code = 'read' OR action.code = 'write');";
-
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' "
+                                         "AND (permission." + tree.column + " = 'read' OR permission." + tree.column + " = 'write');";
                     QByteArray data;
                     if (!db->sendRequest(request, data))
                     {

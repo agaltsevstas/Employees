@@ -142,6 +142,7 @@ namespace Client
                     _model->deleteRow(selectedRow.row());
                 }
 
+                selectionModel()->clearSelection();
                 return true;
             }
         }

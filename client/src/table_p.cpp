@@ -704,12 +704,12 @@ namespace Client
                     {
                         if (_recordsCache->last().isObject())
                         {
-                            const QJsonObject object = _recordsCache->last().toObject();
-                            if (object.contains("column") && object.contains("value"))
+                            const QJsonObject objectCache = _recordsCache->last().toObject();
+                            if (objectCache.contains("column") && objectCache.contains("value"))
                             {
-                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&object](const auto& data)
+                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&objectCache](const auto& data)
                                 {
-                                    return data.first == object.value("column");
+                                    return data.first == objectCache.value("column");
                                 });
                                 if (fieldName == _dataCache.end())
                                 {
@@ -717,7 +717,7 @@ namespace Client
                                     return;
                                 }
 
-                                fieldName->second = object.value("value").toString();
+                                fieldName->second = objectCache.value("value").toString();
                                 _recordsCache->pop_back();
                             }
                         }
@@ -731,10 +731,10 @@ namespace Client
                     {
                         if (_recordsCache->at(i).isObject())
                         {
-                            const QJsonObject object = _recordsCache->at(i).toObject();
-                            if (object.contains("column") && object.contains("value"))
+                            const QJsonObject objectCache = _recordsCache->at(i).toObject();
+                            if (objectCache.contains("column") && objectCache.contains("value"))
                             {
-                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&object](const auto& data) { return data.first == object.value("column"); });
+                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&objectCache](const auto& data) { return data.first == objectCache.value("column"); });
                                 if (fieldName == _dataCache.end())
                                 {
                                     Q_ASSERT(false);
