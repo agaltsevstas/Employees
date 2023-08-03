@@ -221,7 +221,7 @@ namespace Server
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
 
-        QHttpServerResponse response(data1 + data2);
+        QHttpServerResponse response(std::move(data1) + std::move(data2));
         response.addHeader("Content-Type", "application/json");
         return response;
     }
@@ -238,7 +238,7 @@ namespace Server
         if (!db->getPeronalData(_authenticationService.getID(), _authenticationService.getRole(), _authenticationService.getUserName(), data))
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
 
-        return QHttpServerResponse(data);
+        return QHttpServerResponse(std::move(data));
     }
 
     QHttpServerResponse HttpServer::HttpServerImpl::_showDatabase()
@@ -283,7 +283,7 @@ namespace Server
             return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
 
-        return QHttpServerResponse(data1 + data2);
+        return QHttpServerResponse(std::move(data1) + std::move(data2));
     }
 
     QHttpServerResponse HttpServer::HttpServerImpl::_updatePersonalData(QQueue<Tree>& iTrees)
@@ -485,7 +485,7 @@ namespace Server
                     tree.value = tree.value.toByteArray().replace("-", "");
                 }
 
-                _trees.push_back(tree);
+                _trees.emplace_back(std::move(tree));
                 return true;
             }
         }
@@ -525,7 +525,7 @@ namespace Server
                             Tree tree;
                             tree.table = Employee::employeeTable().toUtf8();
                             tree.id = subobject.value(Employee::id()).toInt();
-                            _trees.push_back(tree);
+                            _trees.emplace_back(std::move(tree));
                             return true;
                         }
                     }

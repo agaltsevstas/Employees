@@ -172,7 +172,7 @@ namespace Client
 
         QString token = login + ":" + password;
         connect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
-        _requester->setToken(token);
+        _requester->setToken(std::move(token));
         _requester->sendRequest("login");
     }
 

@@ -128,7 +128,7 @@ namespace Server
             }
         }
 
-        oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), record}}).toJson();
+        oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), std::move(record)}}).toJson();
         return true;
     }
 
@@ -171,6 +171,7 @@ namespace Server
 
         if (query.next())
         {
+            query.value("");
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
             {
@@ -217,18 +218,18 @@ namespace Server
                     recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
                 }
 
-                recordsArray.push_back(recordObject);
+                recordsArray.push_back(std::move(recordObject));
             }
 
             if (!recordsArray.empty())
             {
                 if (!iTable.isEmpty())
                 {
-                    oData = QJsonDocument(QJsonObject{{iTable, recordsArray}}).toJson();
+                    oData = QJsonDocument(QJsonObject{{iTable, std::move(recordsArray)}}).toJson();
                 }
                 else
                 {
-                    oData = QJsonDocument(recordsArray).toJson();
+                    oData = QJsonDocument(std::move(recordsArray)).toJson();
                 }
             }
         }
@@ -247,11 +248,11 @@ namespace Server
             {
                 if (!iTable.isEmpty())
                 {
-                    oData = QJsonDocument(QJsonObject{{iTable, recordObject}}).toJson();
+                    oData = QJsonDocument(QJsonObject{{iTable, std::move(recordObject)}}).toJson();
                 }
                 else
                 {
-                    oData = QJsonDocument(recordObject).toJson();
+                    oData = QJsonDocument(std::move(recordObject)).toJson();
                 }
             }
         }

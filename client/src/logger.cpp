@@ -28,7 +28,7 @@ void Logger::Instance()
         directory.mkpath(".");
 
     const QString filePath = QString(DIRECTORY) + fileName;
-    _file.reset(new QFile(filePath));
+    _file.reset(new QFile(std::move(filePath)));
     _file->open(QFile::Append | QFile::Text);
     if (!_file->isOpen())
         qWarning() << "Logger file is not open";

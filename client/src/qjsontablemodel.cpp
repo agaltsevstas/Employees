@@ -96,7 +96,7 @@ void QJsonTableModel::setEditStrategy(EditStrategy iStrategy) noexcept
 
 bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase) noexcept
 {
-    return setDatabase(iDatabase.array());
+    return setDatabase(std::move(iDatabase.array()));
 }
 
 bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
@@ -120,7 +120,7 @@ bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
                     lineEdit.setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport));
                     lineEdit.setText(QString::number(passport.toInteger()));
 
-                    object.insert(Client::Employee::passport(), lineEdit.text());
+                    object.insert(Client::Employee::passport(), std::move(lineEdit.text()));
                     newDatabase.replace(i, object);
                 }
             }
@@ -133,14 +133,14 @@ bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
                     lineEdit.setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone));
                     lineEdit.setText(QString::number(phone.toInteger()));
 
-                    object.insert(Client::Employee::phone(), lineEdit.text());
+                    object.insert(Client::Employee::phone(), std::move(lineEdit.text()));
                     newDatabase.replace(i, object);
                 }
             }
         }
     }
 
-    _recordsCache = _array = newDatabase;
+    _recordsCache = _array = std::move(newDatabase);
     return true;
 }
 
@@ -250,7 +250,7 @@ void QJsonTableModel::submitAll()
                 while (!_recordsCreatedCache.empty())
                 {
                     _recordsCreatedCache.pop_back();
-                    _recordsCache.push_back(_array.at(i++));
+                    _recordsCache.push_back(std::move(_array.at(i++)));
                 }
 
                 qDebug() << "Пользователи успешно добавлены!";
@@ -307,8 +307,8 @@ void QJsonTableModel::submitAll()
                                         objectCache.contains(column) &&
                                         objectCache.value(Client::Employee::id()) == id)
                                     {
-                                        objectCache[column] = value;
-                                        _recordsCache[i] = objectCache;
+                                        objectCache[column] = std::move(value);
+                                        _recordsCache[i] = std::move(objectCache);
                                         break;
                                     }
                                 }
@@ -345,8 +345,8 @@ void QJsonTableModel::submitAll()
                                         objectCache.contains(column) &&
                                         objectCache.value(Client::Employee::id()) == id)
                                     {
-                                        objectCache[column] = value;
-                                        setJsonObject(i, objectCache);
+                                        objectCache[column] = std::move(value);
+                                        setJsonObject(i, std::move(objectCache));
                                         break;
                                     }
                                 }
@@ -427,11 +427,11 @@ void QJsonTableModel::addRow(const QJsonObject &iEmployee)
         record.insert("column", it.key());
         record.insert("value", it.value());
 
-        newEmployee.push_back(record);
+        newEmployee.push_back(std::move(record));
     }
 
-    _recordsCreatedCache.push_back(newEmployee);
-    _array.append(employee);
+    _recordsCreatedCache.push_back(std::move(newEmployee));
+    _array.append(std::move(employee));
     emit layoutChanged();
 
     if (_strategy == OnFieldChange)
@@ -484,7 +484,7 @@ void QJsonTableModel::deleteRow(int row)
 
     QJsonObject record;
     record.insert(Client::Employee::id(), id);
-    _recordsDeletedCache.push_back(record);
+    _recordsDeletedCache.push_back(std::move(record));
 
     if (_strategy == OnFieldChange)
         submitAll();
@@ -559,7 +559,7 @@ QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
             }
 
             if (foundCount != values.size())
-                hiddenIndices.push_back(i);
+                hiddenIndices.emplace_back(i);
         }
     }
 
@@ -780,8 +780,8 @@ void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QS
                     if (object.contains(Client::Employee::id()) && object.contains("column") &&
                         object.value(Client::Employee::id()) == id && object.value("column") == iColumnName)
                     {
-                        recordCreated.replace(j, record);
-                        _recordsCreatedCache.replace(i, recordCreated);
+                        recordCreated.replace(j, std::move(record));
+                        _recordsCreatedCache.replace(i, std::move(recordCreated));
                         return;
                     }
                 }
@@ -804,7 +804,7 @@ void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QS
                         found = true;
                         if (object.value("value") != iValue)
                         {
-                            _recordsUpdatedCache.replace(i, record);
+                            _recordsUpdatedCache.replace(i, std::move(record));
                             break;
                         }
                     }
@@ -814,7 +814,7 @@ void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QS
     }
 
     if (!found)
-        _recordsUpdatedCache.push_back(record);
+        _recordsUpdatedCache.push_back(std::move(record));
 
     if (_strategy == OnFieldChange)
         submitAll();
@@ -869,7 +869,7 @@ int QJsonTableModel::columnCount(const QModelIndex &) const noexcept
 
 void QJsonTableModel::setJsonObject(int row, const QJsonObject &iJsonObject)
 {
-    _array[row] = iJsonObject;
+    _array[row] = std::move(iJsonObject);
 }
 
 QJsonObject QJsonTableModel::getJsonObject(int row) const

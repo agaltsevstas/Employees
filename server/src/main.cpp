@@ -5,9 +5,6 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define SERVER_HOSTNAME "127.0.0.1" // Хост
-#define SERVER_PORT      5433       // Порт
-
 Server::DataBase* db;
 
 

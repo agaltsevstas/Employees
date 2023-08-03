@@ -68,8 +68,8 @@ namespace Client
         [[nodiscard]] QJsonDocument parseReply(QNetworkReply *iReply);
 
         [[nodiscard]] QNetworkReply *sendCustomRequest(QNetworkRequest &iRequest,
-                                         const QString &iType,
-                                         const QByteArray &iData);
+                                                       const QString &iType,
+                                                       const QByteArray &iData);
 
         bool checkFinishRequest(QNetworkReply *iReply);
 
@@ -118,7 +118,7 @@ namespace Client
                 replyData = replyData.mid(index);
             }
 
-            return QJsonDocument(records);
+            return QJsonDocument(std::move(records));
         }
 
         return jsonDocument;

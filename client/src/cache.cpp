@@ -116,7 +116,7 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
                                 QList<QPair<QString, QString>> userData;
                                 QJsonObject newValue = newValues[j].toObject();
                                 for (auto itNewValue = newValue.begin(); itNewValue != newValue.end(); ++itNewValue)
-                                    userData.push_back({itNewValue.key(), itNewValue.value().toString()});
+                                    userData.emplace_back(itNewValue.key(), itNewValue.value().toString());
 
                                 if (userData == iUserData)
                                     return;
@@ -127,10 +127,10 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
                                     for (const auto &[key, value] : iUserData)
                                         newValue.insert(key, value);
 
-                                    newValues.replace(j, newValue);
-                                    newObject = {{ iTable, newValues}};
-                                    newArray.replace(i, newObject);
-                                    _cache->setArray(newArray);
+                                    newValues.replace(j, std::move(newValue));
+                                    newObject = {{ std::move(iTable), std::move(newValues)}};
+                                    newArray.replace(i, std::move(newObject));
+                                    _cache->setArray(std::move(newArray));
                                     return;
                                 }
                             }
@@ -142,10 +142,10 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
                             for (const auto &[key, value] : iUserData)
                                 newValue.insert(key, value);
 
-                            newValues.append(newValue);
-                            newObject = {{ iTable, newValues}};
-                            newArray.replace(i, newObject);
-                            _cache->setArray(newArray);
+                            newValues.append(std::move(newValue));
+                            newObject = {{ std::move(iTable), std::move(newValues)}};
+                            newArray.replace(i, std::move(newObject));
+                            _cache->setArray(std::move(newArray));
                             return;
                         }
                     }
@@ -157,11 +157,11 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
         for (const auto &[key, value] : iUserData)
             newValue.insert(key, value);
 
-        QJsonArray newValues = { newValue };
-        QJsonObject newObject = {{ iTable, newValues}};
-        newArray.append(newObject);
+        QJsonArray newValues = { std::move(newValue) };
+        QJsonObject newObject = {{ std::move(iTable), std::move(newValues)}};
+        newArray.append(std::move(newObject));
 
-        _cache->setArray(newArray);
+        _cache->setArray(std::move(newArray));
     }
 }
 
@@ -184,10 +184,10 @@ void Cache::insert(const QString &iTable, const QString &iValue)
                         QJsonArray newValues = values.toArray();
                         if (!newValues.contains(iValue))
                         {
-                            newValues.append(iValue);
-                            newObject = {{iTable, newValues}};
-                            newArray.replace(i, newObject);
-                            _cache->setArray(newArray);
+                            newValues.append(std::move(iValue));
+                            newObject = {{std::move(iTable), std::move(newValues)}};
+                            newArray.replace(i, std::move(newObject));
+                            _cache->setArray(std::move(newArray));
                             return;
                         }
                     }
@@ -197,12 +197,12 @@ void Cache::insert(const QString &iTable, const QString &iValue)
 
         if (!isFound)
         {
-            QJsonArray values = {iValue};
-            QJsonObject table = {{iTable, values}};
-            newArray.append(table);
+            QJsonArray values = {std::move(iValue)};
+            QJsonObject table = {{std::move(iTable), std::move(values)}};
+            newArray.append(std::move(table));
         }
 
-        _cache->setArray(newArray);
+        _cache->setArray(std::move(newArray));
     }
 }
 
@@ -309,7 +309,7 @@ QStringList Cache::getList(const QString &iTable, const QString &iKey) const
                         for (const auto &value: array.toArray())
                         {
                             if (value.isObject() && value.toObject().contains(iKey))
-                                list.push_back(value.toObject().value(iKey).toString());
+                                list.emplace_back(value.toObject().value(iKey).toString());
                         }
                     }
                 }
@@ -336,7 +336,7 @@ QStringList Cache::getList(const QString &iTable) const
                         for (const auto &value: array.toArray())
                         {
                             if (value.isString())
-                                list.push_back(value.toString());
+                                list.emplace_back(value.toString());
                         }
                     }
                 }

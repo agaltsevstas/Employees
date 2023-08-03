@@ -128,7 +128,7 @@ namespace Client
                     comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                     widget = comboBox;
 
-                    _dataCache.push_back({field, comboBox->currentText()});
+                    _dataCache.emplace_back(field, comboBox->currentText());
                 }
                 else if (field == Client::Employee::salary())
                 {
@@ -152,7 +152,7 @@ namespace Client
                     spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                     widget = spinBox;
 
-                    _dataCache.push_back({field, spinBox->text()});
+                    _dataCache.emplace_back(field, spinBox->text());
                 }
                 else
                 {
@@ -250,7 +250,7 @@ namespace Client
                     widget = lineEdit;
                     widget->clearFocus();
 
-                    _dataCache.push_back({field, lineEdit->text()});
+                    _dataCache.emplace_back(field, lineEdit->text());
                 }
 
                 if (it_permissions != object_permissions.end() && it_permissions->isString())
@@ -344,7 +344,7 @@ namespace Client
                 valueSearch->setSizePolicy(sizePolicy);
 
                 const QIcon searchIcon("../images/search.png");
-                valueSearch->addAction(searchIcon, QLineEdit::LeadingPosition);
+                valueSearch->addAction(std::move(searchIcon), QLineEdit::LeadingPosition);
                 valueSearch->setStyleSheet(QString::fromUtf8("QLineEdit {border: 1px solid gray;} QLineEdit:focus {border: 4px solid #a5cdff;}"));
                 valueSearch->setEnabled(false);
                 buttonLayout->addWidget(valueSearch, 2, 1, 1, buttonLayout->columnCount() - 1);
@@ -460,7 +460,7 @@ namespace Client
                 comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                 dataLayout->addWidget(comboBox, i, 1, 1, 1);
 
-                _dataCache.push_back({field, comboBox->currentText()});
+                _dataCache.emplace_back(field, comboBox->currentText());
             }
             else if (field == Client::Employee::salary())
             {
@@ -476,7 +476,7 @@ namespace Client
                 spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                 dataLayout->addWidget(spinBox, i, 1, 1, 1);
 
-                _dataCache.push_back({field, spinBox->text()});
+                _dataCache.emplace_back(field, spinBox->text());
             }
             else
             {
@@ -537,7 +537,7 @@ namespace Client
                 lineEdit->setClearButtonEnabled(true);
                 dataLayout->addWidget(lineEdit, i, 1, 1, 1);
 
-                _dataCache.push_back({field, lineEdit->text()});
+                _dataCache.emplace_back(field, lineEdit->text());
             }
         }
 
@@ -627,14 +627,14 @@ namespace Client
                     QPalette palette = widget->palette();
                     palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
                     palette.setColor(QPalette::Text, Qt::black);
-                    widget->setPalette(palette);
+                    widget->setPalette(std::move(palette));
                 }
                 else
                 {
                     QPalette palette = widget->palette();
                     palette.setColor(QPalette::PlaceholderText, Qt::red);
                     palette.setColor(QPalette::Text, Qt::red);
-                    widget->setPalette(palette);
+                    widget->setPalette(std::move(palette));
                     return;
                 }
             }
@@ -675,7 +675,7 @@ namespace Client
                         found = true;
                         if (object.value("value") != iValue)
                         {
-                            _recordsCache->replace(i, record);
+                            _recordsCache->replace(i, std::move(record));
                             break;
                         }
                     }
@@ -684,7 +684,7 @@ namespace Client
         }
 
         if (!found)
-            _recordsCache->push_back(record);
+            _recordsCache->push_back(std::move(record));
 
         if (_strategy == OnFieldChange)
             submitAll();
@@ -803,7 +803,7 @@ namespace Client
             {
                 QStringList list = model->stringList();
                 list.append(value->text());
-                model->setStringList(list);
+                model->setStringList(std::move(list));
             }
 
             emit sendValueSearch(value->text());
@@ -821,6 +821,6 @@ namespace Client
             return;
 
         const QString newEmail = Utils::CreateEmail({ surname->text(), name->text(), patronymic->text() });
-        email->setText(newEmail);
+        email->setText(std::move(newEmail));
     }
 }

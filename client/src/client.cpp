@@ -124,7 +124,7 @@ namespace Client
                 case FIELD_NAME :
                 {
                     Utils::ToUpperandtolower(iValue);
-                    QRegularExpression regular("[А-Яабвгдеёжзийклмнопрстуфхцчшщъыьэюя]+");
+                    QRegularExpression regular("[\\p{Cyrillic}]");
                     if (iValue.isEmpty())
                     {
                         iValue = "Пустое имя >> " + iValue + ", " + helpFields()[name()];
