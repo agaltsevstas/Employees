@@ -171,7 +171,7 @@ namespace Server
         newToken.appendClaim("exp", QString::number(QDateTime::currentDateTime().addDays(7).toMSecsSinceEpoch()));
         newToken.setRandomSecret();
         _selectedIndex = _tokens.size();
-        return _tokens.emplaceBack(newToken);
+        return _tokens.emplaceBack(std::move(newToken));
     }
 
     void AuthenticationService::removeToken()

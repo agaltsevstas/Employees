@@ -171,7 +171,6 @@ namespace Server
 
         if (query.next())
         {
-            query.value("");
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
             {

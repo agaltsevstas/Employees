@@ -96,7 +96,7 @@ void QJsonTableModel::setEditStrategy(EditStrategy iStrategy) noexcept
 
 bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase) noexcept
 {
-    return setDatabase(std::move(iDatabase.array()));
+    return setDatabase(iDatabase.array());
 }
 
 bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
@@ -120,7 +120,7 @@ bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
                     lineEdit.setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport));
                     lineEdit.setText(QString::number(passport.toInteger()));
 
-                    object.insert(Client::Employee::passport(), std::move(lineEdit.text()));
+                    object.insert(Client::Employee::passport(), lineEdit.text());
                     newDatabase.replace(i, object);
                 }
             }
@@ -133,7 +133,7 @@ bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
                     lineEdit.setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone));
                     lineEdit.setText(QString::number(phone.toInteger()));
 
-                    object.insert(Client::Employee::phone(), std::move(lineEdit.text()));
+                    object.insert(Client::Employee::phone(), lineEdit.text());
                     newDatabase.replace(i, object);
                 }
             }
@@ -250,7 +250,7 @@ void QJsonTableModel::submitAll()
                 while (!_recordsCreatedCache.empty())
                 {
                     _recordsCreatedCache.pop_back();
-                    _recordsCache.push_back(std::move(_array.at(i++)));
+                    _recordsCache.push_back(_array.at(i++));
                 }
 
                 qDebug() << "Пользователи успешно добавлены!";

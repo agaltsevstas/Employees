@@ -16,6 +16,49 @@ namespace Server
 {
     struct Tree
     {
+        Tree() noexcept
+        {
+
+        }
+
+        Tree(const Tree& other) noexcept :
+        table(other.table),
+        id(other.id),
+        column(other.column),
+        value(other.value)
+        {
+            qInfo() << "Конструктор копирования : " << this;
+        }
+
+        explicit Tree(Tree&& other) noexcept :
+            table(std::move(other.table)),
+            id(std::exchange(other.id, 0)),
+            column(std::move(other.column)),
+            value(std::move(other.value))
+        {
+            qInfo() << "Конструктор перемещения : " << this;
+        }
+
+        Tree& operator=(Tree&& other) noexcept
+        {
+            qInfo() << "оператор перемещения : " << this;
+            table = std::move(other.table);
+            id = std::exchange(other.id, 0);;
+            column = std::move(other.column);
+            value = std::move(other.value);
+            return *this;
+        }
+
+        Tree& operator=(const Tree& other) noexcept
+        {
+            qInfo() << "оператор копирования : " << this;
+            table = other.table;
+            id = other.id;
+            column = other.column;
+            value = other.value;
+            return *this;
+        }
+
         QByteArray table;
         qint64 id;
         QByteArray column;
