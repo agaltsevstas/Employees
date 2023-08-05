@@ -4,6 +4,7 @@
 
 #include <QAbstractItemModel>
 #include <QComboBox>
+#include <QCryptographicHash>
 #include <QDoubleSpinBox>
 #include <QHeaderView>
 #include <QLineEdit>
@@ -102,11 +103,14 @@ namespace Client
         {
             bool result = false;
             QPair<QString, QString> field = fieldNames[i];
-            emit getUserData(field.first, [&](const QString& iValue)->bool
+            emit getUserData(field.first, [&](const QString &iValue)->bool
             {
                 if (_model->checkField(_model->rowCount(), i, iValue))
                 {
-                    record.insert(field.first, iValue);
+                    if (field.first == Client::Employee::password())
+                        record.insert(field.first, QJsonValue::fromVariant(QCryptographicHash::hash(iValue.toUtf8(), QCryptographicHash::Md5).toHex()));
+                    else
+                        record.insert(field.first, iValue);
                     return result = true;
                 }
 

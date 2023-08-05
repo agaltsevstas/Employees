@@ -347,6 +347,7 @@ void QJsonTableModel::submitAll()
                                     {
                                         objectCache[column] = std::move(value);
                                         setJsonObject(i, std::move(objectCache));
+                                        emit layoutChanged();
                                         break;
                                     }
                                 }

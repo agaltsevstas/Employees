@@ -35,6 +35,7 @@ namespace Client
         void sendRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
         void sendValueSearch(const QString &iValue);
         void sendClearSearch();
+        void logout();
 
     public Q_SLOTS:
         void sendUserData(const QString &iFieldName, const HandleField &handleField = Q_NULLPTR);
@@ -48,6 +49,7 @@ namespace Client
         void update(const QString &iValue);
 
     private:
+        bool _isRoleChanged = false;
         QString _name;
         EditStrategy _strategy = OnFieldChange;
         QList<QPair<QString, QString>> _dataCache;

@@ -18,14 +18,14 @@ namespace Server
         void authentication(const QString &iID, const QString &iUserName, const QString &iRole);
         void logout();
 
-        qint64 getID() const;
-        const QByteArray getUserName() const;
-        const QByteArray getRole() const;
-        const QByteArray getCookie();
+        [[nodiscard]] qint64 getID() const;
+        [[nodiscard]] const QByteArray getUserName() const;
+        [[nodiscard]] const QByteArray getRole() const;
+        [[nodiscard]] const QByteArray getCookie();
         bool checkAuthentication(QByteArray &ioToken, qint64& oExp);
 
     private:
-        QJsonWebToken createToken(const QString &iID, const QString &iUserName, const QString &iRole);
+        [[nodiscard]] QJsonWebToken createToken(const QString &iID, const QString &iUserName, const QString &iRole);
         void removeToken();
 
     private:

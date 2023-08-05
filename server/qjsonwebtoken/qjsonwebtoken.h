@@ -44,348 +44,348 @@ class Q_DECL_EXPORT QJsonWebToken
 
 public:
 
-	/**
+    /**
 
-	\brief Constructor.
-	\return A new instance of QJsonWebToken.
+    \brief Constructor.
+    \return A new instance of QJsonWebToken.
 
-	Creates a default QJsonWebToken instance with *HS256 algorithm*, empty *payload*
-	and empty *secret*.
+    Creates a default QJsonWebToken instance with *HS256 algorithm*, empty *payload*
+    and empty *secret*.
 
-	*/
+    */
     QJsonWebToken();
 
-	/**
+    /**
 
-	\brief Copy Construtor.
-	\param other Other QJsonWebToken to copy from.
-	\return A new instance of QJsonWebToken with same contents as the *other* instance.
-	
-	Copies to the new instance the JWT *header*, *payload*, *signature*, *secret* and *algorithm*.
+    \brief Copy Construtor.
+    \param other Other QJsonWebToken to copy from.
+    \return A new instance of QJsonWebToken with same contents as the *other* instance.
 
-	*/
+    Copies to the new instance the JWT *header*, *payload*, *signature*, *secret* and *algorithm*.
+
+    */
     QJsonWebToken(const QJsonWebToken &other);
 
     bool operator==(const QJsonWebToken &other) const;
 
-	/**
+    /**
 
-	\brief Returns the JWT *header* as a QJsonDocument.
-	\return JWT *header* as a QJsonDocument.
+    \brief Returns the JWT *header* as a QJsonDocument.
+    \return JWT *header* as a QJsonDocument.
 
-	*/
-	QJsonDocument getHeaderJDoc() const;
+    */
+    QJsonDocument getHeaderJDoc() const;
 
-	/**
+    /**
 
-	\brief Returns the JWT *header* as a QString.
-	\param format Defines the format of the JSON returned.
-	\return JWT *header* as a QString.
+    \brief Returns the JWT *header* as a QString.
+    \param format Defines the format of the JSON returned.
+    \return JWT *header* as a QString.
 
-	Format can be *QJsonDocument::JsonFormat::Indented* or *QJsonDocument::JsonFormat::Compact*
+    Format can be *QJsonDocument::JsonFormat::Indented* or *QJsonDocument::JsonFormat::Compact*
 
-	*/
+    */
     QString getHeaderQStr(const QJsonDocument::JsonFormat &format = QJsonDocument::JsonFormat::Indented) const;
 
-	/**
+    /**
 
-	\brief Sets the JWT *header* from a QJsonDocument.
-	\param jdocHeader JWT *header* as a QJsonDocument.
-	\return true if the header was set, false if the header was not set.
+    \brief Sets the JWT *header* from a QJsonDocument.
+    \param jdocHeader JWT *header* as a QJsonDocument.
+    \return true if the header was set, false if the header was not set.
 
-	This method checks for a valid header format and returns false if the header is invalid.
+    This method checks for a valid header format and returns false if the header is invalid.
 
-	*/
+    */
     bool setHeaderJDoc(const QJsonDocument &jdocHeader);
 
-	/**
+    /**
 
-	\brief Sets the JWT *header* from a QString.
-	\param jdocHeader JWT *header* as a QString.
-	\return true if the header was set, false if the header was not set.
+    \brief Sets the JWT *header* from a QString.
+    \param jdocHeader JWT *header* as a QString.
+    \return true if the header was set, false if the header was not set.
 
-	This method checks for a valid header format and returns false if the header is invalid.
+    This method checks for a valid header format and returns false if the header is invalid.
 
-	*/
+    */
     bool setHeaderQStr(const QString &strHeader);
 
-	/**
+    /**
 
-	\brief Returns the JWT *payload* as a QJsonDocument.
-	\return JWT *payload* as a QJsonDocument.
+    \brief Returns the JWT *payload* as a QJsonDocument.
+    \return JWT *payload* as a QJsonDocument.
 
-	*/
-	QJsonDocument getPayloadJDoc() const;
+    */
+    QJsonDocument getPayloadJDoc() const;
 
-	/**
+    /**
 
-	\brief Returns the JWT *payload* as a QString.
-	\param format Defines the format of the JSON returned.
-	\return JWT *payload* as a QString.
+    \brief Returns the JWT *payload* as a QString.
+    \param format Defines the format of the JSON returned.
+    \return JWT *payload* as a QString.
 
-	Format can be *QJsonDocument::JsonFormat::Indented* or *QJsonDocument::JsonFormat::Compact*
+    Format can be *QJsonDocument::JsonFormat::Indented* or *QJsonDocument::JsonFormat::Compact*
 
-	*/
+    */
     QString getPayloadQStr(const QJsonDocument::JsonFormat &format = QJsonDocument::JsonFormat::Indented) const;
 
-	/**
+    /**
 
-	\brief Sets the JWT *payload* from a QJsonDocument.
-	\param jdocHeader JWT *payload* as a QJsonDocument.
-	\return true if the payload was set, false if the payload was not set.
+    \brief Sets the JWT *payload* from a QJsonDocument.
+    \param jdocHeader JWT *payload* as a QJsonDocument.
+    \return true if the payload was set, false if the payload was not set.
 
-	This method checks for a valid payload format and returns false if the payload is invalid.
+    This method checks for a valid payload format and returns false if the payload is invalid.
 
-	*/
+    */
     bool setPayloadJDoc(const QJsonDocument &jdocPayload);
 
-	/**
+    /**
 
-	\brief Sets the JWT *payload* from a QString.
-	\param jdocHeader JWT *payload* as a QString.
-	\return true if the payload was set, false if the payload was not set.
+    \brief Sets the JWT *payload* from a QString.
+    \param jdocHeader JWT *payload* as a QString.
+    \return true if the payload was set, false if the payload was not set.
 
-	This method checks for a valid payload format and returns false if the payload is invalid.
+    This method checks for a valid payload format and returns false if the payload is invalid.
 
-	*/
+    */
     bool setPayloadQStr(const QString &strPayload);
 
-	/**
+    /**
 
-	\brief Returns the JWT *signature* as a QByteArray.
-	\return JWT *signature* as a decoded QByteArray.
+    \brief Returns the JWT *signature* as a QByteArray.
+    \return JWT *signature* as a decoded QByteArray.
 
-	Recalculates the JWT signature given the current *header*, *payload*, *algorithm* and
-	*secret*.
+    Recalculates the JWT signature given the current *header*, *payload*, *algorithm* and
+    *secret*.
 
-	\warning This method overwrites the old signature internally. This could be undesired when
-	the signature was obtained by copying from another QJsonWebToken using the copy constructor.
+    \warning This method overwrites the old signature internally. This could be undesired when
+    the signature was obtained by copying from another QJsonWebToken using the copy constructor.
 
-	*/
+    */
     QByteArray getSignature(); // WARNING : non-const because it overwrites signature
 
-	/**
+    /**
 
-	\brief Returns the JWT *signature* as a QByteArray.
-	\return JWT *signature* as a **base64 encoded** QByteArray.
+    \brief Returns the JWT *signature* as a QByteArray.
+    \return JWT *signature* as a **base64 encoded** QByteArray.
 
-	Recalculates the JWT signature given the current *header*, *payload*, *algorithm* and
-	*secret*. Then encodes the calculated signature using base64 encoding.
+    Recalculates the JWT signature given the current *header*, *payload*, *algorithm* and
+    *secret*. Then encodes the calculated signature using base64 encoding.
 
-	\warning This method overwrites the old signature internally. This could be undesired when
-	the signature was obtained by copying from another QJsonWebToken using the copy constructor.
+    \warning This method overwrites the old signature internally. This could be undesired when
+    the signature was obtained by copying from another QJsonWebToken using the copy constructor.
 
-	*/
+    */
     QByteArray getSignatureBase64(); // WARNING : non-const because it overwrites signature
 
-	/**
+    /**
 
-	\brief Returns the JWT *secret* as a QString.
-	\return JWT *secret* as a QString.
+    \brief Returns the JWT *secret* as a QString.
+    \return JWT *secret* as a QString.
 
-	*/
+    */
     QString getSecret() const;
 
-	/**
+    /**
 
-	\brief Sets the JWT *secret* from a QString.
-	\param strSecret JWT *secret* as a QString.
-	\return true if the secret was set, false if the secret was not set.
+    \brief Sets the JWT *secret* from a QString.
+    \param strSecret JWT *secret* as a QString.
+    \return true if the secret was set, false if the secret was not set.
 
-	This method checks for a valid secret format and returns false if the secret is invalid.
+    This method checks for a valid secret format and returns false if the secret is invalid.
 
-	*/
+    */
     bool setSecret(const QString &strSecret);
 
-	/**
+    /**
 
-	\brief Creates and sets a random secret.
+    \brief Creates and sets a random secret.
 
-	This method creates a random secret with the length defined by QJsonWebToken::getRandLength(),
-	and the characters defined by QJsonWebToken::getRandAlphanum().
+    This method creates a random secret with the length defined by QJsonWebToken::getRandLength(),
+    and the characters defined by QJsonWebToken::getRandAlphanum().
 
-	\sa QJsonWebToken::getRandLength().
-	\sa QJsonWebToken::getRandAlphanum().
+    \sa QJsonWebToken::getRandLength().
+    \sa QJsonWebToken::getRandAlphanum().
 
-	*/
+    */
     void setRandomSecret();
 
-	/**
+    /**
 
-	\brief Returns the JWT *algorithm* as a QString.
-	\return JWT *algorithm* as a QString.
+    \brief Returns the JWT *algorithm* as a QString.
+    \return JWT *algorithm* as a QString.
 
-	*/
+    */
     QString getAlgorithmStr() const;
 
-	/**
+    /**
 
-	\brief Sets the JWT *algorithm* from a QString.
-	\param strAlgorithm JWT *algorithm* as a QString.
-	\return true if the algorithm was set, false if the algorithm was not set.
+    \brief Sets the JWT *algorithm* from a QString.
+    \param strAlgorithm JWT *algorithm* as a QString.
+    \return true if the algorithm was set, false if the algorithm was not set.
 
-	This method checks for a valid supported algorithm. Valid values are:
+    This method checks for a valid supported algorithm. Valid values are:
 
-	"HS256", "HS384" and "HS512".
+    "HS256", "HS384" and "HS512".
 
-	\sa QJsonWebToken::supportedAlgorithms().
+    \sa QJsonWebToken::supportedAlgorithms().
 
-	*/
+    */
     bool setAlgorithmStr(const QString &strAlgorithm);
 
-	/**
+    /**
 
-	\brief Returns the complete JWT as a QString.
-	\return Complete JWT as a QString.
+    \brief Returns the complete JWT as a QString.
+    \return Complete JWT as a QString.
 
-	The token has the form:
+    The token has the form:
 
-	```
-	xxxxx.yyyyy.zzzzz
-	```
+    ```
+    xxxxx.yyyyy.zzzzz
+    ```
 
-	where:
-	
-	- *xxxxx* is the *header* enconded in base64.
-	- *yyyyy* is the *payload* enconded in base64.
-	- *zzzzz* is the *signature* enconded in base64.
+    where:
 
-	\warning This method overwrites the old signature becuse it calls getSignatureBase64 internally. 
-	This could be undesired when the signature was obtained by copying from another QJsonWebToken 
-	using the copy constructor.
+    - *xxxxx* is the *header* enconded in base64.
+    - *yyyyy* is the *payload* enconded in base64.
+    - *zzzzz* is the *signature* enconded in base64.
 
-	\sa QJsonWebToken::getSignatureBase64().
+    \warning This method overwrites the old signature becuse it calls getSignatureBase64 internally.
+    This could be undesired when the signature was obtained by copying from another QJsonWebToken
+    using the copy constructor.
 
-	*/
+    \sa QJsonWebToken::getSignatureBase64().
+
+    */
     QByteArray getToken();
 
-	/**
+    /**
 
-	\brief Sets the complete JWT as a QString.
-	\param strToken Complete JWT as a QString.
-	\return true if the complete JWT was set, false if not set.
+    \brief Sets the complete JWT as a QString.
+    \param strToken Complete JWT as a QString.
+    \return true if the complete JWT was set, false if not set.
 
-	This method checks for a valid JWT format. It overwrites the *header*,
-	*payload* , *signature* and *algorithm*. It does **not** overwrite the secret.
+    This method checks for a valid JWT format. It overwrites the *header*,
+    *payload* , *signature* and *algorithm*. It does **not** overwrite the secret.
 
-	\sa QJsonWebToken::getToken().
+    \sa QJsonWebToken::getToken().
 
-	*/
+    */
     bool setToken(const QString &strToken);
 
-	/**
+    /**
 
-	\brief Returns the current set of characters used to create random secrets.
-	\return Set of characters as a QString.
+    \brief Returns the current set of characters used to create random secrets.
+    \return Set of characters as a QString.
 
-	The default value is "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    The default value is "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-	\sa QJsonWebToken::setRandomSecret()
-	\sa QJsonWebToken::setRandAlphanum()
+    \sa QJsonWebToken::setRandomSecret()
+    \sa QJsonWebToken::setRandAlphanum()
 
-	*/
+    */
     QString getRandAlphanum() const;
 
-	/**
+    /**
 
-	\brief Sets the current set of characters used to create random secrets.
-	\param strRandAlphanum Set of characters as a QString.
+    \brief Sets the current set of characters used to create random secrets.
+    \param strRandAlphanum Set of characters as a QString.
 
-	\sa QJsonWebToken::setRandomSecret()
-	\sa QJsonWebToken::getRandAlphanum()
+    \sa QJsonWebToken::setRandomSecret()
+    \sa QJsonWebToken::getRandAlphanum()
 
-	*/
+    */
     void setRandAlphanum(const QString &strRandAlphanum);
 
-	/**
+    /**
 
-	\brief Returns the current length used to create random secrets.
-	\return Length of random secret as a QString.
+    \brief Returns the current length used to create random secrets.
+    \return Length of random secret as a QString.
 
-	The default value is 10;
+    The default value is 10;
 
-	\sa QJsonWebToken::setRandomSecret()
-	\sa QJsonWebToken::setRandLength()
+    \sa QJsonWebToken::setRandomSecret()
+    \sa QJsonWebToken::setRandLength()
 
-	*/
+    */
     int getRandLength() const;
 
-	/**
+    /**
 
-	\brief Sets the current length used to create random secrets.
-	\param intRandLength Length of random secret.
+    \brief Sets the current length used to create random secrets.
+    \param intRandLength Length of random secret.
 
-	\sa QJsonWebToken::setRandomSecret()
-	\sa QJsonWebToken::getRandLength()
+    \sa QJsonWebToken::setRandomSecret()
+    \sa QJsonWebToken::getRandLength()
 
-	*/
+    */
     void setRandLength(const int &intRandLength);
 
-	/**
+    /**
 
-	\brief Checks validity of current JWT with respect to secret.
-	\return true if the JWT is valid with respect to secret, else false.
+    \brief Checks validity of current JWT with respect to secret.
+    \return true if the JWT is valid with respect to secret, else false.
 
-	Uses the current *secret* to calculate a temporary *signature* and compares it to the
-	current signature to check if they are the same. If they are, true is returned, if not then
-	false is returned.
+    Uses the current *secret* to calculate a temporary *signature* and compares it to the
+    current signature to check if they are the same. If they are, true is returned, if not then
+    false is returned.
 
-	*/
+    */
     bool isValid() const;
 
-	/**
+    /**
 
-	\brief Creates a QJsonWebToken instance from the complete JWT and a secret.
-	\param strToken Complete JWT as a QString.
-	\param srtSecret Secret as a QString.
-	\return Instance of QJsonWebToken.
+    \brief Creates a QJsonWebToken instance from the complete JWT and a secret.
+    \param strToken Complete JWT as a QString.
+    \param srtSecret Secret as a QString.
+    \return Instance of QJsonWebToken.
 
-	The JWT provided must have a valid format, else a QJsonWebToken instance with default
-	values will be returned.
+    The JWT provided must have a valid format, else a QJsonWebToken instance with default
+    values will be returned.
 
-	*/
-	static QJsonWebToken fromTokenAndSecret(const QString &strToken, const QString &srtSecret);
+    */
+    static QJsonWebToken fromTokenAndSecret(const QString &strToken, const QString &srtSecret);
 
-	/**
+    /**
 
-	\brief Returns a list of the supported algorithms.
-	\return List of supported algorithms as a QStringList.
+    \brief Returns a list of the supported algorithms.
+    \return List of supported algorithms as a QStringList.
 
-	*/
-	static QStringList supportedAlgorithms();
+    */
+    static QStringList supportedAlgorithms();
 
-	/**
+    /**
 
-	\brief Convenience method to append a claim to the *payload*.
-	\param strClaimType The claim type as a QString.
-	\param strValue The value type as a QString.
+    \brief Convenience method to append a claim to the *payload*.
+    \param strClaimType The claim type as a QString.
+    \param strValue The value type as a QString.
 
-	Both parameters must be non-empty. If the claim type already exists, the current
-	claim value is updated.
+    Both parameters must be non-empty. If the claim type already exists, the current
+    claim value is updated.
 
-	*/
-	void appendClaim(const QString &strClaimType, const QString &strValue);
+    */
+    void appendClaim(const QString &strClaimType, const QString &strValue);
 
-	/**
+    /**
 
-	\brief Convenience method to remove a claim from the *payload*.
-	\param strClaimType The claim type as a QString.
+    \brief Convenience method to remove a claim from the *payload*.
+    \param strClaimType The claim type as a QString.
 
-	If the claim type does not exist in the *payload*, then this method does nothins.
+    If the claim type does not exist in the *payload*, then this method does nothins.
 
-	*/
-	void removeClaim(const QString &strClaimType);
+    */
+    void removeClaim(const QString &strClaimType);
 
-	/**
+    /**
 
-	\brief Convenience method to return the data of a claim from the *payload* as a string.
-	\param strClaimType The claim type as a QString.
+    \brief Convenience method to return the data of a claim from the *payload* as a string.
+    \param strClaimType The claim type as a QString.
 
-	If the claim type does not exist in the *payload*, then this method returns a default
-	constructed QString.
+    If the claim type does not exist in the *payload*, then this method returns a default
+    constructed QString.
 
-	*/
-	QString claim(const QString &strClaimType);
+    */
+    QString claim(const QString &strClaimType);
 
     qint64 getID() const;
 

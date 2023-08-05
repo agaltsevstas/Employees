@@ -58,7 +58,9 @@ namespace Client
         setObjectName("Table");
         setPersonalData(_requester->getJson());
 
-        QSizePolicy sizePolicy = GetSizePolice();
+        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
         setSizePolicy(sizePolicy);
 
         _stackedWidget->setObjectName(QString::fromUtf8("stackedWidget"));
@@ -161,6 +163,7 @@ namespace Client
                                                 QJsonDocument(permissions.toObject()),
                                                 this);
                 connect(_personalData, &TablePrivate::sendRequest, this, &Table::updatePersonalData);
+                connect(_personalData, &TablePrivate::logout, this, &Table::onExitClicked);
 
                 if (_stackedWidget && _stackedWidget->currentWidget() &&
                     _stackedWidget->currentWidget() != _personalData)
@@ -179,14 +182,6 @@ namespace Client
         {
             Q_ASSERT(false);
         }
-    }
-
-    QSizePolicy Table::GetSizePolice() noexcept
-    {
-        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        return sizePolicy;
     }
 
     void Table::onExitClicked()
@@ -284,10 +279,9 @@ namespace Client
                 connect(_tableView, &TableView::sendCreateData, this, &Table::createData);
                 connect(_tableView, &TableView::sendDeleteData, this, &Table::deleteData);
                 connect(_tableView, &TableView::sendUpdateData, this, &Table::updateData);
-                connect(_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
-                                                      SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
-                connect(_personalData, SIGNAL(sendValueSearch(const QString &)), _tableView, SLOT(valueSearchChanged(const QString &)));
-                connect(_personalData, SIGNAL(sendClearSearch()), _tableView, SLOT(clearSearchChanged()));
+                connect(_tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Table::selectionChanged);
+                connect(_personalData, &TablePrivate::sendValueSearch, _tableView, &TableView::valueSearchChanged);
+                connect(_personalData, &TablePrivate::sendClearSearch, _tableView, &TableView::clearSearchChanged);
                 _ui->splitter->addWidget(_tableView);
             }
             else

@@ -121,7 +121,7 @@ namespace Server
                 {
                     oID = query.value(i).toString();
                     /// Добавил вывод ID
-//                    continue;
+                    // continue;
                 }
 
                 record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
@@ -336,6 +336,7 @@ namespace Server
                         "ON UPDATE NO ACTION"
                         "ON DELETE NO ACTION)"))
         {
+            throw std::runtime_error("DBConnector::getColumnsName: database is not open");
             qCritical() << "Ошибка: " << query.lastError().text() << ", таблица не создалась";
             return false;
         }
@@ -344,7 +345,7 @@ namespace Server
         return this->open();
     }
 
-    bool DataBase::insertRecord(const QMap<QString, QVariant> &iData) const
+    bool DataBase::insertRecord(const QHash<QString, QVariant> &iData) const
     {
         if (iData.size() != 14)
         {

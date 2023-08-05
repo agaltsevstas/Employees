@@ -50,38 +50,38 @@ QString QJsonWebToken::getHeaderQStr(const QJsonDocument::JsonFormat &format/* =
 
 bool QJsonWebToken::setHeaderJDoc(const QJsonDocument &jdocHeader)
 {
-	if (jdocHeader.isEmpty() || jdocHeader.isNull() || !jdocHeader.isObject())
-	{
-		return false;
-	}
+    if (jdocHeader.isEmpty() || jdocHeader.isNull() || !jdocHeader.isObject())
+    {
+        return false;
+    }
 
-	// check if supported algorithm
-	QString strAlgorithm = jdocHeader.object().value("alg").toString("");
-	if (!isAlgorithmSupported(strAlgorithm))
-	{
-		return false;
-	}
+    // check if supported algorithm
+    QString strAlgorithm = jdocHeader.object().value("alg").toString("");
+    if (!isAlgorithmSupported(strAlgorithm))
+    {
+        return false;
+    }
 
     _header = jdocHeader;
 
-	// set also new algorithm
+    // set also new algorithm
     _algorithm = strAlgorithm;
 
-	return true;
+    return true;
 }
 
 bool QJsonWebToken::setHeaderQStr(const QString &strHeader)
 {
-	QJsonParseError error;
-	QJsonDocument tmpHeader = QJsonDocument::fromJson(strHeader.toUtf8(), &error);
+    QJsonParseError error;
+    QJsonDocument tmpHeader = QJsonDocument::fromJson(strHeader.toUtf8(), &error);
 
-	// validate and set header
-	if (error.error != QJsonParseError::NoError || !setHeaderJDoc(tmpHeader))
-	{
-		return false;
-	}
+    // validate and set header
+    if (error.error != QJsonParseError::NoError || !setHeaderJDoc(tmpHeader))
+    {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 QJsonDocument QJsonWebToken::getPayloadJDoc() const
@@ -96,63 +96,63 @@ QString QJsonWebToken::getPayloadQStr(const QJsonDocument::JsonFormat &format/* 
 
 bool QJsonWebToken::setPayloadJDoc(const QJsonDocument &jdocPayload)
 {
-	if (jdocPayload.isEmpty() || jdocPayload.isNull() || !jdocPayload.isObject())
-	{
-		return false;
-	}
+    if (jdocPayload.isEmpty() || jdocPayload.isNull() || !jdocPayload.isObject())
+    {
+        return false;
+    }
 
     _payload = jdocPayload;
 
-	return true;
+    return true;
 }
 
 bool QJsonWebToken::setPayloadQStr(const QString &strPayload)
 {
-	QJsonParseError error;
-	QJsonDocument tmpPayload = QJsonDocument::fromJson(strPayload.toUtf8(), &error);
+    QJsonParseError error;
+    QJsonDocument tmpPayload = QJsonDocument::fromJson(strPayload.toUtf8(), &error);
 
-	// validate and set payload
-	if (error.error != QJsonParseError::NoError || !setPayloadJDoc(tmpPayload))
-	{
-		return false;
-	}
+    // validate and set payload
+    if (error.error != QJsonParseError::NoError || !setPayloadJDoc(tmpPayload))
+    {
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 QByteArray QJsonWebToken::getSignature()
 {
-	// recalculate
-	// get header in compact mode and base64 encoded
-	QByteArray byteHeaderBase64  = getHeaderQStr(QJsonDocument::JsonFormat::Compact).toUtf8().toBase64();
-	// get payload in compact mode and base64 encoded
-	QByteArray bytePayloadBase64 = getPayloadQStr(QJsonDocument::JsonFormat::Compact).toUtf8().toBase64();
-	// calculate signature based on chosen algorithm and secret
+    // recalculate
+    // get header in compact mode and base64 encoded
+    QByteArray byteHeaderBase64  = getHeaderQStr(QJsonDocument::JsonFormat::Compact).toUtf8().toBase64();
+    // get payload in compact mode and base64 encoded
+    QByteArray bytePayloadBase64 = getPayloadQStr(QJsonDocument::JsonFormat::Compact).toUtf8().toBase64();
+    // calculate signature based on chosen algorithm and secret
     _allData = byteHeaderBase64 + "." + bytePayloadBase64;
     if (_algorithm.compare("HS256", Qt::CaseSensitive) == 0)      // HMAC using SHA-256 hash algorithm
-	{
+    {
         _signature = QMessageAuthenticationCode::hash(_allData, _secret.toUtf8(), QCryptographicHash::Sha256);
-	}
+    }
     else if (_algorithm.compare("HS384", Qt::CaseSensitive) == 0) // HMAC using SHA-384 hash algorithm
-	{
+    {
         _signature = QMessageAuthenticationCode::hash(_allData, _secret.toUtf8(), QCryptographicHash::Sha384);
-	}
+    }
     else if (_algorithm.compare("HS512", Qt::CaseSensitive) == 0) // HMAC using SHA-512 hash algorithm
-	{
+    {
         _signature = QMessageAuthenticationCode::hash(_allData, _secret.toUtf8(), QCryptographicHash::Sha512);
-	}
-	// TODO : support other algorithms
-	else
-	{
+    }
+    // TODO : support other algorithms
+    else
+    {
         _signature = QByteArray();
-	}
-	// return recalculated
+    }
+    // return recalculated
     return _signature;
 }
 
 QByteArray QJsonWebToken::getSignatureBase64()
 {
-	// note we return through getSignature() to force recalculation
+    // note we return through getSignature() to force recalculation
     return getSignature().toBase64();
 }
 
@@ -163,10 +163,10 @@ QString QJsonWebToken::getSecret() const
 
 bool QJsonWebToken::setSecret(const QString &strSecret)
 {
-	if (strSecret.isEmpty() || strSecret.isNull())
-	{
-		return false;
-	}
+    if (strSecret.isEmpty() || strSecret.isNull())
+    {
+        return false;
+    }
 
     _secret = strSecret;
 
@@ -189,70 +189,70 @@ QString QJsonWebToken::getAlgorithmStr() const
 
 bool QJsonWebToken::setAlgorithmStr(const QString &strAlgorithm)
 {
-	// check if supported algorithm
-	if (!isAlgorithmSupported(strAlgorithm))
-	{
-		return false;
-	}
-	// set algorithm
+    // check if supported algorithm
+    if (!isAlgorithmSupported(strAlgorithm))
+    {
+        return false;
+    }
+    // set algorithm
     _algorithm = strAlgorithm;
-	// modify header
+    // modify header
     _header = QJsonDocument::fromJson(QByteArray("{\"typ\": \"JWT\", \"alg\" : \"")
                                          + _algorithm.toUtf8()
                                          + QByteArray("\"}"));
 
-	return true;
+    return true;
 }
 
 QByteArray QJsonWebToken::getToken()
 {
     // important to execute first to update _allData which contains header + "." + payload in base64
     QByteArray byteSignatureBase64 = this->getSignatureBase64();
-	// compose token and return it
+    // compose token and return it
     return _allData + "." + byteSignatureBase64;
 }
 
 bool QJsonWebToken::setToken(const QString &strToken)
 {
-	// assume base64 encoded at first, if not try decoding
-	bool isBase64Encoded = true;
-	QStringList listJwtParts = strToken.split(".");
-	// check correct size
-	if (listJwtParts.count() != 3)
-	{
-		return false;
-	}
-	// check all parts are valid using another instance,
-	// so we dont overwrite this instance in case of error
-	QJsonWebToken tempTokenObj;
-	if ( !tempTokenObj.setHeaderQStr(QByteArray::fromBase64(listJwtParts.at(0).toUtf8())) ||
-		 !tempTokenObj.setPayloadQStr(QByteArray::fromBase64(listJwtParts.at(1).toUtf8())) )
-	{
-		// try unencoded
-		if (!tempTokenObj.setHeaderQStr(listJwtParts.at(0)) ||
-			!tempTokenObj.setPayloadQStr(listJwtParts.at(1)))
-		{
-			return false;
-		}
-		else
-		{
-			isBase64Encoded = false;
-		}
-	}
-	// set parts on this instance
-	setHeaderQStr(tempTokenObj.getHeaderQStr());
-	setPayloadQStr(tempTokenObj.getPayloadQStr());
-	if (isBase64Encoded)
-	{ // unencode
+    // assume base64 encoded at first, if not try decoding
+    bool isBase64Encoded = true;
+    QStringList listJwtParts = strToken.split(".");
+    // check correct size
+    if (listJwtParts.count() != 3)
+    {
+        return false;
+    }
+    // check all parts are valid using another instance,
+    // so we dont overwrite this instance in case of error
+    QJsonWebToken tempTokenObj;
+    if ( !tempTokenObj.setHeaderQStr(QByteArray::fromBase64(listJwtParts.at(0).toUtf8())) ||
+         !tempTokenObj.setPayloadQStr(QByteArray::fromBase64(listJwtParts.at(1).toUtf8())) )
+    {
+        // try unencoded
+        if (!tempTokenObj.setHeaderQStr(listJwtParts.at(0)) ||
+            !tempTokenObj.setPayloadQStr(listJwtParts.at(1)))
+        {
+            return false;
+        }
+        else
+        {
+            isBase64Encoded = false;
+        }
+    }
+    // set parts on this instance
+    setHeaderQStr(tempTokenObj.getHeaderQStr());
+    setPayloadQStr(tempTokenObj.getPayloadQStr());
+    if (isBase64Encoded)
+    { // unencode
         _signature = QByteArray::fromBase64(listJwtParts.at(2).toUtf8());
-	} 
-	else
-	{
+    }
+    else
+    {
         _signature = listJwtParts.at(2).toUtf8();
-	}
-	// allData not valid anymore
+    }
+    // allData not valid anymore
     _allData.clear();
-	// success
+    // success
     return true;
 }
 
@@ -286,40 +286,40 @@ void QJsonWebToken::setRandLength(const int &intRandLength)
 
 bool QJsonWebToken::isValid() const
 {
-	// calculate token on other instance,
-	// so we dont overwrite this instance's signature
-	QJsonWebToken tempTokenObj = *this;
+    // calculate token on other instance,
+    // so we dont overwrite this instance's signature
+    QJsonWebToken tempTokenObj = *this;
     if (_signature != tempTokenObj.getSignature())
-	{
-		return false;
-	}
-	return true;
+    {
+        return false;
+    }
+    return true;
 }
 
 QJsonWebToken QJsonWebToken::fromTokenAndSecret(const QString &strToken, const QString &srtSecret)
 {
-	QJsonWebToken tempTokenObj;
-	// set Token
-	tempTokenObj.setToken(strToken);
-	// set Secret
-	tempTokenObj.setSecret(srtSecret);
-	// return
-	return tempTokenObj;
+    QJsonWebToken tempTokenObj;
+    // set Token
+    tempTokenObj.setToken(strToken);
+    // set Secret
+    tempTokenObj.setSecret(srtSecret);
+    // return
+    return tempTokenObj;
 }
 
 void QJsonWebToken::appendClaim(const QString &strClaimType, const QString &strValue)
 {
-	// have to make a copy of the json object, modify the copy and then put it back, sigh
+    // have to make a copy of the json object, modify the copy and then put it back, sigh
     QJsonObject jObj = _payload.object();
-	jObj.insert(strClaimType, strValue);
+    jObj.insert(strClaimType, strValue);
     _payload = QJsonDocument(jObj);
 }
 
 void QJsonWebToken::removeClaim(const QString &strClaimType)
 {
-	// have to make a copy of the json object, modify the copy and then put it back, sigh
+    // have to make a copy of the json object, modify the copy and then put it back, sigh
     QJsonObject jObj = _payload.object();
-	jObj.remove(strClaimType);
+    jObj.remove(strClaimType);
     _payload = QJsonDocument(jObj);
 }
 
@@ -352,24 +352,24 @@ qint64 QJsonWebToken::getExp() const
 
 bool QJsonWebToken::isAlgorithmSupported(const QString &strAlgorithm)
 {
-	// TODO : support other algorithms
-	if (strAlgorithm.compare("HS256", Qt::CaseSensitive) != 0 && // HMAC using SHA-256 hash algorithm
-		strAlgorithm.compare("HS384", Qt::CaseSensitive) != 0 && // HMAC using SHA-384 hash algorithm
-		strAlgorithm.compare("HS512", Qt::CaseSensitive) != 0 /*&& // HMAC using SHA-512 hash algorithm
-		strAlgorithm.compare("RS256", Qt::CaseSensitive) != 0 && // RSA using SHA-256 hash algorithm
-		strAlgorithm.compare("RS384", Qt::CaseSensitive) != 0 && // RSA using SHA-384 hash algorithm
-		strAlgorithm.compare("RS512", Qt::CaseSensitive) != 0 && // RSA using SHA-512 hash algorithm
-		strAlgorithm.compare("ES256", Qt::CaseSensitive) != 0 && // ECDSA using P-256 curve and SHA-256 hash algorithm
-		strAlgorithm.compare("ES384", Qt::CaseSensitive) != 0 && // ECDSA using P-384 curve and SHA-384 hash algorithm
-		strAlgorithm.compare("ES512", Qt::CaseSensitive) != 0*/)  // ECDSA using P-521 curve and SHA-512 hash algorithm
-	{
-		return false;
-	}
-	return true;
+    // TODO : support other algorithms
+    if (strAlgorithm.compare("HS256", Qt::CaseSensitive) != 0 && // HMAC using SHA-256 hash algorithm
+        strAlgorithm.compare("HS384", Qt::CaseSensitive) != 0 && // HMAC using SHA-384 hash algorithm
+        strAlgorithm.compare("HS512", Qt::CaseSensitive) != 0 /*&& // HMAC using SHA-512 hash algorithm
+        strAlgorithm.compare("RS256", Qt::CaseSensitive) != 0 && // RSA using SHA-256 hash algorithm
+        strAlgorithm.compare("RS384", Qt::CaseSensitive) != 0 && // RSA using SHA-384 hash algorithm
+        strAlgorithm.compare("RS512", Qt::CaseSensitive) != 0 && // RSA using SHA-512 hash algorithm
+        strAlgorithm.compare("ES256", Qt::CaseSensitive) != 0 && // ECDSA using P-256 curve and SHA-256 hash algorithm
+        strAlgorithm.compare("ES384", Qt::CaseSensitive) != 0 && // ECDSA using P-384 curve and SHA-384 hash algorithm
+        strAlgorithm.compare("ES512", Qt::CaseSensitive) != 0*/)  // ECDSA using P-521 curve and SHA-512 hash algorithm
+    {
+        return false;
+    }
+    return true;
 }
 
 QStringList QJsonWebToken::supportedAlgorithms()
 {
-	// TODO : support other algorithms
-	return QStringList() << "HS256" << "HS384" << "HS512";
+    // TODO : support other algorithms
+    return QStringList() << "HS256" << "HS384" << "HS512";
 }

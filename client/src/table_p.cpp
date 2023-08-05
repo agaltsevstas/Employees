@@ -29,7 +29,7 @@
 
 namespace Client
 {
-    QSizePolicy GetSizePolice() noexcept
+    const QSizePolicy GetSizePolice() noexcept
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
@@ -37,8 +37,33 @@ namespace Client
         return sizePolicy;
     }
 
+    const QPalette GetPaletteLight() noexcept
+    {
+        QPalette palette;
+        palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
+        palette.setColor(QPalette::Text, Qt::black);
+        return palette;
+    }
+
+    const QPalette GetPaletteGreen() noexcept
+    {
+        QPalette palette;
+        palette.setColor(QPalette::PlaceholderText, Qt::green);
+        palette.setColor(QPalette::Text, Qt::green);
+        return palette;
+    }
+
+    const QPalette GetPaletteRed() noexcept
+    {
+        QPalette palette;
+        palette.setColor(QPalette::PlaceholderText, Qt::red);
+        palette.setColor(QPalette::Text, Qt::red);
+        return palette;
+    }
+
     TablePrivate::TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent) :
         QWidget(parent),
+        _isRoleChanged(false),
         _name(iName)
     {
         if (iData.isEmpty() || iPersonalPermissions.isEmpty() || iPermissions.isEmpty())
@@ -397,6 +422,7 @@ namespace Client
 
     TablePrivate::TablePrivate(const QString &iName, QWidget *parent) :
         QWidget(parent),
+        _isRoleChanged(false),
         _name(iName)
     {
         setObjectName(QString::fromUtf8("userData"));
@@ -468,7 +494,7 @@ namespace Client
                 spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
                 spinBox->setObjectName(field);
                 spinBox->setToolTip(toolTip);
-                spinBox->setAccessibleDescription(Client::Employee::helpFields()[field]);
+                spinBox->setAccessibleDescription(toolTip);
                 spinBox->setRange(0, 1000000);
                 spinBox->setValue(10000);
                 spinBox->setButtonSymbols(QAbstractSpinBox::ButtonSymbols::NoButtons);
@@ -624,19 +650,14 @@ namespace Client
 
                 if (handleField(value))
                 {
-                    QPalette palette = widget->palette();
-                    palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
-                    palette.setColor(QPalette::Text, Qt::black);
-                    widget->setPalette(std::move(palette));
+                    widget->setPalette(GetPaletteLight());
                 }
                 else
                 {
-                    QPalette palette = widget->palette();
-                    palette.setColor(QPalette::PlaceholderText, Qt::red);
-                    palette.setColor(QPalette::Text, Qt::red);
-                    widget->setPalette(std::move(palette));
-                    return;
+                    widget->setPalette(GetPaletteRed());
                 }
+
+                break;
             }
         }
     }
@@ -656,7 +677,54 @@ namespace Client
             return;
         }
 
-        const auto& [field, name] = *fieldName;
+        const auto& [field, value] = *fieldName;
+        if (iValue == value)
+        {
+            for (decltype(_recordsCache->size()) i = 0, I = _recordsCache->size(); i < I; ++i)
+            {
+                if (_recordsCache->at(i).isObject())
+                {
+                    const QJsonObject object = _recordsCache->at(i).toObject();
+                    if (object.contains("column"))
+                    {
+                        if (object.value("column") == field)
+                        {
+                            widget->setPalette(GetPaletteLight());
+                            _recordsCache->removeAt(i);
+                            break;
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
+        if (objectName == Client::Employee::role())
+        {
+            QMessageBox::StandardButton reply = QMessageBox::question(this, "Изменение должности",
+                                                                      "Вы хотите изменить свою должность (будет произведет выход из личного кабинета)?",
+                                                                      QMessageBox::Yes | QMessageBox::No);
+            if (reply == QMessageBox::Yes)
+            {
+                _isRoleChanged = true;
+            }
+            else
+            {
+                auto comboBox = qobject_cast<QComboBox*>(widget);
+                if (comboBox)
+                {
+                    widget->blockSignals(true);
+                    comboBox->setCurrentText(value);
+                    widget->blockSignals(false);
+                    return;
+                }
+                else
+                    Q_ASSERT(comboBox);
+            }
+        }
+
+        widget->setPalette(GetPaletteGreen());
+
         QJsonObject record;
         record.insert(Client::Employee::id(), id->text().toLongLong());
         record.insert("column", field);
@@ -684,7 +752,12 @@ namespace Client
         }
 
         if (!found)
-            _recordsCache->push_back(std::move(record));
+        {
+            if (_isRoleChanged)
+                _recordsCache->push_front(std::move(record));
+            else
+                _recordsCache->push_back(std::move(record));
+        }
 
         if (_strategy == OnFieldChange)
             submitAll();
@@ -700,30 +773,43 @@ namespace Client
             {
                 if (iResult)
                 {
-                    while (_recordsCache->count())
-                    {
-                        if (_recordsCache->last().isObject())
-                        {
-                            const QJsonObject objectCache = _recordsCache->last().toObject();
-                            if (objectCache.contains("column") && objectCache.contains("value"))
-                            {
-                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&objectCache](const auto& data)
-                                {
-                                    return data.first == objectCache.value("column");
-                                });
-                                if (fieldName == _dataCache.end())
-                                {
-                                    Q_ASSERT(false);
-                                    return;
-                                }
+                    qInfo() << "Ваши данные успешно обновлены!";
 
-                                fieldName->second = objectCache.value("value").toString();
-                                _recordsCache->pop_back();
+                    if (_isRoleChanged)
+                    {
+                        _isRoleChanged = false;
+                        emit logout();
+                    }
+                    else
+                    {
+                        while (_recordsCache->count())
+                        {
+                            if (_recordsCache->last().isObject())
+                            {
+                                const QJsonObject objectCache = _recordsCache->last().toObject();
+                                if (objectCache.contains("column") && objectCache.contains("value"))
+                                {
+                                    auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&objectCache](const auto& data)
+                                    {
+                                        return data.first == objectCache.value("column");
+                                    });
+                                    if (fieldName == _dataCache.end())
+                                    {
+                                        Q_ASSERT(false);
+                                        return;
+                                    }
+
+                                    if (auto widget = findChild<QWidget*>(fieldName->first))
+                                    {
+                                        widget->setPalette(GetPaletteLight());
+                                    }
+
+                                    fieldName->second = objectCache.value("value").toString();
+                                    _recordsCache->pop_back();
+                                }
                             }
                         }
                     }
-
-                    qInfo() << "Ваши данные успешно обновлены!";
                 }
                 else
                 {
