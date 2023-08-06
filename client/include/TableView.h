@@ -11,8 +11,8 @@ namespace Client
     {
         Q_OBJECT
         Q_PROPERTY(bool sortingEnabled READ isSortingEnabled WRITE setSortingEnabled)
-        typedef std::function<void(const bool, const QString&)> HandleResponse;
-        typedef std::function<bool(const QString&)> HandleField;
+        using HandleResponse = std::function<void(const bool, const QString&)>;
+        using HandleField = std::function<bool(const QString&)>;
 
     public:
         explicit TableView(QWidget *parent = nullptr);

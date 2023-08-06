@@ -195,7 +195,6 @@ void QJsonTableModel::submitAll()
                                     {
                                         _recordsCache.removeAt(i);
                                         _array.removeAt(i);
-                                        emit layoutChanged();
                                         break;
                                     }
                                 }
@@ -235,6 +234,8 @@ void QJsonTableModel::submitAll()
                 warning.exec();
                 qDebug() << "Ошибка: " << error;
             }
+
+            emit layoutChanged();
         });
     }
     else
@@ -263,8 +264,6 @@ void QJsonTableModel::submitAll()
                     _array.pop_back();
                 }
 
-                emit layoutChanged();
-
                 QWidget* tableView = qobject_cast<QWidget*>(parent());
                 if (!tableView)
                     return;
@@ -274,6 +273,8 @@ void QJsonTableModel::submitAll()
                 warning.exec();
                 qDebug() << "Ошибка: " << error;
             }
+
+            emit layoutChanged();
         });
     }
     else
@@ -347,7 +348,6 @@ void QJsonTableModel::submitAll()
                                     {
                                         objectCache[column] = std::move(value);
                                         setJsonObject(i, std::move(objectCache));
-                                        emit layoutChanged();
                                         break;
                                     }
                                 }
@@ -367,6 +367,8 @@ void QJsonTableModel::submitAll()
                 warning.exec();
                 qDebug() << "Ошибка: " << error;
             }
+
+            emit layoutChanged();
         });
     }
     else

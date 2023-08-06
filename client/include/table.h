@@ -24,7 +24,7 @@ namespace Client
     class Table : public QWidget
     {
         Q_OBJECT
-        typedef std::function<void(const bool, const QString&)> HandleResponse;
+        using HandleResponse = std::function<void(const bool, const QString&)>;
 
     public:
         explicit Table(Requester* iRequester, QWidget *parent = nullptr);

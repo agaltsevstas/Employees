@@ -107,7 +107,7 @@ namespace Server
 
     template <class TClass, class TCallBack, class... TArgs> class Callback : public ICallback
     {
-        typedef std::function<QHttpServerResponse()> _CallBack;
+        using _CallBack = std::function<QHttpServerResponse()>;
     public:
         Callback(TClass& iClass, const TCallBack& iCallback, const TArgs&... iArgs)
         {
