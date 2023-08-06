@@ -93,15 +93,14 @@ namespace Server
     };
 
 
-    AuthenticationService::AuthenticationService(QObject* parent) :
-        QObject(parent)
+    AuthenticationService::AuthenticationService()
     {
 
     }
 
     void AuthenticationService::authentication(const QString &iID, const QString &iUserName, const QString &iRole)
     {
-        createToken(iID, iUserName, iRole);
+        std::ignore = createToken(iID, iUserName, iRole);
     }
 
     void AuthenticationService::logout()

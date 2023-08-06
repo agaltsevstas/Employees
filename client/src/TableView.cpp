@@ -74,6 +74,7 @@ namespace Client
             delete _model;
 
         QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
+        setSortingEnabled(true);
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
         horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(10, QHeaderView::Interactive);

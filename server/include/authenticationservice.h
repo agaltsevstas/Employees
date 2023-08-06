@@ -3,17 +3,15 @@
 
 #include "qjsonwebtoken.h"
 
-#include <QSet>
 
 namespace Server
 {
-    class AuthenticationService : public QObject
+    class AuthenticationService
     {
-        Q_OBJECT
         Q_DISABLE_COPY(AuthenticationService)
     public:
 
-        AuthenticationService(QObject* parent = nullptr);
+        AuthenticationService();
 
         void authentication(const QString &iID, const QString &iUserName, const QString &iRole);
         void logout();

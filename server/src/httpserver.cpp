@@ -126,51 +126,14 @@ namespace Server
         _CallBack _callback;
     };
 
-    template <class TCallBack> class Permission
-    {
-        using StatusCode = QHttpServerResponse::StatusCode;
-    public:
-        Permission(HttpServer::HttpServerImpl &iServer, const QHttpServerRequest &iRequest, const TCallBack& iCallback) :
-            _server(iServer),
-            _request(iRequest)
-        {
-            if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), TCallBack>)
-            {
-                 _callback.reset(new Callback(_server, iCallback));
-            }
-            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), TCallBack>)
-            {
-                _callback.reset(new Callback(_server, iCallback, std::ref(_trees)));
-            }
-            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), TCallBack>)
-            {
-                _callback.reset(new Callback(_server, iCallback, std::ref(_trees), _request.method()));
-            }
-        }
-
-        QHttpServerResponse check(const QByteArray &iTable);
-
-    private:
-        bool parseObject(const QJsonValue& iTable);
-        bool parseData();
-        bool _check(const QByteArray &iTable);
-
-    private:
-        std::unique_ptr<ICallback> _callback;
-        HttpServer::HttpServerImpl &_server;
-        const QHttpServerRequest &_request;
-        QQueue<Tree> _trees;
-    };
-
     class HttpServer::HttpServerImpl
     {
         using StatusCode = QHttpServerResponse::StatusCode;
-        template <class TCallBack> friend class Permission;
+        template <class TCallBack> friend class AuthorizationService;
     public:
-        HttpServerImpl(QObject* parent = nullptr) :
+        HttpServerImpl() :
           _host(SERVER_HOSTNAME),
-          _port(SERVER_PORT),
-          _authenticationService(parent)
+          _port(SERVER_PORT)
         {
 
         }
@@ -192,6 +155,42 @@ namespace Server
         QString _host;
         int _port;
         QHttpServer _server;
+    };
+
+    template <class TCallBack> class AuthorizationService
+    {
+        using StatusCode = QHttpServerResponse::StatusCode;
+    public:
+        AuthorizationService(HttpServer::HttpServerImpl &iServer, const QHttpServerRequest &iRequest, const TCallBack& iCallback) :
+            _authenticationService(iServer._authenticationService),
+            _request(iRequest)
+        {
+            if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), TCallBack>)
+            {
+                 _callback.reset(new Callback(iServer, iCallback));
+            }
+            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), TCallBack>)
+            {
+                _callback.reset(new Callback(iServer, iCallback, std::ref(_trees)));
+            }
+            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), TCallBack>)
+            {
+                _callback.reset(new Callback(iServer, iCallback, std::ref(_trees), _request.method()));
+            }
+        }
+
+        QHttpServerResponse checkPermission(const QByteArray &iTable);
+
+    private:
+        bool parseObject(const QJsonValue& iTable);
+        bool parseData();
+        bool _checkPermission(const QByteArray &iTable);
+
+    private:
+        QScopedPointer<ICallback> _callback;
+        AuthenticationService& _authenticationService;
+        const QHttpServerRequest &_request;
+        QQueue<Tree> _trees;
     };
 
     bool HttpServer::HttpServerImpl::_authorization(const QHttpServerRequest &iRequest, QByteArray* oData)
@@ -468,7 +467,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_showDatabase).check(Employee::permissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkPermission(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updatePersonalData", [&](const QHttpServerRequest &request)
@@ -476,7 +475,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).check(Employee::personalDataPermissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkPermission(Employee::personalDataPermissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Post, [&](const QHttpServerRequest &request)
@@ -484,7 +483,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check(Employee::permissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkPermission(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Delete, [&](const QHttpServerRequest &request)
@@ -492,7 +491,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check(Employee::permissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkPermission(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Patch, [&](const QHttpServerRequest &request)
@@ -500,7 +499,7 @@ namespace Server
             if (!_authorization(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return Permission(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).check(Employee::databasePermissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkPermission(Employee::databasePermissionTable().toUtf8());
         });
 
         _server.afterRequest([this](QHttpServerResponse &&response)
@@ -512,9 +511,9 @@ namespace Server
     }
 
     template <class TCallBack>
-    QHttpServerResponse Permission<TCallBack>::check(const QByteArray &iTable)
+    QHttpServerResponse AuthorizationService<TCallBack>::checkPermission(const QByteArray &iTable)
     {
-        if (_check(iTable))
+        if (_checkPermission(iTable))
         {
             if (_callback)
                 return (*_callback)();
@@ -527,7 +526,7 @@ namespace Server
     }
 
     template <class TCallBack>
-    bool Permission<TCallBack>::parseObject(const QJsonValue& iTable)
+    bool AuthorizationService<TCallBack>::parseObject(const QJsonValue& iTable)
     {
         if (iTable.isObject())
         {
@@ -557,7 +556,7 @@ namespace Server
     };
 
     template <class TCallBack>
-    bool Permission<TCallBack>::parseData()
+    bool AuthorizationService<TCallBack>::parseData()
     {
         if (_request.method() == QHttpServerRequest::Method::Get)
         {
@@ -673,7 +672,7 @@ namespace Server
     }
 
     template <class TCallBack>
-    bool Permission<TCallBack>::_check(const QByteArray &iTable)
+    bool AuthorizationService<TCallBack>::_checkPermission(const QByteArray &iTable)
     {
         if (!parseData())
             return false;
@@ -685,19 +684,19 @@ namespace Server
             {
                 request = "SELECT show_db FROM " + iTable +
                           " JOIN role ON " + iTable + ".id = role.id "
-                          "WHERE role.code = '" + _server._authenticationService.getRole() + "' AND show_db = true;";
+                          "WHERE role.code = '" + _authenticationService.getRole() + "' AND show_db = true;";
             }
             else if (_request.method() == QHttpServerRequest::Method::Post)
             {
                 request = "SELECT create_user FROM " + iTable +
                           " JOIN role ON " + iTable + ".id = role.id "
-                          "WHERE role.code = '" + _server._authenticationService.getRole() + "' AND create_user = true;";
+                          "WHERE role.code = '" + _authenticationService.getRole() + "' AND create_user = true;";
             }
             else if (_request.method() == QHttpServerRequest::Method::Delete)
             {
                 request = "SELECT delete_user FROM " + iTable +
                           " JOIN role ON " + iTable + ".id = role.id "
-                          "WHERE role.code = '" + _server._authenticationService.getRole() + "' AND delete_user = true;";
+                          "WHERE role.code = '" + _authenticationService.getRole() + "' AND delete_user = true;";
             }
 
             QByteArray data;
@@ -715,7 +714,7 @@ namespace Server
                 for (const auto& tree : _trees)
                 {
                     QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
-                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' "
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _authenticationService.getRole() + "' "
                                          "AND permission." + tree.column + " = 'write';";
                     QByteArray data;
                     if (!db->sendRequest(request, data))
@@ -730,7 +729,7 @@ namespace Server
                 for (const auto& tree : _trees)
                 {
                     QByteArray request = "SELECT permission." + tree.column + " FROM " + iTable + " AS permission "
-                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _server._authenticationService.getRole() + "' "
+                                         "JOIN role ON permission.role_id = role.id WHERE role.code = '" + _authenticationService.getRole() + "' "
                                          "AND (permission." + tree.column + " = 'read' OR permission." + tree.column + " = 'write');";
                     QByteArray data;
                     if (!db->sendRequest(request, data))
@@ -753,7 +752,7 @@ namespace Server
 
     HttpServer::HttpServer(QObject* parent) :
         QObject(parent),
-        _server(new HttpServerImpl(this))
+        _server(new HttpServerImpl())
     {
         _server->_start();
     }

@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <QMap>
 #include <QString>
 #include <QVector>
 

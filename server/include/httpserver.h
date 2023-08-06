@@ -20,7 +20,7 @@ namespace Server
         class HttpServerImpl;
         QScopedPointer<HttpServerImpl> _server;
         friend class HttpServerImpl;
-        template <class TCallBack> friend class Permission;
+        template <class TCallBack> friend class AuthorizationService;
     };
 }
 
