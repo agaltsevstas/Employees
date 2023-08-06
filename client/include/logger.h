@@ -46,7 +46,7 @@ public:
      * @TODO: Установление уровня подробности лога
      * @param iLevel - Уровень лога
      */
-    static void SetDebugLevel(DebugLevel iLevel);
+    static void SetDebugLevel(DebugLevel iLevel) noexcept;
 
 private:
     /*!

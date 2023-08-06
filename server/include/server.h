@@ -56,7 +56,7 @@ namespace Server
 
     public:
 
-        [[nodiscard]] inline static QList<QPair<QString, QString>> getFieldNames() noexcept
+        [[nodiscard]] inline static const QList<QPair<QString, QString>> getFieldNames() noexcept
         {
             return
             {
@@ -77,7 +77,7 @@ namespace Server
             };
         }
 
-        [[nodiscard]] inline static QMap<QString, QString> helpFields() noexcept
+        [[nodiscard]] inline static const QMap<QString, QString> helpFields() noexcept
         {
             return
             {
@@ -104,20 +104,20 @@ namespace Server
             };
         };
 
-        static QString id() noexcept           { return "id"; }
-        static QString role() noexcept         { return "role"; }
-        static QString surname() noexcept      { return "surname"; }
-        static QString name() noexcept         { return "name"; }
-        static QString patronymic() noexcept   { return "patronymic"; }
-        static QString sex() noexcept          { return "sex"; }
-        static QString dateOfBirth() noexcept  { return "date_of_birth"; }
-        static QString passport() noexcept     { return "passport"; }
-        static QString phone() noexcept        { return "phone"; }
-        static QString email() noexcept        { return "email"; }
-        static QString dateOfHiring() noexcept { return "date_of_hiring"; }
-        static QString workingHours() noexcept { return "working_hours"; }
-        static QString salary() noexcept       { return "salary"; }
-        static QString password() noexcept     { return "password"; }
+        static const QString id() noexcept           { return "id"; }
+        static const QString role() noexcept         { return "role"; }
+        static const QString surname() noexcept      { return "surname"; }
+        static const QString name() noexcept         { return "name"; }
+        static const QString patronymic() noexcept   { return "patronymic"; }
+        static const QString sex() noexcept          { return "sex"; }
+        static const QString dateOfBirth() noexcept  { return "date_of_birth"; }
+        static const QString passport() noexcept     { return "passport"; }
+        static const QString phone() noexcept        { return "phone"; }
+        static const QString email() noexcept        { return "email"; }
+        static const QString dateOfHiring() noexcept { return "date_of_hiring"; }
+        static const QString workingHours() noexcept { return "working_hours"; }
+        static const QString salary() noexcept       { return "salary"; }
+        static const QString password() noexcept     { return "password"; }
 
         /*!
          * @brief Проверка полей на повреждение/перезапись данных
@@ -125,10 +125,10 @@ namespace Server
          */
 
         static bool checkField(const QString &iField, QString &iValue);
-        static QString employeeTable() noexcept { return "employee"; }
-        static QString permissionTable() noexcept { return "permission"; }
-        static QString personalDataPermissionTable() noexcept { return "personal_data_permission"; }
-        static QString databasePermissionTable() noexcept { return "database_permission"; }
+        static const QString employeeTable() noexcept { return "employee"; }
+        static const QString permissionTable() noexcept { return "permission"; }
+        static const QString personalDataPermissionTable() noexcept { return "personal_data_permission"; }
+        static const QString databasePermissionTable() noexcept { return "database_permission"; }
 
     private:
         /*!

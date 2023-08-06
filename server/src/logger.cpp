@@ -54,7 +54,7 @@ void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext &iC
     }
 }
 
-void Logger::SetDebugLevel(Logger::DebugLevel iDebugLevel)
+void Logger::SetDebugLevel(Logger::DebugLevel iDebugLevel) noexcept
 {
     _debugLevel = iDebugLevel;
 }

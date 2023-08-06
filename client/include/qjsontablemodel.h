@@ -25,7 +25,7 @@ public:
 
     enum EditStrategy {OnFieldChange, OnManualSubmit};
 
-    void setEditStrategy(EditStrategy iStrategy) noexcept;
+    void setEditStrategy(EditStrategy iStrategy);
     inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
 
     bool setDatabase(const QJsonDocument &iDatabase) noexcept;

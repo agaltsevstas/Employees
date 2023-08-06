@@ -29,7 +29,7 @@
 
 namespace Client
 {
-    const QSizePolicy GetSizePolice() noexcept
+    static constexpr const QSizePolicy GetSizePolice() noexcept
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
@@ -37,7 +37,7 @@ namespace Client
         return sizePolicy;
     }
 
-    const QPalette GetPaletteLight() noexcept
+    static const QPalette GetPaletteLight() noexcept
     {
         QPalette palette;
         palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
@@ -45,7 +45,7 @@ namespace Client
         return palette;
     }
 
-    const QPalette GetPaletteGreen() noexcept
+    static const QPalette GetPaletteGreen() noexcept
     {
         QPalette palette;
         palette.setColor(QPalette::PlaceholderText, Qt::green);
@@ -53,7 +53,7 @@ namespace Client
         return palette;
     }
 
-    const QPalette GetPaletteRed() noexcept
+    static const QPalette GetPaletteRed() noexcept
     {
         QPalette palette;
         palette.setColor(QPalette::PlaceholderText, Qt::red);
@@ -861,7 +861,7 @@ namespace Client
 
     void TablePrivate::onResetDataClicked()
     {
-        for(qsizetype i = 0, I = _dataCache.size(); i < I; ++i)
+        for (qsizetype i = 0, I = _dataCache.size(); i < I; ++i)
         {
             if (auto widget = findChild<QWidget*>(_dataCache[i].first))
             {

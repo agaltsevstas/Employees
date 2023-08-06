@@ -12,7 +12,7 @@
 #include <Validator>
 
 
-const QSizePolicy GetSizePolice()
+static constexpr QSizePolicy GetSizePolice() noexcept
 {
     QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     sizePolicy.setHorizontalStretch(0);

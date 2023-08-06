@@ -10,7 +10,7 @@
 namespace Utils
 {
     // Карта перевода из кириллицы в латиницу
-    const QMap<QString, QString> translitSymbols =
+    static const QMap<QString, QString> translitSymbols =
     {
         {"а", "a"},
         {"б", "b"},

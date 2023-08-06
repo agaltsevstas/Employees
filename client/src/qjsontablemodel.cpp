@@ -83,7 +83,7 @@ QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDat
     setDatabase(iDatabase);
 }
 
-void QJsonTableModel::setEditStrategy(EditStrategy iStrategy) noexcept
+void QJsonTableModel::setEditStrategy(EditStrategy iStrategy)
 {
     if (iStrategy != _strategy)
     {
