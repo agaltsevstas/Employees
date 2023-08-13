@@ -41,6 +41,7 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
+    include/cookie.h \
     include/cache.h \
     include/delegate.h \
     include/lineedit.h \
@@ -60,6 +61,7 @@ HEADERS += \
 #/opt/homebrew/lib
 
 SOURCES += \
+    src/cookie.cpp \
     src/cache.cpp \
     src/delegate.cpp \
     src/lineedit.cpp \
@@ -86,6 +88,7 @@ LIBS += -L$$COMMON_LIBS_DIR \
         -lpqxx
 
 include(requester/requester.pri)
+include(qjsonwebtoken/qjsonwebtoken.pri)
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

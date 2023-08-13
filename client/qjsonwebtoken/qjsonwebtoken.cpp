@@ -10,9 +10,7 @@
 
 
 QJsonWebToken::QJsonWebToken():
-    _payload(QJsonDocument::fromJson("{}")),
-    _randLength(10), // default for random generation
-    _randAlphanum("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") // default for random generation
+    _payload(QJsonDocument::fromJson("{}"))
 {
     // create the header with default algorithm
     setAlgorithmStr("HS256");
@@ -33,11 +31,7 @@ QJsonWebToken& QJsonWebToken::operator=(const QJsonWebToken &other)
     this->_header    = other._header;
     this->_payload   = other._payload;
     this->_signature = other._signature;
-    this->_secret    = other._secret;
     this->_algorithm = other._algorithm;
-    this->_randLength = other._randLength;
-    this->_randAlphanum = other._randAlphanum;
-    this->_allData = other._allData;
     return *this;
 }
 
@@ -46,11 +40,7 @@ QJsonWebToken& QJsonWebToken::operator=(QJsonWebToken &&other)
     this->_header = std::move(other._header);
     this->_payload = std::move(other._payload);
     this->_signature = std::move(other._signature);
-    this->_secret = std::move(other._secret);
     this->_algorithm = std::move(other._algorithm);
-    this->_randLength = std::exchange(other._randLength, 0);
-    this->_randAlphanum = std::move(other._randAlphanum);
-    this->_allData = std::move(other._allData);
     return *this;
 }
 
@@ -59,11 +49,7 @@ bool QJsonWebToken::operator==(const QJsonWebToken &other) const
     return _header == other._header &&
            _payload == other._payload &&
            _signature == other._signature &&
-           _secret == other._secret &&
-           _algorithm == other._algorithm &&
-           _randLength == other._randLength &&
-           _randAlphanum == other._randAlphanum &&
-           _allData == other._allData;
+           _algorithm == other._algorithm;
 }
 
 QJsonDocument QJsonWebToken::getHeaderJDoc() const
@@ -148,68 +134,6 @@ bool QJsonWebToken::setPayloadQStr(const QString &strPayload)
     return true;
 }
 
-QByteArray QJsonWebToken::getSignature()
-{
-    // recalculate
-    // get header in compact mode and base64 encoded
-    QByteArray byteHeaderBase64  = getHeaderQStr().toUtf8().toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
-    // get payload in compact mode and base64 encoded
-    QByteArray bytePayloadBase64 = getPayloadQStr().toUtf8().toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
-    // calculate signature based on chosen algorithm and secret
-    _allData = byteHeaderBase64 + "." + bytePayloadBase64;
-    if (_algorithm.compare("HS256", Qt::CaseSensitive) == 0)      // HMAC using SHA-256 hash algorithm
-    {
-        _signature = QMessageAuthenticationCode::hash(_allData, _secret.toUtf8(), QCryptographicHash::Sha256);
-    }
-    else if (_algorithm.compare("HS384", Qt::CaseSensitive) == 0) // HMAC using SHA-384 hash algorithm
-    {
-        _signature = QMessageAuthenticationCode::hash(_allData, _secret.toUtf8(), QCryptographicHash::Sha384);
-    }
-    else if (_algorithm.compare("HS512", Qt::CaseSensitive) == 0) // HMAC using SHA-512 hash algorithm
-    {
-        _signature = QMessageAuthenticationCode::hash(_allData, _secret.toUtf8(), QCryptographicHash::Sha512);
-    }
-    // TODO : support other algorithms
-    else
-    {
-        _signature = QByteArray();
-    }
-    // return recalculated
-    return _signature;
-}
-
-QByteArray QJsonWebToken::getSignatureBase64()
-{
-    // note we return through getSignature() to force recalculation
-    return getSignature().toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
-}
-
-QString QJsonWebToken::getSecret() const
-{
-    return _secret;
-}
-
-bool QJsonWebToken::setSecret(const QString &strSecret)
-{
-    if (strSecret.isEmpty() || strSecret.isNull())
-    {
-        return false;
-    }
-
-    _secret = strSecret;
-
-    return true;
-}
-
-void QJsonWebToken::setRandomSecret()
-{
-    _secret.resize(_randLength);
-    for (int i = 0; i < _randLength; ++i)
-    {
-        _secret[i] = _randAlphanum.at(rand() % (_randAlphanum.length() - 1));
-    }
-}
-
 QString QJsonWebToken::getAlgorithmStr() const
 {
     return _algorithm;
@@ -232,16 +156,14 @@ bool QJsonWebToken::setAlgorithmStr(const QString &strAlgorithm)
     return true;
 }
 
-QByteArray QJsonWebToken::getToken()
+QString QJsonWebToken::getToken() const noexcept
 {
-    // important to execute first to update _allData which contains header + "." + payload in base64
-    QByteArray byteSignatureBase64 = this->getSignatureBase64();
-    // compose token and return it
-    return _allData + "." + byteSignatureBase64;
+    return _token;
 }
 
 bool QJsonWebToken::setToken(const QString &strToken)
 {
+    _token = strToken;
     // assume base64 encoded at first, if not try decoding
     bool isBase64Encoded = true;
     QStringList listJwtParts = strToken.split(".");
@@ -278,40 +200,9 @@ bool QJsonWebToken::setToken(const QString &strToken)
     {
         _signature = listJwtParts.at(2).toUtf8();
     }
-    // allData not valid anymore
-    _allData.clear();
+
     // success
     return true;
-}
-
-QString QJsonWebToken::getRandAlphanum() const
-{
-    return _randAlphanum;
-}
-
-void QJsonWebToken::setRandAlphanum(const QString &strRandAlphanum)
-{
-    if (strRandAlphanum.isNull())
-    {
-        return;
-    }
-
-    _randAlphanum = strRandAlphanum;
-}
-
-int QJsonWebToken::getRandLength() const
-{
-    return _randLength;
-}
-
-void QJsonWebToken::setRandLength(const int &intRandLength)
-{
-    if(intRandLength < 0 || intRandLength > 1e6)
-    {
-        return;
-    }
-
-    _randLength = intRandLength;
 }
 
 bool QJsonWebToken::isValid() const
@@ -319,8 +210,7 @@ bool QJsonWebToken::isValid() const
     // calculate token on other instance,
     // so we dont overwrite this instance's signature
     QJsonWebToken tempTokenObj = *this;
-    if (_signature == tempTokenObj.getSignature() &&
-        getExp() >= QDateTime::currentDateTime().toSecsSinceEpoch())
+    if (getExp() > QDateTime::currentDateTime().toSecsSinceEpoch())
     {
         return true;
     }
@@ -328,13 +218,11 @@ bool QJsonWebToken::isValid() const
     return false;
 }
 
-QJsonWebToken QJsonWebToken::fromTokenAndSecret(const QString &strToken, const QString &srtSecret)
+QJsonWebToken QJsonWebToken::fromToken(const QString &strToken)
 {
     QJsonWebToken tempTokenObj;
     // set Token
     tempTokenObj.setToken(strToken);
-    // set Secret
-    tempTokenObj.setSecret(srtSecret);
     // return
     return tempTokenObj;
 }
@@ -362,36 +250,14 @@ QString QJsonWebToken::claim(const QString &strClaimType)
     return jObj[strClaimType].toString();
 }
 
-qint64 QJsonWebToken::getID() const
-{
-    return _payload["id"].toString().toLongLong();
-}
-
-QString QJsonWebToken::getUserName() const
-{
-    return _payload["username"].toString();
-}
-
-QString QJsonWebToken::getRole() const
-{
-    return _payload["role"].toString();
-}
-
 qint64 QJsonWebToken::getExp() const
 {
     return _payload["exp"].toString().toLongLong();
 }
 
-void QJsonWebToken::clear()
+QString QJsonWebToken::getUserName() const
 {
-    _header = QJsonDocument();
-    _payload = QJsonDocument();
-    _signature.clear();
-    _secret.clear();
-    _algorithm.clear();
-    _randLength = 0;
-    _randAlphanum.clear();
-    _allData.clear();
+    return _payload["username"].toString();
 }
 
 bool QJsonWebToken::isAlgorithmSupported(const QString &strAlgorithm)

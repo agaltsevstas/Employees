@@ -1,11 +1,13 @@
 #include "session.h"
 #include "cache.h"
+#include "cookie.h"
 #include "settings.h"
 #include "logger.h"
 
 Session::Session()
 {
     Cache::Instance();
+    Cookie::Instance();
     Settings::Instance();
     Logger::Instance();
     qInstallMessageHandler(Logger::messageHandler);
@@ -22,12 +24,17 @@ Session &Session::getSession()
     return data;
 }
 
-class Cache& Session::Cache()
+Cache& Session::Cache()
 {
     return Cache::Instance();
 }
 
-class Settings& Session::Settings()
+Cookie& Session::Cookie()
+{
+    return Cookie::Instance();
+}
+
+Settings& Session::Settings()
 {
     return Settings::Instance();
 }

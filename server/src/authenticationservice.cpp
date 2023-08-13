@@ -1,4 +1,8 @@
 #include "authenticationservice.h"
+#include "qjsonwebtoken.h"
+
+#define JWT_ACCESS_SECRET "jwt-access-secret-key"
+#define JWT_REFRESH_SECRET "jwt-refresh-secret-key"
 
 
 namespace Server
@@ -92,101 +96,107 @@ namespace Server
         int _version;
     };
 
-
     AuthenticationService::AuthenticationService()
     {
 
     }
 
-    void AuthenticationService::authentication(const QString &iID, const QString &iUserName, const QString &iRole)
-    {
-        std::ignore = createToken(iID, iUserName, iRole);
-    }
-
     void AuthenticationService::logout()
     {
-        removeToken();
+        _id = 0;
+        _userName.clear();
+        _role.clear();
+    }
+
+    void AuthenticationService::setID(qint64 iID)
+    {
+        _id = iID;
     }
 
     qint64 AuthenticationService::getID() const
     {
-        if (_selectedIndex < 0)
-            return {};
+        return _id;
+    }
 
-        return _tokens[_selectedIndex].getID();
+    void AuthenticationService::setUserName(const QString &iUserName)
+    {
+        _userName = iUserName;
     }
 
     const QByteArray AuthenticationService::getUserName() const
     {
-        if (_selectedIndex < 0)
-            return {};
+        return _userName.toUtf8();
+    }
 
-        return _tokens[_selectedIndex].getUserName().toUtf8();
+    void AuthenticationService::setRole(const QString &iRole)
+    {
+        _role = iRole;
     }
 
     const QByteArray AuthenticationService::getRole() const
     {
-        if (_selectedIndex < 0)
-            return {};
-
-        return _tokens[_selectedIndex].getRole().toUtf8();
+        return _role.toUtf8();
     }
 
-    const QByteArray AuthenticationService::getCookie()
+    const QByteArray AuthenticationService::getAccessToken()
     {
-        return HttpCookie("refreshToken",
-                          _selectedIndex < 0 ? "" : _tokens[_selectedIndex].getToken(),
-                          _selectedIndex < 0 ? 0 :_tokens[_selectedIndex].getExp() / 1000,
+        QJsonWebToken accessToken;
+        accessToken.appendClaim("id", QString::number(_id));
+        accessToken.appendClaim("username", _userName);
+        accessToken.appendClaim("role", _role);
+        accessToken.appendClaim("iat", QString::number(QDateTime::currentDateTime().toSecsSinceEpoch()));
+        accessToken.appendClaim("exp", QString::number(QDateTime::currentDateTime().addSecs(60).toSecsSinceEpoch()));
+        accessToken.setSecret(JWT_ACCESS_SECRET);
+
+        return HttpCookie("accessToken",
+                          accessToken.getToken(),
+                          accessToken.getExp(),
                           "/",
                           "jwt",
                           "",
                           true,
-                          false,
+                          true,
                           "Lax").toByteArray();
     }
 
-    bool AuthenticationService::checkAuthentication(QByteArray &ioToken, qint64& oExp)
+    const QByteArray AuthenticationService::getRefreshToken()
     {
-        for (decltype(_tokens.size()) i = 0; i < _tokens.size(); ++i)
+        QJsonWebToken refreshToken;
+        refreshToken.appendClaim("id", QString::number(_id));
+        refreshToken.appendClaim("username", _userName);
+        refreshToken.appendClaim("role", _role);
+        refreshToken.appendClaim("iat", QString::number(QDateTime::currentDateTime().toSecsSinceEpoch()));
+        refreshToken.appendClaim("exp", QString::number(QDateTime::currentDateTime().addSecs(360).toSecsSinceEpoch()));
+        refreshToken.setSecret(JWT_REFRESH_SECRET);
+
+        return HttpCookie("refreshToken",
+                          refreshToken.getToken(),
+                          refreshToken.getExp(),
+                          "/",
+                          "jwt",
+                          "",
+                          true,
+                          true,
+                          "Lax").toByteArray();
+    }
+
+    bool AuthenticationService::checkAuthentication(QByteArray &ioToken)
+    {
+        if (QJsonWebToken accessToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_ACCESS_SECRET); accessToken.isValid())
         {
-            if (_tokens[i].getToken() == ioToken)
-            {
-                oExp = _tokens[i].getExp();
-                _selectedIndex = i;
-                return true;
-            }
+            _id = accessToken.getID();
+            _userName = accessToken.getUserName();
+            _role = accessToken.getRole();
+            return true;
+        }
+        else if (QJsonWebToken refreshToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_REFRESH_SECRET); refreshToken.isValid())
+        {
+            _id = refreshToken.getID();
+            _userName = refreshToken.getUserName();
+            _role = refreshToken.getRole();
+            return true;
         }
 
         return false;
-    }
-
-    QJsonWebToken AuthenticationService::createToken(const QString &iID, const QString &iUserName, const QString &iRole)
-    {
-        QJsonWebToken newToken;
-        newToken.appendClaim("id", iID);
-        newToken.appendClaim("username", iUserName);
-        newToken.appendClaim("role", iRole);
-        newToken.appendClaim("iat", QString::number(QDateTime::currentSecsSinceEpoch()));
-        newToken.appendClaim("exp", QString::number(QDateTime::currentDateTime().addDays(7).toMSecsSinceEpoch()));
-        newToken.setRandomSecret();
-        _selectedIndex = _tokens.size();
-        return _tokens.emplaceBack(std::move(newToken));
-    }
-
-    void AuthenticationService::removeToken()
-    {
-        if (_selectedIndex < 0)
-        {
-            return;
-        }
-        else if (_selectedIndex == 0 && _tokens.size() == 1)
-        {
-            _tokens.clear();
-            _selectedIndex = -1;
-        }
-        else
-        {
-            _tokens.remove(_selectedIndex);
-        }
     }
 }

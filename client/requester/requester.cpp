@@ -1,4 +1,6 @@
 ﻿#include "requester.h"
+#include "cookie.h"
+#include "session.h"
 
 #include <QBuffer>
 #include <QNetworkAccessManager>
@@ -17,41 +19,6 @@ namespace Client
     #define CLIENT_HOSTNAME        "127.0.0.1"        // Хост
     #define CLIENT_PORT             5433              // Порт
 
-    class NetworkCookieJar: public QNetworkCookieJar
-    {
-    public:
-         explicit NetworkCookieJar(QObject *parent = nullptr) :
-            QNetworkCookieJar(parent)
-         {
-
-         }
-
-         virtual ~NetworkCookieJar()
-         {
-
-         }
-
-         QList<QNetworkCookie> getAllCookies() const
-         {
-             return allCookies();
-         }
-
-         void setAllCookies(const QList<QNetworkCookie>& cookies)
-         {
-             QNetworkCookieJar::setAllCookies(cookies);
-         }
-
-         bool isEmpty()
-         {
-             return allCookies().isEmpty();
-         }
-
-         void clear()
-         {
-             setAllCookies({});
-         }
-    };
-
     class Requester::RequesterImpl
     {
     public:
@@ -61,7 +28,9 @@ namespace Client
           _port(CLIENT_PORT),
           _sslConfig(0),
           _requester(*iRequester)
-        {}
+        {
+
+        }
 
         QNetworkRequest createRequest(const QString &iApi);
 
@@ -73,14 +42,11 @@ namespace Client
 
         bool checkFinishRequest(QNetworkReply *iReply);
 
-        NetworkCookieJar* getCookie() { return &_cookie; };
-
     private:
         QString _pathTemplate;
         QString _host;
         int _port;
         QSslConfiguration *_sslConfig;
-        NetworkCookieJar _cookie;
         Requester &_requester;
     };
 
@@ -129,20 +95,24 @@ namespace Client
         QNetworkRequest request;
         QString url = _pathTemplate.arg(_host).arg(_port).arg(iApi);
         request.setUrl(QUrl(url));
-        request.setRawHeader("Content-Type","application/json");
-        if (!_cookie.isEmpty())
-            request.setRawHeader("Authorization", QString("Bearer %1").arg(_requester._token.toUtf8().toBase64()).toLocal8Bit());
-//          request.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(_requester._requester->_cookie));
-        else if (!_requester._token.isEmpty())
-            request.setRawHeader("Authorization", QString("Basic %1").arg(_requester._token.toUtf8().toBase64()).toLocal8Bit());
+        request.setRawHeader("Content-Type", "application/json");
+        if (Session::getSession().Cookie().isValid())
+        {
+            request.setRawHeader("Authorization", QString("Bearer %1").arg(_requester.getToken().toUtf8().toBase64()).toLocal8Bit());
+        }
+        else
+        {
+            _requester.logout();
+            request.setRawHeader("Authorization", QString("Basic %1").arg(_requester.getToken().toUtf8().toBase64()).toLocal8Bit());
+        }
         if (_sslConfig != Q_NULLPTR)
             request.setSslConfiguration(*_sslConfig);
         return request;
     }
 
     QNetworkReply* Requester::RequesterImpl::sendCustomRequest(QNetworkRequest &iRequest,
-                                                const QString &iType,
-                                                const QByteArray &iData)
+                                                               const QString &iType,
+                                                               const QByteArray &iData)
     {
         iRequest.setRawHeader("HTTP", iType.toUtf8());
         QBuffer *buff = new QBuffer;
@@ -197,6 +167,14 @@ namespace Client
         }
     }
 
+    const QString Requester::getToken()
+    {
+        if (QString token = Session::getSession().Cookie().getValidToken(); !token.isEmpty())
+            return token;
+
+        return _token;
+    }
+
     void Requester::sendRequest(const QString &iApi,
                                 const HandleResponse &handleResponse,
                                 const Requester::Type iType,
@@ -206,8 +184,6 @@ namespace Client
         _progress->setValue(0);
 
         QNetworkRequest request = _requester->createRequest(iApi);
-        _manager->setCookieJar(_requester->getCookie());
-
         QNetworkReply *reply;
         switch (iType)
         {
@@ -249,7 +225,6 @@ namespace Client
                 _progress->setHidden(true);
                 _json = _requester->parseReply(reply);
                 _token.clear();
-                _requester->getCookie()->clear();
 
                 QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
                 if (!variantCookies.isNull())
@@ -257,27 +232,27 @@ namespace Client
                     QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie>>(variantCookies);
                     for (const auto& cookie : cookies)
                     {
-                        if (cookie.name() == "refreshToken")
+                        if (cookie.name() == "accessToken" ||
+                            cookie.name() == "refreshToken")
                         {
-                            _token = cookie.value();
-                            if (!_token.isEmpty() && iApi != "logout")
-                                _requester->getCookie()->setAllCookies({cookie});
-                            else
-                                _requester->getCookie()->clear();
-                            break;
+                            Session::getSession().Cookie().add(cookie.name(), cookie.value());
                         }
                     }
                 }
 
+                /// Временно убрал
+//                if (iApi == "logout")
+//                    Session::getSession().Cookie().clear();
+
                 if (handleResponse)
-                        handleResponse(true, reply->errorString());
+                    handleResponse(true, reply->errorString());
                 else
                     response(true);
             }
             else
             {
                 if (handleResponse)
-                        handleResponse(false, reply->errorString());
+                    handleResponse(false, reply->errorString());
                 else
                     response(false);
             }

@@ -40,22 +40,25 @@ namespace Client
                          const QByteArray &iData = {});
 
         void setToken(const QString &iToken) { _token = iToken; }
-        const QString getToken() const { return _token; }
         const QJsonDocument getJson() const { return _json; }
         QProgressBar *getProgressBar() const { return _progress.get(); }
 
     signals:
         void response(bool iResult); // Ответ на запрос
+        void logout(); // Выход из приложения
 
     private slots:
         void printProgress(qint64 bytesReceived, qint64 bytesTotal);
+
+    private:
+        const QString getToken();
 
     private:
         QString _token;
         QNetworkAccessManager *_manager;
         QJsonDocument _json;
         QScopedPointer<QProgressBar> _progress;
-        QMutex mutex;
+        QMutex _mutex;
         class RequesterImpl;
         QScopedPointer<RequesterImpl> _requester;
         friend class RequesterImpl;

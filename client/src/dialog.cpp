@@ -1,5 +1,6 @@
 #include "ui_dialog.h"
 #include "cache.h"
+#include "cookie.h"
 #include "dialog.h"
 #include "requester.h"
 #include "session.h"
@@ -35,6 +36,24 @@ namespace Client
         connect(_dialog->password, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
 
         loadSettings();
+
+        if (Session::getSession().Cookie().isValid())
+        {
+            const QString userName = Session::getSession().Cookie().getUserName();
+            if (!userName.isEmpty())
+            {
+                for (const auto& login : Session::getSession().Cache().getLogins())
+                {
+                    if (userName == login)
+                    {
+                        _dialog->login->setText(login);
+                        _dialog->password->setText(Session::getSession().Cache().getPassword(login));
+                    }
+                }
+            }
+
+            on_enter_clicked();
+        }
     }
 
     Dialog::~Dialog()

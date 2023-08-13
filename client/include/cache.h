@@ -9,8 +9,8 @@ class QJsonDocument;
 class Cache
 {
     Q_DISABLE_COPY(Cache);
-public:
 
+public:
     [[nodiscard]] QStringList getLogins() const;
     [[nodiscard]] QString getPassword(const QString &iLogin) const;
     bool findUser(const QString &iLogin, const QString &iPassword) const;

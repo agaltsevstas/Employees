@@ -54,7 +54,6 @@ namespace Client
     private:
         void loadSettings();
         void saveSettings();
-        void resizeEvent(QResizeEvent *event) override;
         void setPersonalData(const QJsonDocument &iJson);
 
     private:

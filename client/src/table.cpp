@@ -18,7 +18,6 @@
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QScreen>
-#include <QSettings>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -70,6 +69,8 @@ namespace Client
 
         _ui->gridLayout->addWidget(_stackedWidget, 0, 0, 1, 1);
         _ui->gridLayout->addWidget(new QProgressBar(_requester->getProgressBar()), 1, 0, 1, 1);
+
+        connect(_requester, &Requester::logout, this, &Table::onExitClicked);
     }
 
     Table::~Table()
@@ -99,11 +100,6 @@ namespace Client
         Session::getSession().Settings().setValue("centerTable", geometry().center() - QPoint(width() / 2, height() / 2));
         if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
             Session::getSession().Settings().setValue("update", autoUpdate->isChecked());
-    }
-
-    void Table::resizeEvent(QResizeEvent *event)
-    {
-        QWidget::resizeEvent(event);
     }
 
     void Table::selectionChanged(const QItemSelection &, const QItemSelection &)
@@ -288,6 +284,11 @@ namespace Client
             {
                 _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
             }
+
+            if (QPushButton *showDatabase = _ui->groupBox->findChild<QPushButton*>("showDatabase"))
+                showDatabase->setText("Скрыть базу данных");
+
+            showFullScreen();
         }
         else
         {
@@ -325,10 +326,9 @@ namespace Client
 
         if (isCheckable)
         {
-            showDatabase->setText("Показать базу данных");
-
             if (_tableView)
             {
+                showDatabase->setText("Показать базу данных");
                 _tableView->setHidden(true);
                 _tableView->setParent(NULL);
                 if (_tableView->getModel())
@@ -337,10 +337,9 @@ namespace Client
         }
         else
         {
-            showDatabase->setText("Скрыть базу данных");
-
             if (_tableView)
             {
+                showDatabase->setText("Скрыть базу данных");
                 _tableView->setHidden(false);
                 _ui->splitter->addWidget(_tableView);
                 if (_tableView->getModel())
@@ -352,7 +351,6 @@ namespace Client
                 handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
                 _requester->sendRequest("showDatabase", handleResponse);
             }
-
         }
 
     }

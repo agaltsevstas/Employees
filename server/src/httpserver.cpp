@@ -4,8 +4,8 @@
 
 #include <QHttpServer>
 #include <QQueue>
-
 #include <QJsonObject>
+#include <QJsonDocument>
 
 #define SERVER_HOSTNAME "127.0.0.1" // Хост
 #define SERVER_PORT      5433       // Порт
@@ -21,29 +21,20 @@ namespace Server
 
         }
 
-        Tree(const Tree& other) noexcept :
-        table(other.table),
-        id(other.id),
-        column(other.column),
-        value(other.value)
+        Tree(const Tree& other) noexcept
         {
-
+            *this = other;
         }
 
-        explicit Tree(Tree&& other) noexcept :
-            table(std::move(other.table)),
-            id(std::exchange(other.id, 0)),
-            column(std::move(other.column)),
-            value(std::move(other.value))
+        explicit Tree(Tree&& other) noexcept
         {
-
+            *this = std::move(other);
         }
 
         Tree& operator=(Tree&& other) noexcept
         {
-            qInfo() << "оператор перемещения : " << this;
             table = std::move(other.table);
-            id = std::exchange(other.id, 0);;
+            id = std::exchange(other.id, 0);
             column = std::move(other.column);
             value = std::move(other.value);
             return *this;
@@ -140,7 +131,7 @@ namespace Server
 
         void _start();
     private:
-        bool _authorization(const QHttpServerRequest &iRequest, QByteArray* oData = nullptr);
+        bool _authentication(const QHttpServerRequest &iRequest, QByteArray* oData = nullptr);
         QHttpServerResponse _login();
         QHttpServerResponse _logout();
         QHttpServerResponse _showPersonalData();
@@ -179,12 +170,12 @@ namespace Server
             }
         }
 
-        QHttpServerResponse checkPermission(const QByteArray &iTable);
+        QHttpServerResponse checkAccess(const QByteArray &iTable);
 
     private:
         bool parseObject(const QJsonValue& iTable);
         bool parseData();
-        bool _checkPermission(const QByteArray &iTable);
+        bool _checkAccess(const QByteArray &iTable);
 
     private:
         QScopedPointer<ICallback> _callback;
@@ -193,7 +184,7 @@ namespace Server
         QQueue<Tree> _trees;
     };
 
-    bool HttpServer::HttpServerImpl::_authorization(const QHttpServerRequest &iRequest, QByteArray* oData)
+    bool HttpServer::HttpServerImpl::_authentication(const QHttpServerRequest &iRequest, QByteArray* oData)
     {
         QByteArray authentication = iRequest.value("authorization").simplified();
         if (!authentication.isNull())
@@ -209,7 +200,9 @@ namespace Server
                     QString id, role;
                     if (oData && db->authentication(userName, password, id, role, *oData))
                     {
-                        _authenticationService.authentication(id, userName, role);
+                        _authenticationService.setID(id.toULongLong());
+                        _authenticationService.setUserName(userName);
+                        _authenticationService.setRole(role);
                         return true;
                     }
                 }
@@ -217,9 +210,16 @@ namespace Server
             else if (authentication.startsWith("Bearer"))
             {
                 QByteArray token = QByteArray::fromBase64(authentication.mid(7));
-                qint64 exp;
-                if (_authenticationService.checkAuthentication(token, exp))
-                    return true;
+                if (_authenticationService.checkAuthentication(token))
+                {
+                    if (oData)
+                    {
+                        if (db->getPeronalData(_authenticationService.getID(), _authenticationService.getRole(), _authenticationService.getUserName(), *oData))
+                            return true;
+                    }
+                    else
+                        return true;
+                }
             }
         }
 
@@ -424,7 +424,7 @@ namespace Server
         _server.route("/login", [this](const QHttpServerRequest &request)
         {
             QByteArray data;
-            if (!_authorization(request, &data))
+            if (!_authentication(request, &data))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
             auto login = _login();
@@ -438,7 +438,7 @@ namespace Server
 
         _server.route("/logout", [this](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
             return _logout();
@@ -446,7 +446,7 @@ namespace Server
 
         _server.route("/showPersonalData", [this](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
             auto login = _login();
@@ -464,56 +464,59 @@ namespace Server
 
         _server.route("/showDatabase", [&](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkPermission(Employee::permissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updatePersonalData", [&](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkPermission(Employee::personalDataPermissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkAccess(Employee::personalDataPermissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Post, [&](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkPermission(Employee::permissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Delete, [&](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkPermission(Employee::permissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Patch, [&](const QHttpServerRequest &request)
         {
-            if (!_authorization(request))
+            if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkPermission(Employee::databasePermissionTable().toUtf8());
+            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::databasePermissionTable().toUtf8());
         });
 
         _server.afterRequest([this](QHttpServerResponse &&response)
         {
             if (response.statusCode() != StatusCode::ResetContent)
-                response.addHeader("Set-Cookie", _authenticationService.getCookie());
+            {
+                response.addHeader("Set-Cookie", _authenticationService.getAccessToken());
+                response.addHeader("Set-Cookie", _authenticationService.getRefreshToken());
+            }
             return std::move(response);
         });
     }
 
     template <class TCallBack>
-    QHttpServerResponse AuthorizationService<TCallBack>::checkPermission(const QByteArray &iTable)
+    QHttpServerResponse AuthorizationService<TCallBack>::checkAccess(const QByteArray &iTable)
     {
-        if (_checkPermission(iTable))
+        if (_checkAccess(iTable))
         {
             if (_callback)
                 return (*_callback)();
@@ -574,6 +577,7 @@ namespace Server
                 qWarning() << "Json parse error: " << parseError.errorString();
 //                    _response.setStatus(403, parseError.errorString().toUtf8());
             }
+
 
             else if (_request.method() == QHttpServerRequest::Method::Delete)
             {
@@ -672,7 +676,7 @@ namespace Server
     }
 
     template <class TCallBack>
-    bool AuthorizationService<TCallBack>::_checkPermission(const QByteArray &iTable)
+    bool AuthorizationService<TCallBack>::_checkAccess(const QByteArray &iTable)
     {
         if (!parseData())
             return false;

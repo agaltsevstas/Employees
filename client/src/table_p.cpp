@@ -22,9 +22,9 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QStackedWidget>
-#include <Validator>
 #include <QStringListModel>
 #include <QTimer>
+#include <Validator>
 
 
 namespace Client

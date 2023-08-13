@@ -1,8 +1,7 @@
 #ifndef AUTHENTICATIONSERVICE_H
 #define AUTHENTICATIONSERVICE_H
 
-#include "qjsonwebtoken.h"
-
+#include <QString>
 
 namespace Server
 {
@@ -12,23 +11,22 @@ namespace Server
     public:
 
         AuthenticationService();
-
-        void authentication(const QString &iID, const QString &iUserName, const QString &iRole);
         void logout();
 
+        void setID(qint64 iID);
         [[nodiscard]] qint64 getID() const;
+        void setUserName(const QString &iUserName);
         [[nodiscard]] const QByteArray getUserName() const;
+        void setRole(const QString &iRole);
         [[nodiscard]] const QByteArray getRole() const;
-        [[nodiscard]] const QByteArray getCookie();
-        bool checkAuthentication(QByteArray &ioToken, qint64& oExp);
+        [[nodiscard]] const QByteArray getAccessToken();
+        [[nodiscard]] const QByteArray getRefreshToken();
+        bool checkAuthentication(QByteArray &ioToken);
 
     private:
-        [[nodiscard]] QJsonWebToken createToken(const QString &iID, const QString &iUserName, const QString &iRole);
-        void removeToken();
-
-    private:
-        int _selectedIndex = -1;
-        QVector<QJsonWebToken> _tokens;
+        qint64 _id;
+        QString _userName;
+        QString _role;
     };
 }
 

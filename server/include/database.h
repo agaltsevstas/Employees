@@ -22,6 +22,7 @@ namespace Server
 
         bool checkFieldOnDuplicate(const QByteArray &iColumn, const QVariant &iValue) const;
         bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData) const;
+        bool authentication(const QString &iID, QByteArray& oData) const;
         bool getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData) const;
         bool sendRequest(const QByteArray &iRequest) const;
         bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {}) const;

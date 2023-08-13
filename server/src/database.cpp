@@ -132,6 +132,58 @@ namespace Server
         return true;
     }
 
+    bool DataBase::authentication(const QString &iID, QByteArray& oData) const
+    {
+        QSqlQuery query(_db);
+        query.prepare("SELECT "
+                      "employee.id, "
+                      "role.code, "
+                      "role.name as role, "
+                      "employee.surname, "
+                      "employee.name, "
+                      "employee.patronymic, "
+                      "employee.sex, "
+                      "employee.date_of_birth, "
+                      "employee.passport, "
+                      "employee.phone, "
+                      "employee.email, "
+                      "employee.date_of_hiring, "
+                      "employee.working_hours, "
+                      "employee.salary, "
+                      "employee.password "
+                      "FROM employee LEFT JOIN role ON employee.role_id = role.id "
+                      "WHERE employee.id = :ID;");
+        query.bindValue(":ID", iID);
+        if (!query.exec())
+        {
+            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            return false;
+        }
+
+        QJsonObject record;
+        if (query.next())
+        {
+            auto size = query.record().count();
+            for (decltype(size) i = 0; i < size; ++i)
+            {
+                if (query.record().fieldName(i) == "code")
+                {
+                    continue;
+                }
+                else if (query.record().fieldName(i) == Employee::id())
+                {
+                    /// Добавил вывод ID
+                    // continue;
+                }
+
+                record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
+            }
+        }
+
+        oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), std::move(record)}}).toJson();
+        return true;
+    }
+
     bool DataBase::getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData) const
     {
         QString userName = QString::fromUtf8(iUserName);

@@ -158,66 +158,6 @@ public:
 
     /**
 
-    \brief Returns the JWT *signature* as a QByteArray.
-    \return JWT *signature* as a decoded QByteArray.
-
-    Recalculates the JWT signature given the current *header*, *payload*, *algorithm* and
-    *secret*.
-
-    \warning This method overwrites the old signature internally. This could be undesired when
-    the signature was obtained by copying from another QJsonWebToken using the copy constructor.
-
-    */
-    QByteArray getSignature(); // WARNING : non-const because it overwrites signature
-
-    /**
-
-    \brief Returns the JWT *signature* as a QByteArray.
-    \return JWT *signature* as a **base64 encoded** QByteArray.
-
-    Recalculates the JWT signature given the current *header*, *payload*, *algorithm* and
-    *secret*. Then encodes the calculated signature using base64 encoding.
-
-    \warning This method overwrites the old signature internally. This could be undesired when
-    the signature was obtained by copying from another QJsonWebToken using the copy constructor.
-
-    */
-    QByteArray getSignatureBase64(); // WARNING : non-const because it overwrites signature
-
-    /**
-
-    \brief Returns the JWT *secret* as a QString.
-    \return JWT *secret* as a QString.
-
-    */
-    QString getSecret() const;
-
-    /**
-
-    \brief Sets the JWT *secret* from a QString.
-    \param strSecret JWT *secret* as a QString.
-    \return true if the secret was set, false if the secret was not set.
-
-    This method checks for a valid secret format and returns false if the secret is invalid.
-
-    */
-    bool setSecret(const QString &strSecret);
-
-    /**
-
-    \brief Creates and sets a random secret.
-
-    This method creates a random secret with the length defined by QJsonWebToken::getRandLength(),
-    and the characters defined by QJsonWebToken::getRandAlphanum().
-
-    \sa QJsonWebToken::getRandLength().
-    \sa QJsonWebToken::getRandAlphanum().
-
-    */
-    void setRandomSecret();
-
-    /**
-
     \brief Returns the JWT *algorithm* as a QString.
     \return JWT *algorithm* as a QString.
 
@@ -239,31 +179,7 @@ public:
     */
     bool setAlgorithmStr(const QString &strAlgorithm);
 
-    /**
-
-    \brief Returns the complete JWT as a QString.
-    \return Complete JWT as a QString.
-
-    The token has the form:
-
-    ```
-    xxxxx.yyyyy.zzzzz
-    ```
-
-    where:
-
-    - *xxxxx* is the *header* enconded in base64.
-    - *yyyyy* is the *payload* enconded in base64.
-    - *zzzzz* is the *signature* enconded in base64.
-
-    \warning This method overwrites the old signature becuse it calls getSignatureBase64 internally.
-    This could be undesired when the signature was obtained by copying from another QJsonWebToken
-    using the copy constructor.
-
-    \sa QJsonWebToken::getSignatureBase64().
-
-    */
-    QByteArray getToken();
+    QString getToken() const noexcept;
 
     /**
 
@@ -273,8 +189,6 @@ public:
 
     This method checks for a valid JWT format. It overwrites the *header*,
     *payload* , *signature* and *algorithm*. It does **not** overwrite the secret.
-
-    \sa QJsonWebToken::getToken().
 
     */
     bool setToken(const QString &strToken);
@@ -290,42 +204,6 @@ public:
     \sa QJsonWebToken::setRandAlphanum()
 
     */
-    QString getRandAlphanum() const;
-
-    /**
-
-    \brief Sets the current set of characters used to create random secrets.
-    \param strRandAlphanum Set of characters as a QString.
-
-    \sa QJsonWebToken::setRandomSecret()
-    \sa QJsonWebToken::getRandAlphanum()
-
-    */
-    void setRandAlphanum(const QString &strRandAlphanum);
-
-    /**
-
-    \brief Returns the current length used to create random secrets.
-    \return Length of random secret as a QString.
-
-    The default value is 10;
-
-    \sa QJsonWebToken::setRandomSecret()
-    \sa QJsonWebToken::setRandLength()
-
-    */
-    int getRandLength() const;
-
-    /**
-
-    \brief Sets the current length used to create random secrets.
-    \param intRandLength Length of random secret.
-
-    \sa QJsonWebToken::setRandomSecret()
-    \sa QJsonWebToken::getRandLength()
-
-    */
-    void setRandLength(const int &intRandLength);
 
     /**
 
@@ -341,16 +219,15 @@ public:
 
     /**
 
-    \brief Creates a QJsonWebToken instance from the complete JWT and a secret.
+    \brief Creates a QJsonWebToken instance from the complete JWT.
     \param strToken Complete JWT as a QString.
-    \param srtSecret Secret as a QString.
     \return Instance of QJsonWebToken.
 
     The JWT provided must have a valid format, else a QJsonWebToken instance with default
     values will be returned.
 
     */
-    static QJsonWebToken fromTokenAndSecret(const QString &strToken, const QString &srtSecret);
+    static QJsonWebToken fromToken(const QString &strToken);
 
     /**
 
@@ -393,15 +270,9 @@ public:
     */
     QString claim(const QString &strClaimType);
 
-    qint64 getID() const;
-
-    QString getUserName() const;
-
-    QString getRole() const;
-
     qint64 getExp() const;
 
-    void clear();
+    QString getUserName() const;
 
 private:
     bool isAlgorithmSupported(const QString &strAlgorithm);
@@ -412,23 +283,8 @@ private:
     QJsonDocument _header;	     // unencoded
     QJsonDocument _payload;      // unencoded
     QByteArray    _signature;    // unencoded
-    QString       _secret;
     QString       _algorithm;
-    int           _randLength;
-    QString       _randAlphanum;
-    QByteArray    _allData;      // helpers
+    QString       _token;
 };
-
-inline uint qHash(const QJsonWebToken &key, uint seed)
-{
-    return qHash(key._header.object(), seed) ^
-           qHash(key._payload.object(), seed + 1) ^
-           qHash(key._signature, seed + 2) ^
-           qHash(key._secret, seed + 3) ^
-           qHash(key._algorithm, seed + 4) ^
-           qHash(key._randLength, seed + 5) ^
-           qHash(key._randAlphanum, seed + 6) ^
-           qHash(key._allData, seed + 7);
-}
 
 #endif // QJSONWEBTOKEN_H
