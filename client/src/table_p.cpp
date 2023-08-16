@@ -29,6 +29,8 @@
 
 namespace Client
 {
+    static QPalette palette;
+
     static constexpr const QSizePolicy GetSizePolice() noexcept
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
@@ -39,7 +41,6 @@ namespace Client
 
     static const QPalette GetPaletteLight() noexcept
     {
-        QPalette palette;
         palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
         palette.setColor(QPalette::Text, Qt::black);
         return palette;
@@ -47,7 +48,6 @@ namespace Client
 
     static const QPalette GetPaletteGreen() noexcept
     {
-        QPalette palette;
         palette.setColor(QPalette::PlaceholderText, Qt::green);
         palette.setColor(QPalette::Text, Qt::green);
         return palette;
@@ -55,7 +55,6 @@ namespace Client
 
     static const QPalette GetPaletteRed() noexcept
     {
-        QPalette palette;
         palette.setColor(QPalette::PlaceholderText, Qt::red);
         palette.setColor(QPalette::Text, Qt::red);
         return palette;

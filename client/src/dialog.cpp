@@ -8,13 +8,14 @@
 
 #include <QColor>
 #include <QCompleter>
+#include <QGraphicsDropShadowEffect>
 #include <QMessageBox>
+#include <QMouseEvent>
 #include <QScreen>
 #include <QStatusBar>
 #include <QTimer>
 #include <QProgressBar>
 #include <Settings>
-
 
 #define DIRECTORY "../settings/"
 
@@ -24,16 +25,46 @@ namespace Client
     Dialog::Dialog(QWidget *parent) :
         QDialog(parent),
         _dialog(new Ui::Dialog),
-        _status(new QStatusBar(this)),
         _requester(new Requester(this))
     {   
         _dialog->setupUi(this);
+        setWindowFlag(Qt::FramelessWindowHint);
+        setAttribute(Qt::WA_TranslucentBackground);
 
-        _dialog->gridLayout->addWidget(_status, 5, 0, 1, 4);
-        _dialog->gridLayout->addWidget(_requester->getProgressBar(), 6, 0, 1, 4);
+        auto outerFrameEffect = new QGraphicsDropShadowEffect();
+        outerFrameEffect->setBlurRadius(25);
+        outerFrameEffect->setXOffset(0);
+        outerFrameEffect->setYOffset(0);
+        outerFrameEffect->setColor(QColor(234, 221, 186, 100));
+        _dialog->outerFrame->setGraphicsEffect(std::move(outerFrameEffect));
 
-        connect(_dialog->login, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
-        connect(_dialog->password, &QLineEdit::textChanged, this, &Dialog::updateLineEditStyleSheet);
+        auto innerFrameEffect = new QGraphicsDropShadowEffect();
+        innerFrameEffect->setBlurRadius(25);
+        innerFrameEffect->setXOffset(0);
+        innerFrameEffect->setYOffset(0);
+        innerFrameEffect->setColor(QColor(105, 118, 132, 100));
+        _dialog->innerFrame->setGraphicsEffect(std::move(innerFrameEffect));
+
+        auto enterEffect = new QGraphicsDropShadowEffect();
+        enterEffect->setBlurRadius(25);
+        enterEffect->setXOffset(3);
+        enterEffect->setYOffset(3);
+        enterEffect->setColor(QColor(105, 118, 132, 100));
+        _dialog->enter->setGraphicsEffect(std::move(enterEffect));
+
+        auto exitEffect = new QGraphicsDropShadowEffect();
+        exitEffect->setBlurRadius(25);
+        exitEffect->setXOffset(3);
+        exitEffect->setYOffset(3);
+        exitEffect->setColor(QColor(235, 255, 255, 90));
+        _dialog->exit->setGraphicsEffect(std::move(exitEffect));
+
+        _status = new QStatusBar(this);
+        _status->setObjectName("status");
+        _status->setGeometry(QRect(20, 395, 270, 20));
+        _status->setStyleSheet("background:rgba(0, 0, 0, 0);");
+        _requester->getProgressBar()->setParent(this);
+        _requester->getProgressBar()->setGeometry(QRect(20, 395, 300, 20));
 
         loadSettings();
 
@@ -70,20 +101,10 @@ namespace Client
 
         _dialog->login->setCompleter(completer);
         _dialog->login->installEventFilter(this);
-        _dialog->login->setPlaceholderText("Введите Логин/email");
-        _dialog->password->setPlaceholderText("Введите пароль");
         _dialog->password->setEchoMode(QLineEdit::Password);
         _dialog->rememberMe->setChecked(true);
-        _status->setSizePolicy(_dialog->authorization->sizePolicy());
         // Установка главного окна по центру экрана по умолчанию
         move(Session::getSession().Settings().value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
-
-//        QPixmap loginIcon(":/images/login.png");
-//        QPixmap passwordIcon(":/images/password.png");
-//        int width = _dialog->loginIcon->width();
-//        int height = _dialog->loginIcon->height();
-//        _dialog->loginIcon->setPixmap(loginIcon.scaled(width, height, Qt::KeepAspectRatio));
-//        _dialog->passwordIcon->setPixmap(passwordIcon.scaled(width, height, Qt::KeepAspectRatio));
 
         connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iLogin)
         {
@@ -96,58 +117,12 @@ namespace Client
         Session::getSession().Settings().setValue("centerDialog", geometry().center() - QPoint(width() / 2, height() / 2));
     }
 
-    void Dialog::updateLineEditStyleSheet()
-    {
-        QLineEdit *lineEdit = qobject_cast<QLineEdit*>(sender());
-        if (lineEdit->text().isEmpty())
-        {
-            lineEdit->setStyleSheet("width: 100%; "
-                                    "height: 40px; "
-                                    "margin-top: 7px; "
-                                    "font-size: 14px; "
-                                    "color: gray; "
-                                    "outline: none; "
-                                    "border: 1px solid rgba(0, 0, 0, .49); "
-
-                                    "padding-left: 20px; "
-                                    "background-clip: padding-box; "
-                                    "border-radius: 6px; "
-
-                                    "background-image: -webkit-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: -moz-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: -o-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: -ms-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); ");
-        }
-        else
-        {
-            lineEdit->setStyleSheet("width: 100%; "
-                                    "height: 40px; "
-                                    "margin-top: 7px; "
-                                    "font-size: 14px; "
-                                    "color: black; "
-                                    "outline: none; "
-                                    "border: 1px solid rgba(0, 0, 0, .49); "
-
-                                    "padding-left: 20px; "
-                                    "background-clip: padding-box; "
-                                    "border-radius: 6px; "
-
-                                    "background-image: -webkit-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: -moz-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: -o-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: -ms-linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%); "
-                                    "background-image: linear-gradient(bottom, #FFFFFF 0%, #F2F2F2 100%);");
-        }
-    }
-
-
     void Dialog::authentication(bool iResult)
     {
         if (iResult)
         {
             qDebug() << "Вход успешно выполнен!";
-            _status->setStyleSheet("color: blue");
+            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: blue");
             _status->showMessage("Вход успешно выполнен!", 1000);
 
             _table = new Table(_requester);
@@ -159,7 +134,7 @@ namespace Client
         {
             qDebug() << "Введен неверный логин или пароль!";
 
-            _status->setStyleSheet("color: red");
+            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: red");
             _status->showMessage("Введен неверный логин или пароль!", 1000);
         }
     }
@@ -169,7 +144,8 @@ namespace Client
         delete _table;
         disconnect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
         _requester->sendRequest("logout");
-        _dialog->gridLayout->addWidget(_requester->getProgressBar(), 6, 0, 1, 4);
+        _requester->getProgressBar()->setParent(this);
+        _requester->getProgressBar()->setGeometry(QRect(20, 395, 300, 20));;
         show();
     }
 
@@ -208,6 +184,33 @@ namespace Client
     void Dialog::on_exit_clicked()
     {
         close();
+    }
+
+    void Dialog::mouseMoveEvent(QMouseEvent *event)
+    {
+        if (event->buttons() | Qt::LeftButton )
+        {
+            setGeometry(pos().x() + (event->position().x() - _dx),
+                        pos().y() + (event->position().y() - _dy),
+                        width(),
+                        height());
+        }
+    }
+
+    void Dialog::mousePressEvent(QMouseEvent *event)
+    {
+        if (event->button() == Qt::LeftButton )
+        {
+            _dx = event->position().x();
+            _dy = event->position().y();
+            setCursor(Qt::OpenHandCursor);
+        }
+    }
+
+    void Dialog::mouseReleaseEvent(QMouseEvent* event)
+    {
+        if (event->button() == Qt::LeftButton )
+            setCursor(Qt::ArrowCursor);
     }
 }
 

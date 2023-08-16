@@ -18,7 +18,7 @@ namespace Client
     class Table;
     class Requester;
 
-    class Dialog : public QDialog
+    class Dialog final : public QDialog
     {
         Q_OBJECT
 
@@ -31,7 +31,6 @@ namespace Client
         void saveSettings();
 
     private slots:
-        void updateLineEditStyleSheet();
         void authentication(bool iResult);
         void showDialog();
         void on_enter_clicked();
@@ -40,6 +39,13 @@ namespace Client
         void on_exit_clicked();
 
     private:
+        void mouseMoveEvent(QMouseEvent *event) override;
+        void mousePressEvent(QMouseEvent *event) override;
+        void mouseReleaseEvent(QMouseEvent *event) override;
+
+
+    private:
+        int _dx, _dy;
         Ui::Dialog *_dialog = nullptr;
         Table *_table = nullptr;
         QStatusBar *_status = nullptr;
