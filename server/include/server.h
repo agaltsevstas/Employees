@@ -126,6 +126,7 @@ namespace Server
 
         static bool checkField(const QString &iField, QString &iValue);
         static const QString employeeTable() noexcept { return "employee"; }
+        static const QString roleTable() noexcept { return "role"; }
         static const QString permissionTable() noexcept { return "permission"; }
         static const QString personalDataPermissionTable() noexcept { return "personal_data_permission"; }
         static const QString databasePermissionTable() noexcept { return "database_permission"; }

@@ -143,9 +143,9 @@ namespace Client
     {
         delete _table;
         disconnect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
-        _requester->sendRequest("logout");
         _requester->getProgressBar()->setParent(this);
-        _requester->getProgressBar()->setGeometry(QRect(20, 395, 300, 20));;
+        _requester->getProgressBar()->setGeometry(QRect(20, 395, 300, 20));
+        _requester->sendRequest("logout");
         show();
     }
 

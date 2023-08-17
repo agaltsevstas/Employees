@@ -347,6 +347,24 @@ namespace Server
 
             if (!db->updateRecord(tree.id, tree.column, tree.value))
                 return QHttpServerResponse(StatusCode::BadRequest);
+
+            if (tree.column == "id")
+            {
+                _authenticationService.setID(tree.value.toULongLong());
+            }
+            else if (tree.column == "role")
+            {
+                QByteArray data;
+                if (!db->sendRequest("SELECT code FROM " + Employee::role().toUtf8() + " WHERE name = '" + tree.value.toString().toUtf8() +"'", data))
+                    return QHttpServerResponse(StatusCode::BadRequest);
+
+                const QString role = QJsonDocument::fromJson(data).object().value("code").toString();
+                _authenticationService.setRole(std::move(role));
+            }
+            else if (tree.column == "email")
+            {
+                _authenticationService.setUserName(tree.value.toString());
+            }
         }
 
         return QHttpServerResponse(StatusCode::Ok);

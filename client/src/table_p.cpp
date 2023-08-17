@@ -1,6 +1,7 @@
 #include "table_p.h"
 #include "ui_table.h"
 #include "cache.h"
+#include "cookie.h"
 #include "client.h"
 #include "session.h"
 #include "utils.h"
@@ -294,7 +295,7 @@ namespace Client
             create_user != subobject_permissions.end() &&
             delete_user != subobject_permissions.end())
         {
-            if (create_user->isBool())
+            if (create_user->isBool() && create_user->toBool() == true)
             {
                 QPushButton *createUser = new QPushButton("Создать пользователя", verticalLayoutWidget);
                 connect(createUser, SIGNAL(clicked()), parent, SLOT(onCreateUserClicked()));
@@ -303,10 +304,10 @@ namespace Client
                 createUser->setToolTip("Создать пользователя");
                 createUser->setSizePolicy(sizePolicy);
                 createUser->setEnabled(false);
-                buttonLayout->addWidget(createUser, 1, 2, 1, 1);
+                buttonLayout->addWidget(createUser, 1, 1, 1, 1);
             }
 
-            if (delete_user->isBool())
+            if (delete_user->isBool() && delete_user->toBool() == true)
             {
                 QPushButton *deleteUser = new QPushButton("Удалить пользователя", verticalLayoutWidget);
                 connect(deleteUser, SIGNAL(clicked()), parent, SLOT(onDeleteUserClicked()));
@@ -315,7 +316,7 @@ namespace Client
                 deleteUser->setToolTip("Удалить пользователя из базы данных");
                 deleteUser->setSizePolicy(sizePolicy);
                 deleteUser->setEnabled(false);
-                buttonLayout->addWidget(deleteUser, 1, 3, 1, 1);
+                buttonLayout->addWidget(deleteUser, 1, 2, 1, 1);
 
                 QPushButton *restoreUser = new QPushButton("Восстановить пользователя", verticalLayoutWidget);
                 connect(restoreUser, SIGNAL(clicked()), parent, SLOT(onRestoreUserClicked()));
@@ -325,10 +326,10 @@ namespace Client
                 restoreUser->setSizePolicy(sizePolicy);
                 restoreUser->setEnabled(true);
                 restoreUser->setVisible(false);
-                buttonLayout->addWidget(restoreUser, 1, 3, 1, 1);
+                buttonLayout->addWidget(restoreUser, 1, 2, 1, 1);
             }
 
-            if (show_db->isBool())
+            if (show_db->isBool() && show_db->toBool() == true)
             {
                 QPushButton *showDatabase = new QPushButton("Показать базу данных", verticalLayoutWidget);
                 connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
@@ -336,7 +337,7 @@ namespace Client
                 showDatabase->setObjectName("showDatabase");
                 showDatabase->setToolTip("Показать базу данных сотрудников");
                 showDatabase->setSizePolicy(sizePolicy);
-                buttonLayout->addWidget(showDatabase, 1, 1, 1, 1);
+                buttonLayout->addWidget(showDatabase, 1, 0, 1, 1);
 
                 QPushButton *search = new QPushButton("Поиск", verticalLayoutWidget);
                 connect(search, SIGNAL(clicked()), SLOT(onSearchClicked()));
@@ -378,9 +379,9 @@ namespace Client
         QCheckBox *autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
         connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
         autoUpdate->setObjectName("autoUpdate");
-        autoUpdate->setToolTip("Автоматически отправлять данные на сервер");
+        autoUpdate->setToolTip("Автоматически отправлять д1анные на сервер");
         autoUpdate->setSizePolicy(sizePolicy);
-        buttonLayout->addWidget(autoUpdate, 0, 0, 1, buttonLayout->columnCount() / 2);
+        buttonLayout->addWidget(autoUpdate, 0, 0, 1, 1);
 
         QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
         connect(update, SIGNAL(clicked()), parent, SLOT(onUpdateClicked()));
@@ -388,7 +389,7 @@ namespace Client
         update->setToolTip("Отправить данные на сервер");
         update->setObjectName("update");
         update->setSizePolicy(sizePolicy);
-        buttonLayout->addWidget(update, 0, 2, 1, buttonLayout->columnCount() / 2);
+        buttonLayout->addWidget(update, 0, 1, 1, 1);
 
         QPushButton *revert = new QPushButton(verticalLayoutWidget);
         connect(revert, SIGNAL(clicked()), parent, SLOT(onRevertClicked()));
@@ -397,7 +398,7 @@ namespace Client
         revert->setToolTip("Вернуть предыдущие изменения");
         revert->setText("Откатить");
         revert->setSizePolicy(sizePolicy);
-        buttonLayout->addWidget(revert, 1, 0, 1, 1);
+        buttonLayout->addWidget(revert, 0, 2, 1, buttonLayout->columnCount() / 2);
 
         QPushButton *exit = new QPushButton("Выход", verticalLayoutWidget);
         connect(exit, SIGNAL(clicked()), parent, SLOT(onExitClicked()));

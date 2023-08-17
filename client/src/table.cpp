@@ -68,7 +68,7 @@ namespace Client
         _stackedWidget->setCurrentWidget(_personalData);
 
         _ui->gridLayout->addWidget(_stackedWidget, 0, 0, 1, 1);
-        _ui->gridLayout->addWidget(new QProgressBar(_requester->getProgressBar()), 1, 0, 1, 1);
+        _ui->gridLayout->addWidget(_requester->getProgressBar(), 1, 0, 1, 1);
 
         connect(_requester, &Requester::logout, this, &Table::onExitClicked);
     }
@@ -182,6 +182,7 @@ namespace Client
 
     void Table::onExitClicked()
     {
+        _requester->getProgressBar()->setParent(NULL);
         showNormal();
         close();           // Закрытие окна
         emit openDialog(); // Вызов главного окна
