@@ -28,6 +28,26 @@
 
 namespace Client
 {
+    static QString pushButtonStyle(":enabled {\n"
+                                    "border-left:20px solid qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                    "border-right:20px solid qlineargradient(spread:pad, x1:1, y1:0, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                    "border-top:10px solid qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                    "border-bottom:10px solid qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                    "color:rgba(255, 255, 255, 210);\n"
+                                    "}\n"
+                                    ":disabled { \n"
+                                    "background-color:rgba(255, 255, 255, 0); "
+                                    "color:rgba(255, 255, 255, 100);"
+                                    "}\n"
+                                    ":hover{\n"
+                                    "background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(40, 67, 98, 219), stop:1 rgba(105, 118, 132, 226));\n"
+                                    "}\n"
+                                    ":pressed{\n"
+                                    "padding-left:5px;\n"
+                                    "padding-top:5px;\n"
+                                    "background-color:rgba(105, 118, 132, 200);\n"
+                                    "}");
+
     static QPalette palette;
 
     static constexpr const QSizePolicy GetSizePolice() noexcept
@@ -302,6 +322,7 @@ namespace Client
                 createUser->setToolTip("Создать пользователя");
                 createUser->setSizePolicy(sizePolicy);
                 createUser->setEnabled(false);
+                createUser->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(createUser, 1, 1, 1, 1);
             }
 
@@ -314,6 +335,7 @@ namespace Client
                 deleteUser->setToolTip("Удалить пользователя из базы данных");
                 deleteUser->setSizePolicy(sizePolicy);
                 deleteUser->setEnabled(false);
+                deleteUser->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(deleteUser, 1, 2, 1, 1);
 
                 QPushButton *restoreUser = new QPushButton("Восстановить пользователя", verticalLayoutWidget);
@@ -324,6 +346,7 @@ namespace Client
                 restoreUser->setSizePolicy(sizePolicy);
                 restoreUser->setEnabled(true);
                 restoreUser->setVisible(false);
+                restoreUser->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(restoreUser, 1, 2, 1, 1);
             }
 
@@ -335,6 +358,7 @@ namespace Client
                 showDatabase->setObjectName("showDatabase");
                 showDatabase->setToolTip("Показать базу данных сотрудников");
                 showDatabase->setSizePolicy(sizePolicy);
+                showDatabase->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(showDatabase, 1, 0, 1, 1);
 
                 QPushButton *search = new QPushButton("Поиск", verticalLayoutWidget);
@@ -343,6 +367,7 @@ namespace Client
                 search->setToolTip("Поиск сотрудника в базе данных");
                 search->setSizePolicy(sizePolicy);
                 search->setEnabled(false);
+                search->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(search, 2, 0, 1, 1);
 
                 QLineEdit *valueSearch = new QLineEdit(verticalLayoutWidget);
@@ -387,6 +412,7 @@ namespace Client
         update->setToolTip("Отправить данные на сервер");
         update->setObjectName("update");
         update->setSizePolicy(sizePolicy);
+        update->setStyleSheet(pushButtonStyle);
         buttonLayout->addWidget(update, 0, 1, 1, 1);
 
         QPushButton *revert = new QPushButton(verticalLayoutWidget);
@@ -396,6 +422,7 @@ namespace Client
         revert->setToolTip("Вернуть предыдущие изменения");
         revert->setText("Откатить");
         revert->setSizePolicy(sizePolicy);
+        revert->setStyleSheet(pushButtonStyle);
         buttonLayout->addWidget(revert, 0, 2, 1, buttonLayout->columnCount() / 2);
 
         QPushButton *exit = new QPushButton("Выход", verticalLayoutWidget);
@@ -405,6 +432,7 @@ namespace Client
         exit->setToolTip("Вернуться в главное меню");
         exit->setEnabled(true);
         exit->setSizePolicy(sizePolicy);
+        exit->setStyleSheet(pushButtonStyle);
         buttonLayout->addWidget(exit, buttonLayout->rowCount(), 0, 1, buttonLayout->columnCount());
 
         splitter->addWidget(data);
@@ -571,6 +599,7 @@ namespace Client
         cancel->setObjectName("cancel");
         cancel->setToolTip("Отменить ввод данных нового пользователя");
         cancel->setSizePolicy(sizePolicy);
+        cancel->setStyleSheet(pushButtonStyle);
 
         QPushButton *resetData = new QPushButton("Сбросить данные", verticalLayoutWidget);
         connect(resetData, SIGNAL(clicked()), SLOT(onResetDataClicked()));
@@ -578,6 +607,7 @@ namespace Client
         resetData->setObjectName("resetData");
         resetData->setToolTip("Сбросить данные нового пользователя");
         resetData->setSizePolicy(sizePolicy);
+        resetData->setStyleSheet(pushButtonStyle);
 
         QPushButton *addUser = new QPushButton("Добавить в базу данных", verticalLayoutWidget);
         connect(addUser, SIGNAL(clicked()), parent, SLOT(onAddUserClicked()));
@@ -585,6 +615,7 @@ namespace Client
         addUser->setObjectName("addUser");
         addUser->setToolTip("Добавить в базу данных нового пользователя");
         addUser->setSizePolicy(sizePolicy);
+        addUser->setStyleSheet(pushButtonStyle);
 
         buttonLayout->addWidget(cancel, 0, 0, 1, 1);
         buttonLayout->addWidget(resetData, 0, 1, 1, 1);

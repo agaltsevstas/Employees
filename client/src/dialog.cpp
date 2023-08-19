@@ -17,6 +17,8 @@
 #include <QProgressBar>
 #include <Settings>
 
+#include <QPainter>
+
 #define DIRECTORY "../settings/"
 
 
@@ -65,6 +67,9 @@ namespace Client
         _status->setStyleSheet("background:rgba(0, 0, 0, 0);");
         _requester->getProgressBar()->setParent(this);
         _requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
+
+//        _dialog->loginIcon->setPixmap(QPixmap(":/images/images/login.png"));
+//        _dialog->passwordIcon->setPixmap(QPixmap(":/images/images/password.png"));
 
         loadSettings();
 

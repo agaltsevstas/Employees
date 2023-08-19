@@ -19,8 +19,24 @@
   <property name="windowTitle">
    <string>Личный кабинет</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
-   <item row="0" column="0">
+  <property name="styleSheet">
+   <string notr="true">:enabled {
+background-color:rgba(20, 47, 78, 219);
+color: rgba(255, 255, 255, 210);
+}
+
+:disabled {
+background-color:rgba(255, 255, 255, 0);
+color:rgba(255, 255, 255, 100);
+}
+
+hover{
+background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(40, 67, 98, 219), stop:1 rgba(105, 118, 132, 226));
+}
+</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
     <widget class="QSplitter" name="splitter">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">

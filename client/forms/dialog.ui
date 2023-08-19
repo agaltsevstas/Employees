@@ -237,10 +237,12 @@ padding-bottom:7px;</string>
     </sizepolicy>
    </property>
    <property name="styleSheet">
-    <string notr="true">QPushButton{ 
-background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(20, 47, 78, 219), stop:1 rgba(85, 98, 112, 226));
+    <string notr="true">QPushButton {
+border-left:20px solid qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));
+border-right:20px solid qlineargradient(spread:pad, x1:1, y1:0, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));
+border-top:10px solid qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));
+border-bottom:10px solid qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));
 color:rgba(255, 255, 255, 210);
-border-radius:5px;
 }
 
 QPushButton:hover{

@@ -286,21 +286,22 @@ namespace Client
             if (!_tableView)
             {
                 _tableView = new TableView(this);
-                _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
-                if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
-                    _tableView->setEditStrategy(autoUpdate->isChecked() ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
-                connect(_tableView, &TableView::sendCreateData, this, &Table::createData);
-                connect(_tableView, &TableView::sendDeleteData, this, &Table::deleteData);
-                connect(_tableView, &TableView::sendUpdateData, this, &Table::updateData);
-                connect(_tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Table::selectionChanged);
-                connect(_personalData, &TablePrivate::sendValueSearch, _tableView, &TableView::valueSearchChanged);
-                connect(_personalData, &TablePrivate::sendClearSearch, _tableView, &TableView::clearSearchChanged);
                 _ui->splitter->addWidget(_tableView);
             }
             else
             {
-                _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
+                _tableView->clearSearchChanged();
             }
+
+            _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
+            if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
+                _tableView->setEditStrategy(autoUpdate->isChecked() ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
+            connect(_tableView, &TableView::sendCreateData, this, &Table::createData);
+            connect(_tableView, &TableView::sendDeleteData, this, &Table::deleteData);
+            connect(_tableView, &TableView::sendUpdateData, this, &Table::updateData);
+            connect(_tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &Table::selectionChanged);
+            connect(_personalData, &TablePrivate::sendValueSearch, _tableView, &TableView::valueSearchChanged);
+            connect(_personalData, &TablePrivate::sendClearSearch, _tableView, &TableView::clearSearchChanged);
 
             if (QPushButton *showDatabase = _ui->groupBox->findChild<QPushButton*>("showDatabase"))
                 showDatabase->setText("Скрыть базу данных");
@@ -345,6 +346,22 @@ namespace Client
             if (_tableView)
             {
                 showDatabase->setText("Показать базу данных");
+
+                if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
+                    createUser->setEnabled(false);
+
+                if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
+                    deleteUser->setEnabled(false);
+
+                if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
+                    restoreUser->setEnabled(false);
+
+                if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
+                    search->setEnabled(false);
+
+                if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
+                    valueSearch->setEnabled(false);
+
                 _tableView->setHidden(true);
                 _tableView->setParent(NULL);
                 if (_tableView->getModel())
@@ -356,6 +373,22 @@ namespace Client
             if (_tableView)
             {
                 showDatabase->setText("Скрыть базу данных");
+
+                if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
+                    createUser->setEnabled(true);
+
+                if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
+                    deleteUser->setEnabled(true);
+
+                if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
+                    restoreUser->setEnabled(true);
+
+                if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
+                    search->setEnabled(true);
+
+                if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
+                    valueSearch->setEnabled(true);
+
                 _tableView->setHidden(false);
                 _ui->splitter->addWidget(_tableView);
                 if (_tableView->getModel())
