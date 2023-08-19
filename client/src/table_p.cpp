@@ -1,7 +1,5 @@
 #include "table_p.h"
-#include "ui_table.h"
 #include "cache.h"
-#include "cookie.h"
 #include "client.h"
 #include "session.h"
 #include "utils.h"
@@ -859,6 +857,11 @@ namespace Client
             qInfo() << "Пустые данные!";
     }
 
+    bool TablePrivate::checkChanges() const noexcept
+    {
+        return _recordsCache && !_recordsCache->empty();
+    }
+
     void TablePrivate::onResetDataClicked()
     {
         for (qsizetype i = 0, I = _dataCache.size(); i < I; ++i)
@@ -887,9 +890,11 @@ namespace Client
         {
             if (QStringListModel* model = qobject_cast<QStringListModel*>(value->completer()->model()))
             {
-                QStringList list = model->stringList();
-                list.append(value->text());
-                model->setStringList(std::move(list));
+                if (QStringList list = model->stringList(); !list.contains(value->text()))
+                {
+                    list.append(value->text());
+                    model->setStringList(std::move(list));
+                }
             }
 
             emit sendValueSearch(value->text());

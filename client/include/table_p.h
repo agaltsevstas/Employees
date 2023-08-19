@@ -30,6 +30,7 @@ namespace Client
         [[nodiscard]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
         bool getUserData();
         void submitAll();
+        bool checkChanges() const noexcept;
 
     Q_SIGNALS:
         void sendRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);

@@ -387,6 +387,7 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
     {
         if (Client::Employee::checkField(field, message))
         {
+            message = value; // нужно для проверки дубликаата, checkField изменяет значение
             if (checkFieldOnDuplicate(row, column, message))
             {
                 return true;
@@ -523,6 +524,11 @@ bool QJsonTableModel::canDeleteRow(int row)
     }
 
     return true;
+}
+
+bool QJsonTableModel::checkChanges() const noexcept
+{
+    return !_recordsCreatedCache.empty() || !_recordsDeletedCache.empty() || !_recordsUpdatedCache.empty();
 }
 
 QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept

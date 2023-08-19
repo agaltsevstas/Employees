@@ -30,6 +30,7 @@ namespace Client
         bool deleteUser();
         void restoreUser();
         [[nodiscard]] std::optional<bool> canDelete();
+        bool checkChanges() const noexcept;
 
     Q_SIGNALS:
         void sendCreateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);

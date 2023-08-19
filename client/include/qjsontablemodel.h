@@ -41,6 +41,7 @@ public:
     void deleteRow(int row);
     void restoreRow(int row);
     bool canDeleteRow(int row);
+    bool checkChanges() const noexcept;
     [[nodiscard]] QList<int> valueSearch(const QString &iValue) const noexcept;
     [[nodiscard]] QAbstractItemModel *relationModel(int column) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const noexcept override;

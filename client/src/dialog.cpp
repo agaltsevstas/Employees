@@ -61,10 +61,10 @@ namespace Client
 
         _status = new QStatusBar(this);
         _status->setObjectName("status");
-        _status->setGeometry(QRect(20, 395, 270, 20));
+        _status->setGeometry(QRect(290, 395, 270, 20));
         _status->setStyleSheet("background:rgba(0, 0, 0, 0);");
         _requester->getProgressBar()->setParent(this);
-        _requester->getProgressBar()->setGeometry(QRect(20, 395, 300, 20));
+        _requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
 
         loadSettings();
 
@@ -85,6 +85,8 @@ namespace Client
 
             on_enter_clicked();
         }
+
+
     }
 
     Dialog::~Dialog()
@@ -122,7 +124,7 @@ namespace Client
         if (iResult)
         {
             qDebug() << "Вход успешно выполнен!";
-            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: blue");
+            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color:rgba(255, 255, 255, 210);");
             _status->showMessage("Вход успешно выполнен!", 1000);
 
             _table = new Table(_requester);
@@ -134,7 +136,7 @@ namespace Client
         {
             qDebug() << "Введен неверный логин или пароль!";
 
-            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: red");
+            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: red;");
             _status->showMessage("Введен неверный логин или пароль!", 1000);
         }
     }
@@ -144,7 +146,7 @@ namespace Client
         delete _table;
         disconnect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
         _requester->getProgressBar()->setParent(this);
-        _requester->getProgressBar()->setGeometry(QRect(20, 395, 300, 20));
+        _requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
         _requester->sendRequest("logout");
         show();
     }

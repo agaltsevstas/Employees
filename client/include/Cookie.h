@@ -1,7 +1,7 @@
 #ifndef COOKIE_H
 #define COOKIE_H
 
-#include <QHash>
+#include <QMap>
 
 
 class Cookie final
@@ -14,7 +14,7 @@ public:
     QString getValidToken();
     void add(const QString &iKey, const QString &iValue) noexcept;
     QString getUserName() const;
-    const QHash<QString, QString>& get() const noexcept { return _data; }
+    const QMap<QString, QString>& get() const noexcept { return _data; }
     void clear() noexcept;
     bool isEmpty() const noexcept;
 
@@ -23,7 +23,7 @@ private:
     Cookie();
     ~Cookie();
 
-    QHash<QString, QString> _data;
+    QMap<QString, QString> _data;
 };
 
 #endif // COOKIE_H

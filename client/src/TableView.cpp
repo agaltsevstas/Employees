@@ -197,6 +197,11 @@ namespace Client
         return allDeleted;
     }
 
+    bool TableView::checkChanges() const noexcept
+    {
+        return _model->checkChanges();
+    }
+
     void TableView::valueSearchChanged(const QString &iValue)
     {
         if (!_model)

@@ -49,6 +49,7 @@ namespace Client
         void onDeleteUserClicked();
         void onRestoreUserClicked();
         void onCreateUserClicked();
+        bool checkChanges() const noexcept;
         void onExitClicked();
 
     private:

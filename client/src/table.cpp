@@ -180,8 +180,20 @@ namespace Client
         }
     }
 
+    bool Table::checkChanges() const noexcept
+    {
+        return (_personalData && _personalData->checkChanges()) || (_tableView && _tableView->checkChanges());
+    }
+
     void Table::onExitClicked()
     {
+        if (checkChanges())
+        {
+            QMessageBox::StandardButton reply = QMessageBox::question(this, "Обновления", "Есть неотданные изменения, хотите выйти? (изменения не уйдут на сервер)", QMessageBox::Yes | QMessageBox::No);
+            if (reply == QMessageBox::No)
+                return;
+        }
+
         _requester->getProgressBar()->setParent(NULL);
         showNormal();
         close();           // Закрытие окна
@@ -190,14 +202,15 @@ namespace Client
 
     void Table::onAutoUpdateClicked(bool isChecked)
     {
-        if (_personalData)
-            _personalData->setEditStrategy(isChecked ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
-
+        /// Первым должно обновляться БД, потому в личных данных может быть смена роли
         if (_tableView)
         {
             _tableView->setEditStrategy(isChecked ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);
             _tableView->selectionModel()->clearSelection();
         }
+
+        if (_personalData)
+            _personalData->setEditStrategy(isChecked ? TablePrivate::EditStrategy::OnFieldChange : TablePrivate::EditStrategy::OnManualSubmit);
 
         if (QPushButton* update = _personalData->findChild<QPushButton*>("update"))
         {
@@ -231,6 +244,9 @@ namespace Client
             }
             else
             {
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+                QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                warning.exec();
                 qDebug() << "Ошибка: " << error;
             }
         };
@@ -239,7 +255,7 @@ namespace Client
     }
 
     void Table::showDB(const bool iResult, const QString &error)
-    {
+    {   
         if (iResult)
         {
             qDebug() << "Ответ на запрос получен!";
@@ -298,6 +314,21 @@ namespace Client
             warning.exec();
             qDebug() << "Ошибка: " << error;
         }
+
+        if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
+            createUser->setEnabled(iResult);
+
+        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
+            deleteUser->setEnabled(iResult && _tableView && _tableView->selectionModel()->hasSelection());
+
+        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
+            restoreUser->setEnabled(iResult && _tableView && _tableView->selectionModel()->hasSelection());
+
+        if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
+            search->setEnabled(iResult);
+
+        if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
+            valueSearch->setEnabled(iResult);
     }
 
     void Table::showDatabase()
@@ -308,22 +339,6 @@ namespace Client
 
         const bool isCheckable = showDatabase->isCheckable();
         showDatabase->setCheckable(!isCheckable);
-
-        if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
-            createUser->setEnabled(!isCheckable);
-
-        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
-            deleteUser->setEnabled(!isCheckable && _tableView && _tableView->selectionModel()->hasSelection());
-
-        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
-            restoreUser->setEnabled(!isCheckable && _tableView && _tableView->selectionModel()->hasSelection());
-
-        if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
-            search->setEnabled(!isCheckable);
-
-        if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
-            valueSearch->setEnabled(!isCheckable);
-
 
         if (isCheckable)
         {
