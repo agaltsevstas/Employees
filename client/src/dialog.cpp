@@ -17,8 +17,6 @@
 #include <QProgressBar>
 #include <Settings>
 
-#include <QPainter>
-
 #define DIRECTORY "../settings/"
 
 
@@ -67,9 +65,6 @@ namespace Client
         _status->setStyleSheet("background:rgba(0, 0, 0, 0);");
         _requester->getProgressBar()->setParent(this);
         _requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
-
-//        _dialog->loginIcon->setPixmap(QPixmap(":/images/images/login.png"));
-//        _dialog->passwordIcon->setPixmap(QPixmap(":/images/images/password.png"));
 
         loadSettings();
 
@@ -124,32 +119,9 @@ namespace Client
         Session::getSession().Settings().setValue("centerDialog", geometry().center() - QPoint(width() / 2, height() / 2));
     }
 
-    void Dialog::authentication(bool iResult)
-    {
-        if (iResult)
-        {
-            qDebug() << "Вход успешно выполнен!";
-            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color:rgba(255, 255, 255, 210);");
-            _status->showMessage("Вход успешно выполнен!", 1000);
-
-            _table = new Table(_requester);
-            connect(_table, &Table::openDialog, this, &Dialog::showDialog);
-            QTimer::singleShot(1000, _table, SLOT(show()));
-            QTimer::singleShot(1000, this, SLOT(close()));
-        }
-        else
-        {
-            qDebug() << "Введен неверный логин или пароль!";
-
-            _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: red;");
-            _status->showMessage("Введен неверный логин или пароль!", 1000);
-        }
-    }
-
     void Dialog::showDialog()
     {
         delete _table;
-        disconnect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
         _requester->getProgressBar()->setParent(this);
         _requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
         _requester->sendRequest("logout");
@@ -173,14 +145,40 @@ namespace Client
         }
 
         QString token = login + ":" + password;
-        connect(_requester, SIGNAL(response(bool)), this, SLOT(authentication(bool)));
         _requester->setToken(std::move(token));
-        _requester->sendRequest("login");
-    }
 
-    void Dialog::on_rememberMe_clicked()
-    {
+        Requester::HandleResponse handleResponse = [this](bool iResult, const QString &error)
+        {
+            if (iResult)
+            {
+                qDebug() << "Вход успешно выполнен!";
+                _status->setStyleSheet("background:rgba(0, 0, 0, 0); color:rgba(255, 255, 255, 210);");
+                _status->showMessage("Вход успешно выполнен!", 1000);
 
+                _table = new Table(_requester);
+                connect(_table, &Table::openDialog, this, &Dialog::showDialog);
+                QTimer::singleShot(1000, _table, SLOT(show()));
+                QTimer::singleShot(1000, this, SLOT(close()));
+            }
+            else
+            {
+                if (error == "Connection refused")
+                {
+                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+                                                                                                     QTimer::singleShot(1000, &warning, &QMessageBox::close);
+                    warning.exec();
+                    qDebug() << "Ошибка: " << error;
+                }
+                else
+                {
+                    _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: red;");
+                    _status->showMessage("Введен неверный логин или пароль!", 1000);
+                    qDebug() << "Введен неверный логин или пароль!";
+                }
+            }
+        };
+
+        _requester->sendRequest("login", handleResponse);
     }
 
     void Dialog::on_showPassword_clicked(bool iChecked)

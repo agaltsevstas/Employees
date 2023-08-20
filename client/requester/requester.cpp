@@ -246,15 +246,11 @@ namespace Client
 
                 if (handleResponse)
                     handleResponse(true, reply->errorString());
-                else
-                    response(true);
             }
             else
             {
                 if (handleResponse)
                     handleResponse(false, reply->errorString());
-                else
-                    response(false);
             }
 
             reply->close();

@@ -44,7 +44,6 @@ namespace Client
         QProgressBar *getProgressBar() const { return _progress.get(); }
 
     signals:
-        void response(bool iResult); // Ответ на запрос
         void logout(); // Выход из приложения
 
     private slots:

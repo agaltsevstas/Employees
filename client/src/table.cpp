@@ -254,6 +254,24 @@ namespace Client
         _requester->sendRequest("showPersonalData", handleResponse);
     }
 
+    void Table::setEnabledDatabaseButtons(bool isEnable)
+    {
+        if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
+            createUser->setEnabled(isEnable);
+
+        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
+            deleteUser->setEnabled(isEnable && _tableView && _tableView->selectionModel()->hasSelection());
+
+        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
+            restoreUser->setEnabled(isEnable && _tableView && _tableView->selectionModel()->hasSelection());
+
+        if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
+            search->setEnabled(isEnable);
+
+        if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
+            valueSearch->setEnabled(isEnable);
+    }
+
     void Table::showDB(const bool iResult, const QString &error)
     {   
         if (iResult)
@@ -316,20 +334,7 @@ namespace Client
             qDebug() << "Ошибка: " << error;
         }
 
-        if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
-            createUser->setEnabled(iResult);
-
-        if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
-            deleteUser->setEnabled(iResult && _tableView && _tableView->selectionModel()->hasSelection());
-
-        if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
-            restoreUser->setEnabled(iResult && _tableView && _tableView->selectionModel()->hasSelection());
-
-        if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
-            search->setEnabled(iResult);
-
-        if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
-            valueSearch->setEnabled(iResult);
+        setEnabledDatabaseButtons(iResult);
     }
 
     void Table::showDatabase()
@@ -346,22 +351,7 @@ namespace Client
             if (_tableView)
             {
                 showDatabase->setText("Показать базу данных");
-
-                if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
-                    createUser->setEnabled(false);
-
-                if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
-                    deleteUser->setEnabled(false);
-
-                if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
-                    restoreUser->setEnabled(false);
-
-                if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
-                    search->setEnabled(false);
-
-                if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
-                    valueSearch->setEnabled(false);
-
+                setEnabledDatabaseButtons(false);
                 _tableView->setHidden(true);
                 _tableView->setParent(NULL);
                 if (_tableView->getModel())
@@ -373,22 +363,7 @@ namespace Client
             if (_tableView)
             {
                 showDatabase->setText("Скрыть базу данных");
-
-                if (QPushButton* createUser = _ui->groupBox->findChild<QPushButton*>("createUser"))
-                    createUser->setEnabled(true);
-
-                if (QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser"); deleteUser && deleteUser->isVisible())
-                    deleteUser->setEnabled(true);
-
-                if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
-                    restoreUser->setEnabled(true);
-
-                if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
-                    search->setEnabled(true);
-
-                if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
-                    valueSearch->setEnabled(true);
-
+                setEnabledDatabaseButtons(true);
                 _tableView->setHidden(false);
                 _ui->splitter->addWidget(_tableView);
                 if (_tableView->getModel())

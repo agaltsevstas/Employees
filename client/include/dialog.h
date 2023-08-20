@@ -31,10 +31,8 @@ namespace Client
         void saveSettings();
 
     private slots:
-        void authentication(bool iResult);
         void showDialog();
         void on_enter_clicked();
-        void on_rememberMe_clicked();
         void on_showPassword_clicked(bool iChecked);
         void on_exit_clicked();
 

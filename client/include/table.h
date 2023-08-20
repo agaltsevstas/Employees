@@ -49,13 +49,14 @@ namespace Client
         void onDeleteUserClicked();
         void onRestoreUserClicked();
         void onCreateUserClicked();
-        bool checkChanges() const noexcept;
         void onExitClicked();
 
     private:
         void loadSettings();
         void saveSettings();
         void setPersonalData(const QJsonDocument &iJson);
+        void setEnabledDatabaseButtons(bool isEnable);
+        bool checkChanges() const noexcept;
 
     private:
         Ui::Table *_ui = nullptr;

@@ -23,9 +23,7 @@ namespace Client
         setItemDelegate(new Delegate(this));
         setSortingEnabled(true);
         setMouseTracking(true);
-        setMinimumHeight(700);
-        setMinimumWidth(800);
-//        setMinimumSize(QSize(803, 654));
+        setMinimumSize(QSize(800, 700));
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(10);
         setSizePolicy(sizePolicy);
@@ -79,12 +77,9 @@ namespace Client
         horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(10, QHeaderView::Interactive);
         horizontalHeader()->setSectionResizeMode(12, QHeaderView::Interactive);
-        connect(_model, SIGNAL(sendCreateRequest(const QByteArray&, const HandleResponse&)),
-                this, SIGNAL(sendCreateData(const QByteArray&, const HandleResponse&)));
-        connect(_model, SIGNAL(sendDeleteRequest(const QByteArray&, const HandleResponse&)),
-                this, SIGNAL(sendDeleteData(const QByteArray&, const HandleResponse&)));
-        connect(_model, SIGNAL(sendUpdateRequest(const QByteArray&, const HandleResponse&)),
-                this, SIGNAL(sendUpdateData(const QByteArray&, const HandleResponse&)));
+        connect(_model, &QJsonTableModel::sendCreateRequest, this, &TableView::sendCreateData);
+        connect(_model, &QJsonTableModel::sendDeleteRequest, this, &TableView::sendDeleteData);
+        connect(_model, &QJsonTableModel::sendUpdateRequest, this, &TableView::sendUpdateData);
     }
 
     void TableView::submitAll()

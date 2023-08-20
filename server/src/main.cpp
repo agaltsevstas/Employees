@@ -27,5 +27,4 @@ int main(int argc, char *argv[])
 
     delete db;
     return exec;
-    return 0;
 }
