@@ -28,7 +28,7 @@ Cache::Cache() : _cache(new QJsonDocument())
     }
     else
     {
-        qDebug() << "Файл Cache не открыт";
+        qCritical() << "Файл Cache не открыт";
     }
 }
 
@@ -37,7 +37,7 @@ Cache::~Cache()
     QFile file(QString(DIRECTORY) + FILENAME);
     if (!file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
     {
-        qDebug() << "Файл Cache не открыт";
+        qCritical() << "Файл Cache не открыт";
         return;
     }
 

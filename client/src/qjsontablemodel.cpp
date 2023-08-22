@@ -628,8 +628,6 @@ bool QJsonTableModel::createEmail(int row)
                                                          tr("Предупреждение"),
                                                          tr("Данная почта уже существует, измените почту:"),
                                                          QLineEdit::Normal, newEmail, &ok);
-                        qDebug() << "Данная почта уже существует: " << newEmail;
-
                         if (ok)
                         {
                             if (Client::Employee::checkField(Client::Employee::email(), message))
@@ -641,7 +639,7 @@ bool QJsonTableModel::createEmail(int row)
                                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
                                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                                 warning.exec();
-                                qDebug() << "Ошибка: " << message;
+                                qWarning() << "Ошибка: " << message;
                             }
                         }
                         else

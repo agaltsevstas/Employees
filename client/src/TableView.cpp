@@ -127,7 +127,7 @@ namespace Client
         QMessageBox information(QMessageBox::Icon::Information, tr("Сообщение"), message, QMessageBox::NoButton, this);
         QTimer::singleShot(1000, &information, &QMessageBox::close);
         information.exec();
-        qDebug() << "Сообщение: " << message;
+        qInfo() << "Сообщение: " << message;
         return true;
     }
 

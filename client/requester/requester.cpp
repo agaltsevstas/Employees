@@ -161,10 +161,7 @@ namespace Client
     {
 //        QMutexLocker locker(&mutex);
         if (bytesTotal > 0 && bytesReceived > 0)
-        {
-            qDebug() << "Получено байт" << bytesReceived << " из " << bytesTotal;
             _progress->setValue((int)(bytesReceived * 100 / bytesTotal));
-        }
     }
 
     const QString Requester::getToken()

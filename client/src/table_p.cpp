@@ -877,7 +877,7 @@ namespace Client
                         }
                     }
 
-                    qDebug() << "Ошибка: " << error;
+                    qWarning() << "Ошибка: " << error;
                     QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, this);
                     QTimer::singleShot(1500, &warning, &QMessageBox::close);
                     warning.exec();

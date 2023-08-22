@@ -251,7 +251,7 @@ namespace Client
             }
             else
             {
-                qDebug() << "Ошибка: " << error;
+                qWarning() << "Ошибка: " << error;
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
                 QTimer::singleShot(1000, &warning, &QMessageBox::close);
                 warning.exec();
@@ -338,7 +338,7 @@ namespace Client
             QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
             QTimer::singleShot(1000, &warning, &QMessageBox::close);
             warning.exec();
-            qDebug() << "Ошибка: " << error;
+            qWarning() << "Ошибка: " << error;
         }
 
         setEnabledDatabaseButtons(iResult);
