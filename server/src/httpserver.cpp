@@ -1,14 +1,20 @@
 #include "httpserver.h"
 #include "database.h"
 #include "authenticationservice.h"
+#include "server.h"
 
 #include <QHttpServer>
 #include <QQueue>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
 
 #define SERVER_HOSTNAME "127.0.0.1" // Хост
 #define SERVER_PORT      5433       // Порт
+
+#define INFO(object, str) qInfo() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
+#define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
+#define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 
 extern Server::DataBase *db;
 
@@ -49,10 +55,10 @@ namespace Server
             return *this;
         }
 
-        QByteArray table;
-        qint64 id;
-        QByteArray column;
-        QVariant value;
+        QByteArray table;  // Название таблицы в БД
+        qint64 id;         // id пользователя в БД
+        QByteArray column; // Название столбца в БД
+        QVariant value;    // Значение в поле БД
     };
 
     template <class Arg, class ... Args>
@@ -200,6 +206,7 @@ namespace Server
                     QString id, role;
                     if (oData && db->authentication(userName, password, id, role, *oData))
                     {
+                        INFO(_authenticationService, "Аутентификации пройдена");
                         _authenticationService.setID(id.toULongLong());
                         _authenticationService.setUserName(userName);
                         _authenticationService.setRole(role);
@@ -212,6 +219,7 @@ namespace Server
                 QByteArray token = QByteArray::fromBase64(authentication.mid(7));
                 if (_authenticationService.checkAuthentication(token))
                 {
+                    INFO(_authenticationService, "Аутентификации пройдена");
                     if (oData)
                     {
                         if (db->getPeronalData(_authenticationService.getID(), _authenticationService.getRole(), _authenticationService.getUserName(), *oData))
@@ -223,6 +231,7 @@ namespace Server
             }
         }
 
+        CRITICAL(_authenticationService, "Аутентификации не пройдена");
         return false;
     }
 
@@ -238,12 +247,18 @@ namespace Server
 
 
             if (!db->sendRequest(request))
+            {
+                CRITICAL(_authenticationService, "Неверный запрос");
                 return QHttpServerResponse(StatusCode::BadRequest);
+            }
         }
 
         QByteArray data1;
         if (!db->sendRequest("SELECT * FROM tmp;", data1, Employee::permissionTable().toUtf8()))
+        {
+            CRITICAL(_authenticationService, "Неверный запрос");
             return QHttpServerResponse(StatusCode::BadRequest);
+        }
 
         QByteArray data2;
         if (!db->sendRequest("SELECT "
@@ -262,9 +277,11 @@ namespace Server
                              "p.password FROM " + Employee::personalDataPermissionTable().toUtf8() + " AS p "
                              "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService.getRole() + "';", data2, Employee::personalDataPermissionTable().toUtf8()))
         {
+            CRITICAL(_authenticationService, "Неверный запрос");
             return QHttpServerResponse(StatusCode::BadRequest);
         }
 
+        INFO(_authenticationService, "Получение прав");
         QHttpServerResponse response(std::move(data1) + std::move(data2));
         response.addHeader("Content-Type", "application/json");
         return response;
@@ -280,7 +297,10 @@ namespace Server
     {
         QByteArray data;
         if (!db->getPeronalData(_authenticationService.getID(), _authenticationService.getRole(), _authenticationService.getUserName(), data))
+        {
+            CRITICAL(_authenticationService, "Неверный запрос");
             return QHttpServerResponse(StatusCode::BadRequest);
+        }
 
         QHttpServerResponse response(std::move(data));
         response.addHeader("Content-Type", "application/json");
@@ -307,6 +327,7 @@ namespace Server
                             "FROM employee LEFT JOIN role ON employee.role_id = role.id "
                             "WHERE employee.id != " + QByteArray::number(_authenticationService.getID()) + ";", data1, Employee::employeeTable().toUtf8()))
         {
+            CRITICAL(_authenticationService, "Неверный запрос");
             return QHttpServerResponse(StatusCode::BadRequest);
         }
 
@@ -327,9 +348,11 @@ namespace Server
                              "p.password FROM " + Employee::databasePermissionTable().toUtf8() + " AS p "
                              "JOIN role AS role_id ON p.role_id = role_id.id WHERE role_id.code = '" + _authenticationService.getRole() + "';", data2, Employee::databasePermissionTable().toUtf8()))
         {
+            CRITICAL(_authenticationService, "Неверный запрос");
             return QHttpServerResponse(StatusCode::BadRequest);
         }
 
+        INFO(_authenticationService, "Показать БД");
         QHttpServerResponse response(std::move(data1) + std::move(data2));
         response.addHeader("Content-Type", "application/json");
         return response;
@@ -343,10 +366,16 @@ namespace Server
             iTrees.pop_front();
 
             if (!db->checkFieldOnDuplicate(tree.column, tree.value))
+            {
+                CRITICAL(_authenticationService, "Неверный запрос");
                 return QHttpServerResponse(StatusCode::Conflict);
+            }
 
             if (!db->updateRecord(tree.id, tree.column, tree.value))
+            {
+                CRITICAL(_authenticationService, "Неверный запрос");
                 return QHttpServerResponse(StatusCode::BadRequest);
+            }
 
             if (tree.column == "id")
             {
@@ -356,7 +385,10 @@ namespace Server
             {
                 QByteArray data;
                 if (!db->sendRequest("SELECT code FROM " + Employee::role().toUtf8() + " WHERE name = '" + tree.value.toString().toUtf8() +"'", data))
+                {
+                    CRITICAL(_authenticationService, "Неверный запрос");
                     return QHttpServerResponse(StatusCode::BadRequest);
+                }
 
                 const QString role = QJsonDocument::fromJson(data).object().value("code").toString();
                 _authenticationService.setRole(std::move(role));
@@ -367,6 +399,7 @@ namespace Server
             }
         }
 
+        INFO(_authenticationService, "Данные пользователя успешно обновлены");
         return QHttpServerResponse(StatusCode::Ok);
     }
 
@@ -387,17 +420,27 @@ namespace Server
                     return fieldName.first == tree.column;
                 });
                 if (fieldName == fieldNames.constEnd())
+                {
+                    CRITICAL(_authenticationService, "Неверный запрос");
                     return QHttpServerResponse(StatusCode::BadRequest);
+                }
 
                 if (!db->checkFieldOnDuplicate(tree.column, tree.value))
+                {
+                    CRITICAL(_authenticationService, "Дублирование данных");
                     return QHttpServerResponse(StatusCode::Conflict);
+                }
 
                 data[tree.column] = tree.value;
             }
 
             if (!db->insertRecord(data))
+            {
+                CRITICAL(_authenticationService, "Неверный запрос");
                 return QHttpServerResponse(StatusCode::BadRequest);
+            }
 
+            INFO(_authenticationService, "Пользователи успешно добавлены");
             statusCode = StatusCode::Created;
         }
         else if (iMethod == QHttpServerRequest::Method::Delete)
@@ -408,9 +451,13 @@ namespace Server
                 iTrees.pop_front();
 
                 if (!db->deleteRecord(tree.id))
+                {
+                    CRITICAL(_authenticationService, "Неверный запрос");
                     return QHttpServerResponse(StatusCode::BadRequest);
+                }
             }
 
+            INFO(_authenticationService, "Пользователи успешно удалены");
             statusCode = StatusCode::Ok;
         }
         else if (iMethod == QHttpServerRequest::Method::Patch)
@@ -421,12 +468,19 @@ namespace Server
                 iTrees.pop_front();
 
                 if (!db->checkFieldOnDuplicate(tree.column, tree.value))
+                {
+                    CRITICAL(_authenticationService, "Дублирование данных");
                     return QHttpServerResponse(StatusCode::Conflict);
+                }
 
                 if (!db->updateRecord(tree.id, tree.column, tree.value))
+                {
+                    CRITICAL(_authenticationService, "Неверный запрос");
                     return QHttpServerResponse(StatusCode::BadRequest);
+                }
             }
 
+            INFO(_authenticationService, "Данные успешно обновлены");
             statusCode = StatusCode::Ok;
         }
 
@@ -437,8 +491,12 @@ namespace Server
     {
         const auto sslPort = _server.listen(QHostAddress(_host), _port);
         if (!sslPort)
-            qWarning() << "Server failed to listen on a port";
+        {
+            qWarning() << "Серверу не удалось прослушать порт";
+            return;
+        }
 
+        INFO(_authenticationService, "Сервер запущен");
         _server.route("/login", [this](const QHttpServerRequest &request)
         {
             QByteArray data;
@@ -542,7 +600,7 @@ namespace Server
                 return QHttpServerResponse(StatusCode::BadRequest);
         }
 
-        qDebug() << "permission denied";
+        CRITICAL(_authenticationService, "Нет прав доступа");
         return QHttpServerResponse("permission denied", QHttpServerResponse::StatusCode::Forbidden);
     }
 
@@ -591,11 +649,7 @@ namespace Server
             QJsonParseError parseError;
             QJsonDocument json = QJsonDocument::fromJson(_request.body(), &parseError);
             if (parseError.error != QJsonParseError::NoError)
-            {
-                qWarning() << "Json parse error: " << parseError.errorString();
-//                    _response.setStatus(403, parseError.errorString().toUtf8());
-            }
-
+                return false;
 
             else if (_request.method() == QHttpServerRequest::Method::Delete)
             {
@@ -697,7 +751,10 @@ namespace Server
     bool AuthorizationService<TCallBack>::_checkAccess(const QByteArray &iTable)
     {
         if (!parseData())
+        {
+            CRITICAL(_authenticationService, "Данные не распарсились");
             return false;
+        }
 
         if (iTable == Employee::permissionTable())
         {
@@ -724,7 +781,7 @@ namespace Server
             QByteArray data;
             if (!db->sendRequest(request, data))
             {
-                qWarning() << "Ошибка прав доступа";
+                CRITICAL(_authenticationService, "Нет прав доступа");
                 return false;
             }
         }
@@ -741,7 +798,7 @@ namespace Server
                     QByteArray data;
                     if (!db->sendRequest(request, data))
                     {
-                        qWarning() << "Ошибка прав доступа";
+                        CRITICAL(_authenticationService, "Нет прав доступа");
                         return false;
                     }
                 }
@@ -756,7 +813,7 @@ namespace Server
                     QByteArray data;
                     if (!db->sendRequest(request, data))
                     {
-                        qWarning() << "Ошибка прав доступа";
+                        CRITICAL(_authenticationService, "Нет прав доступа");
                         return false;
                     }
                 }
@@ -764,10 +821,11 @@ namespace Server
         }
         else
         {
-            qDebug() << "...";
+            CRITICAL(_authenticationService, "Неизвестная ошибка");
             return false;
         }
 
+        INFO(_authenticationService, "Доступ получен");
         return true;
     }
 
@@ -781,11 +839,12 @@ namespace Server
 
     HttpServer::~HttpServer()
     {
-
+        qInfo() << "Отключение сервера";
     }
 
     void HttpServer::Start(QObject* parent)
     {
+        qInfo() << "Запуск сервера";
         static HttpServer data(parent);
     }
 }

@@ -31,7 +31,7 @@ void UInt64Validator::setBottom(quint64 minimum) noexcept
         return;
 
     _min = minimum;
-    changed();
+    emit changed();
 }
 
 void UInt64Validator::setTop(quint32 maximum) noexcept
@@ -40,7 +40,7 @@ void UInt64Validator::setTop(quint32 maximum) noexcept
         return;
 
     _max = maximum;
-    changed();
+    emit changed();
 }
 
 void UInt64Validator::setRange(quint32 minimum, quint32 maximum) noexcept

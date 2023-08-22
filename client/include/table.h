@@ -31,7 +31,10 @@ namespace Client
         ~Table();
 
     Q_SIGNALS:
-        void openDialog(); /// Открытие главного окна.
+        /*!
+         * \brief Переход к главному окну
+         */
+        void openDialog();
 
     private Q_SLOTS:
         void selectionChanged(const QItemSelection &, const QItemSelection &);

@@ -88,6 +88,7 @@ void QJsonTableModel::setEditStrategy(EditStrategy iStrategy)
     if (iStrategy != _strategy)
     {
         _strategy = iStrategy;
+        qInfo() << "Смена стратегии в БД";
 
         if (_strategy == OnFieldChange)
             submitAll();
@@ -140,6 +141,7 @@ bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
         }
     }
 
+    qInfo() << "Установка БД";
     _recordsCache = _array = std::move(newDatabase);
     return true;
 }
@@ -166,6 +168,7 @@ bool QJsonTableModel::setPermissions(const QJsonObject &iPermissions)
         }
     }
 
+    qInfo() << "Установка доступа к БД";
     return true;
 }
 
@@ -218,7 +221,7 @@ void QJsonTableModel::submitAll()
                     }
                 }
 
-                qDebug() << "Пользователи успешно удалены!";
+                qInfo() << "Пользователи БД успешно удалены";
             }
             else
             {
@@ -229,17 +232,17 @@ void QJsonTableModel::submitAll()
                 if (!tableView)
                     return;
 
+                qWarning() << "Ошибка: " << error;
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
-                qDebug() << "Ошибка: " << error;
             }
 
             emit layoutChanged();
         });
     }
     else
-        qInfo() << "Пустые данные для удаления!";
+        qInfo() << "Пустые данные БД для удаления";
 
     if (!_recordsCreatedCache.empty())
     {
@@ -254,7 +257,7 @@ void QJsonTableModel::submitAll()
                     _recordsCache.push_back(_array.at(i++));
                 }
 
-                qDebug() << "Пользователи успешно добавлены!";
+                qInfo() << "Пользователи БД успешно добавлены";
             }
             else
             {
@@ -268,17 +271,17 @@ void QJsonTableModel::submitAll()
                 if (!tableView)
                     return;
 
+                qWarning() << "Ошибка: " << error;
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
-                qDebug() << "Ошибка: " << error;
             }
 
             emit layoutChanged();
         });
     }
     else
-        qInfo() << "Пустые данные для создания!";
+        qInfo() << "Пустые данные БД для создания";
 
     if (!_recordsUpdatedCache.empty())
     {
@@ -320,7 +323,7 @@ void QJsonTableModel::submitAll()
                     }
                 }
 
-                qDebug() << "Данные успешно обновлены!";
+                qInfo() << "Данные БД успешно обновлены";
             }
             else
             {
@@ -362,17 +365,17 @@ void QJsonTableModel::submitAll()
                 if (!tableView)
                     return;
 
+                qWarning() << "Ошибка: " << error;
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
-                qDebug() << "Ошибка: " << error;
             }
 
             emit layoutChanged();
         });
     }
     else
-        qInfo() << "Пустые данные для обновления!";
+        qInfo() << "Пустые данные БД для обновления";
 }
 
 bool QJsonTableModel::checkField(int row, int column, const QString &value) const
@@ -380,6 +383,7 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
     if (column < 0)
         return false;
 
+    qInfo() << "Проверка поля, строка: " << QString::number(row) << ", столбец: " << QString::number(column) << ", значение: " << value;
     const QString& field = _headers[column].first.first;
     QString message = value;
 
@@ -387,38 +391,39 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
     {
         if (Client::Employee::checkField(field, message))
         {
-            message = value; // нужно для проверки дубликаата, checkField изменяет значение
+            message = value; // нужно для проверки дубликата, checkField изменяет значение
             if (checkFieldOnDuplicate(row, column, message))
             {
                 return true;
             }
             else
             {
+                qWarning() << "Ошибка: " << message;
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
-                qDebug() << "Ошибка: " << message;
             }
         }
         else
         {
+            qWarning() << "Ошибка: " << message;
             QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), message, QMessageBox::NoButton, tableView);
             QTimer::singleShot(1500, &warning, &QMessageBox::close);
             warning.exec();
-            qDebug() << "Ошибка: " << message;
         }
     }
 
     return false;
 }
 
-bool QJsonTableModel::checkField(const QModelIndex &index, const QString &value) const
+bool QJsonTableModel::checkField(const QModelIndex &index, const QString &iValue) const
 {
-    return checkField(index.row(), index.column(), value);
+    return checkField(index.row(), index.column(), iValue);
 }
 
 void QJsonTableModel::addRow(const QJsonObject &iEmployee)
 {
+    qInfo() << "Добавление пользователя: " << iEmployee;
     const qint64 newID = _array.last().toObject().value(Client::Employee::id()).toInteger() + 1;
     QJsonObject employee = iEmployee;
     employee.insert(Client::Employee::id(), newID);
@@ -486,6 +491,7 @@ void QJsonTableModel::deleteRow(int row)
         }
     }
 
+    qInfo() << "Удаление строки из БД >> " << QString::number(row);
     QJsonObject record;
     record.insert(Client::Employee::id(), id);
     _recordsDeletedCache.push_back(std::move(record));
@@ -496,6 +502,7 @@ void QJsonTableModel::deleteRow(int row)
 
 void QJsonTableModel::restoreRow(int row)
 {
+    qInfo() << "Восстановление строки в БД >> " << QString::number(row);
     const qint64 id = getJsonObject(row)[Client::Employee::id()].toInteger();
 
     _recordsDeletedCache.erase(std::find_if(_recordsDeletedCache.begin(), _recordsDeletedCache.end(), [&](const auto& recordDeleted)
@@ -523,6 +530,7 @@ bool QJsonTableModel::canDeleteRow(int row)
         }
     }
 
+    qInfo() << "Проверка на удаление строки >> " << QString::number(row);
     return true;
 }
 
@@ -531,7 +539,7 @@ bool QJsonTableModel::checkChanges() const noexcept
     return !_recordsCreatedCache.empty() || !_recordsDeletedCache.empty() || !_recordsUpdatedCache.empty();
 }
 
-QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
+QList<int> QJsonTableModel::search(const QString &iValue) const noexcept
 {
     QList<int> hiddenIndices;
     QStringList values = iValue.split(" ");
@@ -572,6 +580,7 @@ QList<int> QJsonTableModel::valueSearch(const QString &iValue) const noexcept
         }
     }
 
+    qInfo() << "Поиск слова в БД >> " +  iValue;
     return hiddenIndices;
 }
 
@@ -643,6 +652,7 @@ bool QJsonTableModel::createEmail(int row)
                 }
             }
 
+            qInfo() << "Автосоздание почты в строке >> " << QString::number(row);
             return true;
         }
     }
@@ -665,15 +675,16 @@ bool QJsonTableModel::checkFieldOnDuplicate(int row, int column, QString &iValue
             {
                 if (_array[i].isObject())
                 {
-                    QJsonObject row = _array[i].toObject();
-                    if (row.contains(field))
+                    QJsonObject rowObject = _array[i].toObject();
+                    if (rowObject.contains(field))
                     {
-                        auto column = row.take(field);
-                        if (column.isString())
+                        auto columnObject = rowObject.take(field);
+                        if (columnObject.isString())
                         {
-                            auto value = column.toString();
+                            auto value = columnObject.toString();
                             if (value == iValue)
                             {
+                                qWarning() << "Проверка на дубликат не пройдена, строка: " << QString::number(row) << ", столбец: " << QString::number(column) << ", значение: " << value;
                                 iValue = "поле >> " + fieldName + value + " - повторяется";
                                 return false;
                             }
@@ -684,6 +695,7 @@ bool QJsonTableModel::checkFieldOnDuplicate(int row, int column, QString &iValue
         }
     }
 
+    qInfo() << "Проверка на дубликат пройдена, строка: " << QString::number(row) << ", столбец: " << QString::number(column) << ", значение: " << iValue << ", ";
     return true;
 }
 
@@ -701,12 +713,14 @@ bool QJsonTableModel::checkRowOnDeleted(int row) const
                 const QJsonValue recordId = object.value(Client::Employee::id());
                 if (object.value(Client::Employee::id()) == id)
                 {
+                    qInfo() << "Проверка пройдена для удаленной строки >> " << QString::number(row);
                     return true;
                 }
             }
         }
     }
 
+    qWarning() << "Проверка не пройдена для удаленной строки >> " << QString::number(row);
     return false;
 }
 
@@ -727,6 +741,7 @@ bool QJsonTableModel::checkRowOnCreated(int row) const
                     {
                         if (object.value(Client::Employee::id()) == id)
                         {
+                            qInfo() << "Проверка пройдена для созданной строки >> " << QString::number(row);
                             return true;
                         }
                     }
@@ -735,6 +750,7 @@ bool QJsonTableModel::checkRowOnCreated(int row) const
         }
     }
 
+    qWarning() << "Проверка не пройдена для созданной строки >> " << QString::number(row);
     return false;
 }
 
@@ -757,12 +773,14 @@ bool QJsonTableModel::checkFieldOnUpdated(const QModelIndex &index) const
                     object.value("column") == field &&
                     object.value("value") == value)
                 {
+                    qInfo() << "Проверка пройдена для обновленного поля, строка: " << QString::number(index.row()) << ", столбец: " << QString::number(index.column()) << ", значение: " << value;
                     return true;
                 }
             }
         }
     }
 
+    qInfo() << "Проверка не пройдена для обновленного поля, строка: " << QString::number(index.row()) << ", столбец: " << QString::number(index.column()) << ", значение: " << value;
     return false;
 }
 
@@ -822,6 +840,8 @@ void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QS
         }
     }
 
+    qInfo() << "Обновление поля, строка: " << QString::number(row) << ", столбец: " << iColumnName << ", значение: " << value;
+
     if (!found)
         _recordsUpdatedCache.push_back(std::move(record));
 
@@ -859,7 +879,6 @@ QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, i
         case Qt::Horizontal:
             return _headers.value(section).first.second;
         case Qt::Vertical:
-            //return section + 1;
             return {};
         default:
             return {};
@@ -994,7 +1013,7 @@ bool QJsonTableModel::sortColumn(const QJsonValue &first, const QJsonValue &seco
 
 void QJsonTableModel::sort(int column, Qt::SortOrder order)
 {
-    qDebug() << "Сортировка";
+    qInfo() << "Сортировка в столбце" << column;
     std::sort(_array.begin(), _array.end(), [&](const auto &first, const auto &second)
     {
         return sortColumn(first, second, column, order);
@@ -1005,5 +1024,6 @@ void QJsonTableModel::sort(int column, Qt::SortOrder order)
 
 bool QJsonTableModel::isSortColumn(int column) const
 {
+    qInfo() << "Проверка столбца на отсортированность " << column;
     return std::is_sorted(std::begin(_array), std::end(_array), [&](const auto &lhs, const auto &rhs) { return sortColumn(lhs, rhs, column); });
 }

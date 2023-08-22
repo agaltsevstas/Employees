@@ -19,23 +19,101 @@ namespace Client
 
         enum EditStrategy {OnFieldChange, OnManualSubmit};
 
+        /*!
+         * \brief Установить стратегию для отправки данных на сервер
+         * \param iStrategy - OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
+         */
         void setEditStrategy(EditStrategy iStrategy) noexcept;
+
+        /*!
+         * \brief Получить стратегию для отправки данныз на север
+         * \return OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
+         */
         EditStrategy getEditStrategy() const noexcept;
+
+        /*!
+         * \brief Установить БД
+         * \param iName - Имя модели
+         * \param iDatabase - БД
+         * \param iPermissions - Права
+         */
         void setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
+
+        /*!
+         * \brief Установить модель данных
+         * \param iName - Имя модели
+         * \param iDatabase - БД
+         */
         void setModel(const QString& iName, const QJsonDocument &iDatabase);
+
+        /*!
+         * \brief Получить БД
+         * \return БД
+         */
         [[nodiscard]] const QAbstractItemModel *getModel() const noexcept;
 
+        /*!
+         * \brief Отправка изменений на сервер
+         */
         void submitAll();
+
+        /*!
+         * \brief Добавить нового пользователя
+         * \return true - Пользователь успешно добавлен, иначе false
+         */
         bool addUser();
+
+        /*!
+         * \brief Удаление пользователя
+         * \return true - Пользователь успешно удален, иначе false
+         */
         bool deleteUser();
+
+        /*!
+         * \brief Восстановление пользователя
+         */
         void restoreUser();
-        [[nodiscard]] std::optional<bool> canDelete();
+
+        /*!
+         * \brief Проверка на удаление пользователя
+         * \return true - можно удалить, иначе false
+         */
+        [[nodiscard]] std::optional<bool> canDeleteUser();
+
+        /*!
+         * \brief Проверка на какие-либо изменения
+         * \return true - есть изменения, false - нет изменений
+         */
         bool checkChanges() const noexcept;
 
     Q_SIGNALS:
+
+        /*!
+         * \brief Отправка запроса на сервер на создание данных
+         * \param iRequest - Запрос с данными
+         * \param handleResponse - ответ на запрос
+         */
         void sendCreateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+
+        /*!
+         * \brief Отправка запроса на сервер на удаление данных
+         * \param iRequest - Запрос с данными
+         * \param handleResponse - Ответ на запрос
+         */
         void sendDeleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+
+        /*!
+         * \brief Отправка запроса на сервер на обновление данных
+         * \param iRequest - Запрос с данными
+         * \param handleResponse - Ответ на запрос
+         */
         void sendUpdateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+
+        /*!
+         * \brief Получение пользовательских данных
+         * \param iFieldName - Имя поля
+         * \param handleField - Ответ на запрос
+         */
         void getUserData(const QString &iFieldName, const HandleField&);
 
     private:

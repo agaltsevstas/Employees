@@ -39,12 +39,29 @@ namespace Client
                          const Type iType = Type::GET,
                          const QByteArray &iData = {});
 
+        /*!
+         * \brief Устновить токен (access/refresh)
+         * \param iToken - Токен (access/refresh)
+         */
         void setToken(const QString &iToken) { _token = iToken; }
+
+        /*!
+         * \brief Получить данные формата JSon
+         * \return Данные формата QJsonDocument
+         */
         const QJsonDocument getJson() const { return _json; }
+
+        /*!
+         * \brief Получить прогресс выполнения ответа на запрос
+         * \return Прогресс ответа на запрос
+         */
         QProgressBar *getProgressBar() const { return _progress.get(); }
 
     signals:
-        void logout(); // Выход из приложения
+        /*!
+         * \brief Сигнал о выходе из личного кабинета
+         */
+        void logout();
 
     private slots:
         void printProgress(qint64 bytesReceived, qint64 bytesTotal);

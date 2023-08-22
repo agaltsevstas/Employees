@@ -18,7 +18,7 @@ Cookie::Cookie()
     file.open(QFile::ReadOnly | QFile::Text);
     if (file.isOpen())
     {
-        qDebug() << "File Cookie is open";
+        qInfo() << "Чтение Cookie";
         QTextStream stream(&file);
         while (!stream.atEnd())
         {
@@ -35,7 +35,7 @@ Cookie::Cookie()
     }
     else
     {
-        qDebug() << "File Cache is not open";
+        qWarning() << "Файл Cookie не открыт";
     }
 }
 
@@ -44,10 +44,11 @@ Cookie::~Cookie()
     QFile file(QString(DIRECTORY) + FILENAME);
     if (!file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
     {
-        qDebug() << "File Cache is not open";
+        qWarning() << "Файл Cookie не открыт";
         return;
     }
 
+    qInfo() << "Запись Cookie";
     QTextStream out(&file);
     for (const auto& name : _data.keys())
         out << name << ": \"" << _data.value(name) << "\"" << Qt::endl;
@@ -57,7 +58,7 @@ Cookie::~Cookie()
 
 Cookie &Cookie::Instance() noexcept
 {
-    static Cookie data; // Объект-одиночка
+    static Cookie data;
     return data;
 }
 
@@ -87,7 +88,7 @@ QString Cookie::getValidToken()
     return {};
 }
 
-void Cookie::add(const QString &iKey, const QString &iValue) noexcept
+void Cookie::addToken(const QString &iKey, const QString &iValue) noexcept
 {
     _data[iKey] = iValue;
 }

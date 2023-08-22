@@ -270,8 +270,16 @@ public:
     */
     QString claim(const QString &strClaimType);
 
+    /*!
+     * \brief Получить время жизни токена
+     * \return Время жизни токена
+     */
     qint64 getExp() const;
 
+    /*!
+     * \brief Получить имя пользователя
+     * \return
+     */
     QString getUserName() const;
 
 private:

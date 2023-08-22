@@ -26,21 +26,71 @@ namespace Client
 
         enum EditStrategy {OnFieldChange, OnManualSubmit};
 
+        /*!
+         * \brief Установить стратегию для отправки данных на сервер
+         * \param iStrategy - OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
+         */
         void setEditStrategy(EditStrategy iStrategy);
+
+        /*!
+         * \brief Получить стратегию для отправки данныз на север
+         * \return OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
+         */
         [[nodiscard]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
-        bool getUserData();
+
+        /*!
+         * \brief Отправка изменений на сервер
+         */
         void submitAll();
+
+        /*!
+         * \brief Проверка на какие-либо изменения
+         * \return true - есть изменения, false - нет изменений
+         */
         bool checkChanges() const noexcept;
 
     Q_SIGNALS:
+
+        /*!
+         * \brief Отправка запроса с изменениями на сервер
+         * \param iRequest - Запрос с данными
+         * \param handleResponse - Ответ на запрос
+         */
         void sendRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+
+        /*!
+         * \brief Отправка слова для поиска
+         * \param iValue - Значение слова
+         */
         void sendValueSearch(const QString &iValue);
+
+        /*!
+         * \brief Сообщение об очистке поискового слова
+         */
         void sendClearSearch();
+
+        /*!
+         * \brief Выход из личного кабинета
+         */
         void logout();
 
     public Q_SLOTS:
+
+        /*!
+         * \brief Отправка пользовательских данных
+         * \param iFieldName - Имя поля
+         * \param handleField - Ответ на запрос
+         */
         void sendUserData(const QString &iFieldName, const HandleField &handleField = Q_NULLPTR);
+
+        /*!
+         * \brief Откатить данные с сервера
+         */
         void onResetDataClicked();
+
+        /*!
+         * \brief Нажатие на поисковое слово
+         */
         void onSearchClicked();
 
     private Q_SLOTS:

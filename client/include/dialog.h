@@ -26,15 +26,15 @@ namespace Client
         explicit Dialog(QWidget *parent = nullptr);
         ~Dialog();
 
-    private:
-        void loadSettings();
-        void saveSettings();
-
-    private slots:
+    private Q_SLOTS:
         void showDialog();
         void on_enter_clicked();
         void on_showPassword_clicked(bool iChecked);
         void on_exit_clicked();
+
+    private:
+        void loadSettings();
+        void saveSettings();
 
     private:
         void mouseMoveEvent(QMouseEvent *event) override;
@@ -43,7 +43,7 @@ namespace Client
 
 
     private:
-        int _dx, _dy;
+        int _dx, _dy; // Значения для mouse
         Ui::Dialog *_dialog = nullptr;
         Table *_table = nullptr;
         QStatusBar *_status = nullptr;

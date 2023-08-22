@@ -1,9 +1,6 @@
 #include "server.h"
 #include "utils.h"
 
-#include <regex>
-#include <QSqlError>
-#include <QSqlRecord>
 #include <QRegularExpression>
 
 namespace Server
@@ -47,20 +44,18 @@ namespace Server
                     {
                         iValue = "Пустой ID >> " + iValue + ", " + helpFields()[id()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустой ID >> " << iValue << std::endl;
+                        qWarning() << "Пустой ID >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректный ID >> " + iValue + ", " + helpFields()[id()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректный ID >> " << iValue << std::endl;
+                        qWarning() << "Некорректный ID >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    !_id ? Logger::info << "ID >> " << iValue << std::endl :
-    //                          (Logger::info << "ID << " << _id << " >> изменен на >> " << iValue << std::endl,
-    //                           std::cout << "ID успешно изменен" << std::endl);
+                        qInfo() << "ID изменен на >> " << iValue;
                     }
                     type.uintValue = iValue.toUInt();
                     return type;
@@ -75,20 +70,18 @@ namespace Server
                     {
                         iValue = "Пустая должность >> " + iValue + ", " + helpFields()[role()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустая должность >> " << iValue << std::endl;
+                        qWarning() << "Пустая должность >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректная должность >> " + iValue + ", " + helpFields()[role()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректная должность >> " << iValue << std::endl;
+                        qWarning() << "Некорректная должность >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _role.empty() ? Logger::info << "Должность >> " << iValue << std::endl :
-    //                                       (Logger::info << "Должность << " << _role << " >> изменена на >> " << iValue << std::endl,
-    //                                        std::cout << "Должность успешно изменена" << std::endl);
+                        qInfo() << "Должность изменена на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -102,20 +95,18 @@ namespace Server
                     {
                         iValue = "Пустая фамилия >> " + iValue + ", " + helpFields()[surname()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустая фамилия >> " << iValue << std::endl;
+                        qWarning() << "Пустая фамилия >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректная фамилия >> " + iValue + ", " + helpFields()[surname()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректная фамилия >> " << iValue << std::endl;
+                        qWarning() << "Некорректная фамилия >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _surname.empty() ? Logger::info << "Фамилия >> " << iValue << std::endl :
-    //                                      (Logger::info << "Фамилия << " << _surname << " >> изменена на >> " << iValue << std::endl,
-    //                                       std::cout << "Фамилия успешно изменена" << std::endl);
+                        qInfo() << "Фамилия изменена на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -129,20 +120,18 @@ namespace Server
                     {
                         iValue = "Пустое имя >> " + iValue + ", " + helpFields()[name()];
                         type.status = ST_EMPTY;
-    //                    Logger::info << "Пустое имя >> " << iValue << std::endl;
+                        qWarning() << "Пустое имя >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорретное имя >> " + iValue + ", " + helpFields()[name()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорретное имя >> " << iValue << std::endl;
+                        qWarning() << "Некорретное имя >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _name.empty() ? Logger::info << "Имя >> " << iValue << std::endl :
-    //                                   (Logger::info << "Имя << " << _name << " >> изменено на >> " << iValue << std::endl,
-    //                                    std::cout << "Имя успешно изменено" << std::endl);
+                        qInfo() << "Имя изменено на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -156,20 +145,18 @@ namespace Server
                     {
                         iValue = "Пустое отчество >> " + iValue + ", " + helpFields()[patronymic()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустое отчество >> " << iValue << std::endl;
+                        qWarning() << "Пустое отчество >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорретное отчество >> " + iValue + ", " + helpFields()[patronymic()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорретное отчество >> " << iValue << std::endl;
+                        qWarning() << "Некорретное отчество >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _patronymic.empty() ? Logger::info << "Отчество >> " << iValue << std::endl :
-    //                                         (Logger::info << "Отчество << " << _patronymic << " >> изменено на >> " << iValue << std::endl,
-    //                                          std::cout << "Отчество успешно изменено" << std::endl);
+                        qInfo() << "Отчество изменено на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -183,20 +170,18 @@ namespace Server
                     {
                         iValue = "Пустой пол >> " + iValue + ", " + helpFields()[sex()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустой пол >> " << iValue << std::endl;
+                        qWarning() << "Пустой пол >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректный пол >> " + iValue + ", " + helpFields()[sex()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректный пол >> " << iValue << std::endl;
+                        qWarning() << "Некорректный пол >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _sex.empty() ? Logger::info << "Пол >> " << iValue << std::endl :
-    //                                  (Logger::info << "Пол << " << _sex << " >> изменен на >> " << iValue << std::endl,
-    //                                   std::cout << "Пол успешно изменен" << std::endl);
+                        qInfo() << "Пол изменен на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -212,13 +197,13 @@ namespace Server
                     {
                         iValue = "Пустая дата рождения >> " + iValue + ", " + helpFields()[dateOfBirth()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустая дата рождения >> " << iValue << std::endl;
+                        qWarning() << "Пустая дата рождения >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректная дата рождения >> " + iValue + ", " + helpFields()[dateOfBirth()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректная дата рождения >> " << iValue << std::endl;
+                        qWarning() << "Некорректная дата рождения >> " << iValue;
                     }
                     else
                     {
@@ -233,14 +218,12 @@ namespace Server
                         {
                             iValue = "Неудовлетворительный возраст >> " + iValue + ", " + helpFields()[dateOfBirth()];
                             type.status = ST_WRONGDATA;
-    //                        Logger::warning << "Неудовлетворительный возраст >> " << "Лет: " << year << "Месяцев: " << month << "Дней: " << day << std::endl;
+                            qWarning() << "Неудовлетворительный возраст >> " << "Лет: " << year << "Месяцев: " << month << "Дней: " << day;
                         }
                         else
                         {
                             type.status = ST_OK;
-    //                        _dateOfBirth.empty() ? Logger::info << "Дата рождения >> " << iValue << std::endl :
-    //                                              (Logger::info << "Дата рождения << " << _dateOfBirth << " >> изменена на >> " << iValue << std::endl,
-    //                                               std::cout << "Дата рождения успешно изменена" << std::endl);
+                            qInfo() << "Дата рождения изменена на >> " << iValue;
                         }
                     }
                     type.stringValue = iValue;
@@ -255,20 +238,18 @@ namespace Server
                     {
                         iValue = "Пустой паспорт >> " + iValue + ", " + helpFields()[passport()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустой паспорт >> " << iValue << std::endl;
+                        qWarning() << "Пустой паспорт >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректный паспорт >> " + iValue + ", " + helpFields()[passport()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректный паспорт >> " << iValue << std::endl;
+                        qWarning() << "Некорректный паспорт >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    !_passport ? Logger::info << "Паспорт >> " << iValue << std::endl :
-    //                                (Logger::info << "Паспорт << " << _passport << " >> изменен на >> " << iValue << std::endl,
-    //                                 std::cout << "Паспорт успешно изменен" << std::endl);
+                        qInfo() << "Паспорт изменен на >> " << iValue;
                     }
                     type.uint64Value = iValue.toULongLong();
                     return type;
@@ -282,20 +263,18 @@ namespace Server
                     {
                         iValue = "Пустой телефон >> " + iValue + ", " + helpFields()[phone()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустой телефон >> " << iValue << std::endl;
+                        qWarning() << "Пустой телефон >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректный телефон >> " + iValue + ", " + helpFields()[phone()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректный телефон >> " << iValue << std::endl;
+                        qWarning() << "Некорректный телефон >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    !_phone ? Logger::info << "Телефон >> " << iValue << std::endl :
-    //                             (Logger::info << "Телефон << " << _phone << " >> изменен на >> " << iValue << std::endl,
-    //                              std::cout << "Телефон успешно изменен" << std::endl);
+                        qInfo() << "Телефон изменен на >> " << iValue;
                     }
                     type.uint64Value = iValue.toULongLong();
                     return type;
@@ -309,20 +288,18 @@ namespace Server
                     {
                         iValue = "Пустая почта >> " + iValue + ", " + helpFields()[email()];
                         type.status = ST_EMPTY;
-//                        Logger::error << "Пустая почта >> " << iValue << std::endl;
+                        qWarning() << "Пустая почта >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректная почта >> " + iValue + ", " + helpFields()[email()];
                         type.status = ST_WRONGDATA;
-//                        Logger::warning << "Некорректная почта >> " << iValue << std::endl;
+                        qWarning() << "Некорректная почта >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _email.empty() ? Logger::info << "Почта >> " << iValue << std::endl :
-    //                                    (Logger::info << "Почта << " << _email << " >> изменена на >> " << iValue << std::endl,
-    //                                     std::cout << "Почта успешно изменена" << std::endl);
+                        qInfo() << "Почта изменена на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -338,20 +315,18 @@ namespace Server
                     {
                         iValue = "Пустая дата принятия на работу >> " + iValue + ", " + helpFields()[dateOfHiring()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустая дата принятия на работу >> " << iValue << std::endl;
+                        qWarning() << "Пустая дата принятия на работу >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректная дата принятия на работу >> " + iValue + ", " + helpFields()[dateOfHiring()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректная дата принятия на работу >> " << iValue << std::endl;
+                        qWarning() << "Некорректная дата принятия на работу >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _dateOfHiring.empty() ? Logger::info << "Дата принятия на работу >> " << iValue << std::endl :
-    //                                           (Logger::info << "Дата принятия на работу << " << _dateOfHiring << " >> изменена на >> " << iValue << std::endl,
-    //                                            std::cout << "Дата принятия на работу успешно изменена" << std::endl);
+                        qInfo() << "Дата принятия на работу изменена на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -367,20 +342,18 @@ namespace Server
                     {
                         iValue = "Пустые часы работы >> " + iValue + ", " + helpFields()[workingHours()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустые часы работы >> " << iValue << std::endl;
+                        qWarning() << "Пустые часы работы >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректные часы работы >> " + iValue + ", " + helpFields()[workingHours()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректные часы работы >> " << iValue << std::endl;
+                        qWarning() << "Некорректные часы работы >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _workingHours.empty() ? Logger::info << "Часы работы >> " << iValue << std::endl :
-    //                                           (Logger::info << "Часы работы << " << _workingHours << " >> изменены на >> " << iValue << std::endl,
-    //                                            std::cout << "Часы работы успешно изменены" << std::endl);
+                        qInfo() << "Часы работы изменены на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -393,20 +366,18 @@ namespace Server
                     {
                         iValue = "Пустая зарплата >> " + iValue + ", " + helpFields()[salary()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустая зарплата >> " << iValue << std::endl;
+                        qWarning() << "Пустая зарплата >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректная зарплата >> " + iValue + ", " + helpFields()[salary()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректная зарплата >> " << iValue << std::endl;
+                        qWarning() << "Некорректная зарплата >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    !_salary ? Logger::info << "Зарплата >> " << iValue << std::endl :
-    //                              (Logger::info << "Зарплата << " << _salary << " >> изменена на >> " << iValue << std::endl,
-    //                               std::cout << "Зарплата успешно изменена" << std::endl);
+                        qInfo() << "Зарплата изменена на >> " << iValue;
                     }
                     type.uintValue = iValue.toUInt();
                     return type;
@@ -419,20 +390,18 @@ namespace Server
                     {
                         iValue = "Пустая пароль >> " + iValue + ", " + helpFields()[password()];
                         type.status = ST_EMPTY;
-    //                    Logger::error << "Пустой пароль >> " << iValue << std::endl;
+                        qWarning() << "Пустой пароль >> " << iValue;
                     }
                     else if (!regular.match(iValue).hasMatch())
                     {
                         iValue = "Некорректный пароль >> " + iValue + ", " + helpFields()[password()];
                         type.status = ST_WRONGDATA;
-    //                    Logger::warning << "Некорректный пароль >> " << iValue << std::endl;
+                        qWarning() << "Некорректный пароль >> " << iValue;
                     }
                     else
                     {
                         type.status = ST_OK;
-    //                    _password.empty() ? Logger::info << "Пароль >> " << iValue << std::endl :
-    //                                       (Logger::info << "Пароль << " << _password << " >> изменен на >> " << iValue << std::endl,
-    //                                        std::cout << "Пароль успешно изменен" << std::endl);
+                        qInfo() << "Пароль изменен на >> " << iValue;
                     }
                     type.stringValue = iValue;
                     return type;
@@ -442,13 +411,13 @@ namespace Server
                     throw iField;
             }
         }
-        catch (const std::string &exception)
+        catch (const QString &exception)
         {
-    //        Logger::error << "Невернное значение >> " << exception << std::endl;
+            qCritical() << "Невернное значение >> " << exception;
         }
         catch(const Field field)
         {
-    //        Logger::error << "Неверный параметр поля >> " + std::to_string(field) << std::endl;
+            qCritical() << "Неверный параметр поля >> " + QString::number(field);
         }
 
         return {};

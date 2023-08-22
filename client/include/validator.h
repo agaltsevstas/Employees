@@ -24,12 +24,43 @@ public:
     };
 
     UInt64Validator(quint64 min, quint64 max, Mode mode = Mode::None, QObject *parent = nullptr);
+
+    /*!
+     * \brief Получить нижний предел
+     * \return Нижний предел
+     */
     inline quint64 bottom() const noexcept { return _min; }
+
+    /*!
+     * \brief Получить верхний предел
+     * \return Верхний предел
+     */
     inline quint64 top() const noexcept { return _max; }
+
+    /*!
+     * \brief Установить нижний предел
+     * \param min - Нижний предел
+     */
     void setBottom(quint64 min) noexcept;
+
+    /*!
+     * \brief Установить верхний предел
+     * \param min - Верхний предел
+     */
     void setTop(quint32 max) noexcept;
+
+    /*!
+     * \brief Устноавить пределы
+     * \param min - Нижний предел
+     * \param max - Верхний предел
+     */
     void setRange(quint32 min, quint32 max) noexcept;
 
+    /*!
+     * \brief Проверка на валидность
+     * \param input - Значение
+     * \return true - значение валидно, иначе false
+     */
     QValidator::State validate(QString &input, int&) const override;
 private:
     Mode _mode;

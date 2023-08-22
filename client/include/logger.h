@@ -35,10 +35,10 @@ public:
     };
 
     /*!
-     * \brief Обработчик выводимых сообщения
-     * \param iMessageType - тип сообщения
-     * \param iContext - контекст
-     * \param iMessage - записываемое сообщение
+     * @brief Обработчик выводимых сообщения
+     * @param iMessageType - тип сообщения
+     * @param iContext - контекст
+     * @param iMessage - записываемое сообщение
      */
     static void messageHandler(QtMsgType iMessageType, const QMessageLogContext &iContext, const QString &iMessage);
 
@@ -49,9 +49,6 @@ public:
     static void SetDebugLevel(DebugLevel iLevel) noexcept;
 
 private:
-    /*!
-     * @brief Создание единственного объекта
-     */
     static void Instance();
 
     Logger() {}

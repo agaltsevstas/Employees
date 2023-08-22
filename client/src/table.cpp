@@ -82,6 +82,7 @@ namespace Client
 
     void Table::loadSettings()
     {
+        qInfo() << "Загрузка настроек для таблицы";
         auto update = Session::getSession().Settings().value("update");
         move(Session::getSession().Settings().value("centerTable", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
@@ -97,6 +98,7 @@ namespace Client
 
     void Table::saveSettings()
     {
+        qInfo() << "Сохранение настроек для таблицы";
         Session::getSession().Settings().setValue("centerTable", geometry().center() - QPoint(width() / 2, height() / 2));
         if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
             Session::getSession().Settings().setValue("update", autoUpdate->isChecked());
@@ -109,7 +111,7 @@ namespace Client
         if (!deleteUser || !restoreUser)
             return;
 
-        auto canDelete = _tableView->canDelete();
+        auto canDelete = _tableView->canDeleteUser();
         if (canDelete.has_value())
         {
             if (canDelete.value())
@@ -137,10 +139,11 @@ namespace Client
     {
         if (!iJson.isArray())
         {
-            Q_ASSERT(false);
+            Q_ASSERT(iJson.isArray());
             return;
         }
 
+        qInfo() << "Установка персональных данных";
         auto index_data = findTableInJson(iJson, "employee");
         auto index_personal_permissions = findTableInJson(iJson, "personal_data_permission");
         auto index_permissions = findTableInJson(iJson, "permission");
@@ -176,6 +179,7 @@ namespace Client
         }
         else
         {
+            qCritical() << "Не хватает данных для таблицы";
             Q_ASSERT(false);
         }
     }
@@ -194,6 +198,7 @@ namespace Client
                 return;
         }
 
+        qInfo() << "Выход из таблицы";
         _requester->getProgressBar()->setParent(NULL);
         showNormal();
         close();           // Закрытие окна
@@ -202,6 +207,7 @@ namespace Client
 
     void Table::onAutoUpdateClicked(bool isChecked)
     {
+        qInfo() << "Изменение автообновления";
         /// Первым должно обновляться БД, потому в личных данных может быть смена роли
         if (_tableView)
         {
@@ -221,6 +227,7 @@ namespace Client
 
     void Table::onUpdateClicked()
     {
+        qInfo() << "Автообновление";
         if (_personalData)
             _personalData->submitAll();
 
@@ -234,7 +241,7 @@ namespace Client
         {
             if (iResult)
             {
-                qDebug() << "Ваши данные успешно обновлены!";
+                qInfo() << "Данные успешно обновлены";
                 setPersonalData(_requester->getJson());
                 if (_tableView && _tableView->getModel())
                 {
@@ -244,10 +251,10 @@ namespace Client
             }
             else
             {
+                qDebug() << "Ошибка: " << error;
                 QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
                 QTimer::singleShot(1000, &warning, &QMessageBox::close);
                 warning.exec();
-                qDebug() << "Ошибка: " << error;
             }
         };
 
@@ -276,11 +283,9 @@ namespace Client
     {   
         if (iResult)
         {
-            qDebug() << "Ответ на запрос получен!";
-
             if (!_requester->getJson().isArray())
             {
-                Q_ASSERT(false);
+                Q_ASSERT(_requester->getJson().isArray());
                 return;
             }
 
@@ -289,7 +294,7 @@ namespace Client
             auto index_database_permissions = findTableInJson(json, "database_permission");
             if (index_database == -1 || index_database_permissions == -1)
             {
-                qDebug() << "База данных сотрудников не найдена!";
+                qCritical() << "БД сотрудников не найдена!";
                 return;
             }
 
@@ -297,7 +302,7 @@ namespace Client
             const QJsonValue database_permissions = json.array()[index_database_permissions].toObject().value("database_permission");
             if (!database.isArray() || !database_permissions.isObject())
             {
-                qDebug() << "База данных сотрудников не найдена!";
+                qCritical() << "БД сотрудников не найдена!";
                 return;
             }
 
@@ -311,6 +316,8 @@ namespace Client
                 _tableView->clearSearchChanged();
             }
 
+
+            qInfo() << "Показ БД";
             _tableView->setModel("employee", QJsonDocument(database.toArray()), QJsonDocument(database_permissions.toObject()));
             if (QCheckBox* autoUpdate = _personalData->findChild<QCheckBox*>("autoUpdate"))
                 _tableView->setEditStrategy(autoUpdate->isChecked() ? TableView::EditStrategy::OnFieldChange : TableView::EditStrategy::OnManualSubmit);

@@ -1,19 +1,15 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#pragma once
-
 #include <QMap>
 #include <QPair>
 #include <QList>
-#include <QString>
 
 
 namespace Client
 {
     class Employee
     {
-        /// Номера полей класса Employee
         enum Field
         {
             FIELD_ID = 0,
@@ -35,22 +31,12 @@ namespace Client
         /// Карта полей с их доступом
         static const QMap<QString, Field> checkParameters;
 
-        /// Статус данных
         enum Status
         {
-            /// Успех
             ST_OK = 0,
-
-            /// Перезаписывание данных
             ST_OVERWRITEDATA,
-
-            /// Пусто
             ST_EMPTY,
-
-            /// Проблема с данными
             ST_WRONGDATA,
-
-            /// Дублирование данных
             ST_DUBLICATE
         };
 
@@ -149,11 +135,6 @@ namespace Client
         static const QString salary() noexcept       { return "salary"; }
         static const QString password() noexcept     { return "password"; }
 
-        /*!
-         * @brief Проверка полей на повреждение/перезапись данных
-         * @param iWarning - Предупреждение о невалидности данных поля
-         */
-
         static bool checkField(const QString &iField, QString &iValue);
         static const QString employeeTable() noexcept { return "employee"; }
         static const QString permissionTable() noexcept { return "permission"; }
@@ -172,25 +153,11 @@ namespace Client
         }
 
     private:
-        /*!
-         * @brief Структура данных
-         */
         struct Type
         {
-            /// Статус данных
             Status status;
-
-            /*!
-             * @brief Тип данных
-             */
-
-            /// 32-разрядное целое значение без знака
             uint32_t uintValue = 0;
-
-            /// 64-разрядное целое значение без знака
             uint64_t uint64Value = 0;
-
-            /// Строковое значение
             QString stringValue;
         };
 

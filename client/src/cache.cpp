@@ -20,6 +20,7 @@ Cache::Cache() : _cache(new QJsonDocument())
     file.open(QFile::ReadOnly | QFile::Text);
     if (file.isOpen())
     {
+        qInfo() << "Чтение Cache";
         const QJsonDocument document = _cache->fromJson(file.readAll());
         if (document.isArray())
             _cache->setArray(document.array());
@@ -27,7 +28,7 @@ Cache::Cache() : _cache(new QJsonDocument())
     }
     else
     {
-        qDebug() << "File Cache is not open";
+        qDebug() << "Файл Cache не открыт";
     }
 }
 
@@ -36,7 +37,7 @@ Cache::~Cache()
     QFile file(QString(DIRECTORY) + FILENAME);
     if (!file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
     {
-        qDebug() << "File Cache is not open";
+        qDebug() << "Файл Cache не открыт";
         return;
     }
 
@@ -46,7 +47,7 @@ Cache::~Cache()
 
 Cache &Cache::Instance() noexcept
 {
-    static Cache data; // Объект-одиночка
+    static Cache data;
     return data;
 }
 

@@ -393,14 +393,33 @@ public:
     */
     QString claim(const QString &strClaimType);
 
+    /*!
+     * \brief Получить id пользвателя
+     * \return id пользователя
+     */
     qint64 getID() const;
 
+    /*!
+     * \brief Получить имя пользователя
+     * \return
+     */
     QString getUserName() const;
 
+    /*!
+     * \brief Получить роль пользователя
+     * \return Роль пользователя
+     */
     QString getRole() const;
 
+    /*!
+     * \brief Получить время жизни токена
+     * \return Время жизни токена
+     */
     qint64 getExp() const;
 
+    /*!
+     * \brief Очистить токен
+     */
     void clear();
 
 private:

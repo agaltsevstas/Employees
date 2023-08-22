@@ -802,7 +802,7 @@ namespace Client
             {
                 if (iResult)
                 {
-                    qInfo() << "Ваши данные успешно обновлены!";
+                    qInfo() << "Персональные данные успешно обновлены";
 
                     if (_isRoleChanged)
                     {
@@ -877,15 +877,15 @@ namespace Client
                         }
                     }
 
+                    qDebug() << "Ошибка: " << error;
                     QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, this);
                     QTimer::singleShot(1500, &warning, &QMessageBox::close);
                     warning.exec();
-                    qDebug() << "Ошибка: " << error;
                 }
             });
         }
         else
-            qInfo() << "Пустые данные!";
+            qInfo() << "Пустые персональные данные для обновления ";
     }
 
     bool TablePrivate::checkChanges() const noexcept
@@ -934,6 +934,7 @@ namespace Client
 
     void TablePrivate::createEmail()
     {
+        qInfo() << "Автосоздание почты";
         const QLineEdit* surname = findChild<const QLineEdit*>(Client::Employee::surname());
         const QLineEdit* name = findChild<const QLineEdit*>(Client::Employee::name());
         const QLineEdit* patronymic = findChild<const QLineEdit*>(Client::Employee::patronymic());

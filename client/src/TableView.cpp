@@ -53,7 +53,6 @@ namespace Client
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
     {
         setModel(new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this));
-
     }
 
     void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase)
@@ -69,8 +68,12 @@ namespace Client
     void TableView::setModel(QAbstractItemModel *model)
     {
         if (_model)
+        {
+            qInfo() << "Удаление предыдущей модели БД";
             delete _model;
+        }
 
+        qInfo() << "Установка новой модели БД";
         QTableView::setModel(_model = qobject_cast<QJsonTableModel*>(model));
         setSortingEnabled(true);
         sortByColumn(0, Qt::SortOrder::AscendingOrder); // Может падать
@@ -167,7 +170,7 @@ namespace Client
         }
     }
 
-    std::optional<bool> TableView::canDelete()
+    std::optional<bool> TableView::canDeleteUser()
     {
         if (!_model)
             return {};
@@ -207,7 +210,7 @@ namespace Client
             setRowHidden(index, false);
         });
 
-        _hiddenIndices = _model->valueSearch(iValue);
+        _hiddenIndices = _model->search(iValue);
         std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
         {
             setRowHidden(index, true);

@@ -33,16 +33,13 @@ public:
         DEBUG_LEVEL_INFO = 3,
     };
 
-    /*!
-     * @brief Создание единственного объекта
-     */
     static void Instance();
 
     /*!
-     * \brief Обработчик выводимых сообщения
-     * \param iMessageType - тип сообщения
-     * \param iContext - контекст
-     * \param iMessage - записываемое сообщение
+     * @brief Обработчик выводимых сообщения
+     * @param iMessageType - тип сообщения
+     * @param iContext - контекст
+     * @param iMessage - записываемое сообщение
      */
     static void messageHandler(QtMsgType iMessageType, const QMessageLogContext &iContext, const QString &iMessage);
 

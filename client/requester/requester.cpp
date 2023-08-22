@@ -55,7 +55,7 @@ namespace Client
         QByteArray replyData = iReply->readAll();
         if (replyData.isEmpty())
         {
-            qInfo() << "Пустые данные";
+            qWarning() << "Пришли пустые данные!";
             return {};
         }
 
@@ -102,7 +102,7 @@ namespace Client
         }
         else
         {
-            _requester.logout();
+            emit _requester.logout();
             request.setRawHeader("Authorization", QString("Basic %1").arg(_requester.getToken().toUtf8().toBase64()).toLocal8Bit());
         }
         if (_sslConfig != Q_NULLPTR)
@@ -235,7 +235,7 @@ namespace Client
                         if (cookie.name() == "accessToken" ||
                             cookie.name() == "refreshToken")
                         {
-                            Session::getSession().Cookie().add(cookie.name(), cookie.value());
+                            Session::getSession().Cookie().addToken(cookie.name(), cookie.value());
                         }
                     }
                 }

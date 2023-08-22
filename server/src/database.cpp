@@ -1,4 +1,5 @@
 #include "database.h"
+#include "server.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -28,6 +29,7 @@ namespace Server
 
     DataBase::~DataBase()
     {
+        qInfo() << "Закрытие БД";
         _db.close();
     }
 
@@ -41,10 +43,12 @@ namespace Server
 
         if (this->open())
         {
+            qInfo() << "Успешное подключение к БД";
             return true;
         }
         else
         {
+            qFatal("Неуспешное подключение к БД");
             return false;
         }
     }
@@ -61,7 +65,7 @@ namespace Server
 
             if (!query.exec())
             {
-                qWarning() << "Ошибка: " << query.lastError().text();
+                qCritical() << "Ошибка: " << query.lastError().text();
                 return false;
             }
 
@@ -102,7 +106,7 @@ namespace Server
         query.bindValue(":password", password);
         if (!query.exec())
         {
-            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
@@ -156,7 +160,7 @@ namespace Server
         query.bindValue(":ID", iID);
         if (!query.exec())
         {
-            qWarning() << "Ошибка: " << query.lastError().text() << "аутентификации";
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
@@ -215,19 +219,16 @@ namespace Server
         query.bindValue(":userName", userName + "@tradingcompany.ru");
         if (!query.exec())
         {
-            qWarning() << "Ошибка: " << query.lastError().text();
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
         QJsonObject record;
-
         if (query.next())
         {
             auto size = query.record().count();
             for (decltype(size) i = 0; i < size; ++i)
-            {
                 record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
-            }
         }
 
         oData = QJsonDocument(QJsonObject{{Employee::employeeTable(), record}}).toJson();
@@ -240,7 +241,7 @@ namespace Server
         QSqlQuery query(_db);
         if (!query.exec(request))
         {
-            qWarning() << "Ошибка: " << query.lastError().text() << "запроса";
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
@@ -401,7 +402,7 @@ namespace Server
     {
         if (iData.size() != 14)
         {
-            qWarning() << "Недостаточно данных для выполнения запроса";
+            qCritical() << "Недостаточно данных для выполнения запроса";
             return false;
         }
 
@@ -453,7 +454,7 @@ namespace Server
         query.bindValue(":password", iData[Employee::password()].toString());
         if (!query.exec())
         {
-            qDebug() << query.lastError().text();
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
@@ -468,7 +469,7 @@ namespace Server
         query.bindValue(":ID", iID);
         if (!query.exec())
         {
-            qDebug() << query.lastError().text();
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 
@@ -492,7 +493,7 @@ namespace Server
         query.bindValue(":ID", iID);
         if (!query.exec())
         {
-            qDebug() << query.lastError().text();
+            qCritical() << "Ошибка: " << query.lastError().text();
             return false;
         }
 

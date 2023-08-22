@@ -4,25 +4,28 @@
 #define JWT_ACCESS_SECRET "jwt-access-secret-key"
 #define JWT_REFRESH_SECRET "jwt-refresh-secret-key"
 
+#define INFO(object, str) qInfo() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
+#define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
+#define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
+
 
 namespace Server
 {
     class HttpCookie
     {
     public:
-        /**
-          Create a cookie and set name/value pair.
-          @param name name of the cookie
-          @param value value of the cookie
-          @param maxAge maximum age of the cookie in seconds. 0=discard immediately
-          @param path Path for that the cookie will be sent, default="/" which means the whole domain
-          @param comment Optional comment, may be displayed by the web browser somewhere
-          @param domain Optional domain for that the cookie will be sent. Defaults to the current domain
-          @param secure If true, the cookie will be sent by the browser to the server only on secure connections
-          @param httpOnly If true, the browser does not allow client-side scripts to access the cookie
-          @param sameSite Declare if the cookie can only be read by the same site, which is a stronger
-                 restriction than the domain. Allowed values: "Lax" and "Strict".
-        */
+    /*!
+     * @brief создание Coockie
+     * @param name - Имя куки
+     * @param value - Значение файла cookie
+     * @param maxAge - Максимальный срок жизни cookie в секундах, по-умолчанию 0
+     * @param path - Путь, по которому будет отправлен файл cookie, по умолчанию = "/", что означает весь домен.
+     * @param comment - Необязательный комментарий, который может где-то отображаться веб-браузером
+     * @param domain - Необязательный домен, для которого будет отправлен файл cookie. По умолчанию текущий домен
+     * @param secure - Если true, браузер будет отправлять cookie на сервер только при безопасном соединении.
+     * @param httpOnly - Если установлено значение true, браузер не разрешает клиентским сценариям доступ к файлу cookie.
+     * @param sameSite - Может ли файл cookie быть прочитан только одним и тем же сайтом, что является более сильным ограничением, чем домен. Допустимые значения: «Нестрогий» и «Строгий».
+     */
         HttpCookie(const QByteArray iName, const QByteArray iValue, const int iMaxAge,
                    const QByteArray iPath = "/", const QByteArray iComment = QByteArray(),
                    const QByteArray iDomain = QByteArray(), const bool iSecure = false,
@@ -40,8 +43,9 @@ namespace Server
             _version = 1;
         }
 
-        QByteArray toByteArray()
+        QByteArray toByteArray(const AuthenticationService &parent) const
         {
+            INFO(parent, "Создание access token");
             QByteArray buffer(_name);
             buffer.append('=');
             buffer.append(_value);
@@ -103,6 +107,7 @@ namespace Server
 
     void AuthenticationService::logout()
     {
+        INFO((*this), "Выход");
         _id = 0;
         _userName.clear();
         _role.clear();
@@ -140,6 +145,7 @@ namespace Server
 
     const QByteArray AuthenticationService::getAccessToken()
     {
+        INFO((*this), "Создание access token");
         QJsonWebToken accessToken;
         accessToken.appendClaim("id", QString::number(_id));
         accessToken.appendClaim("username", _userName);
@@ -156,11 +162,12 @@ namespace Server
                           "",
                           true,
                           true,
-                          "Lax").toByteArray();
+                          "Lax").toByteArray(*this);
     }
 
     const QByteArray AuthenticationService::getRefreshToken()
     {
+        INFO((*this), "Создание refresh token");
         QJsonWebToken refreshToken;
         refreshToken.appendClaim("id", QString::number(_id));
         refreshToken.appendClaim("username", _userName);
@@ -177,13 +184,14 @@ namespace Server
                           "",
                           true,
                           true,
-                          "Lax").toByteArray();
+                          "Lax").toByteArray(*this);
     }
 
     bool AuthenticationService::checkAuthentication(QByteArray &ioToken)
     {
         if (QJsonWebToken accessToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_ACCESS_SECRET); accessToken.isValid())
         {
+            INFO((*this), "Проверка access token");
             _id = accessToken.getID();
             _userName = accessToken.getUserName();
             _role = accessToken.getRole();
@@ -191,12 +199,14 @@ namespace Server
         }
         else if (QJsonWebToken refreshToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_REFRESH_SECRET); refreshToken.isValid())
         {
+            INFO((*this), "Проверка access token");
             _id = refreshToken.getID();
             _userName = refreshToken.getUserName();
             _role = refreshToken.getRole();
             return true;
         }
 
+        CRITICAL((*this), "Аутентификации не пройдена");
         return false;
     }
 }

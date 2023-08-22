@@ -11,6 +11,10 @@ public:
     explicit LineEdit(bool isView = false, QWidget *parent = nullptr);
     explicit LineEdit(const QString &text, bool isView = false, QWidget *parent = nullptr);
     ~LineEdit();
+
+    /*!
+     * \brief Запрос на автосоздание почты
+     */
     void showQuestion();
 
 Q_SIGNALS:

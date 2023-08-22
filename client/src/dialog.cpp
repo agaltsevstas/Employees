@@ -98,6 +98,7 @@ namespace Client
 
     void Dialog::loadSettings()
     {
+        qInfo() << "Загрузка настроек для диалога";
         QCompleter* completer = new QCompleter(Session::getSession().Cache().getLogins(), _dialog->login);
         completer->setCaseSensitivity(Qt::CaseInsensitive);
 
@@ -116,11 +117,13 @@ namespace Client
 
     void Dialog::saveSettings()
     {
+        qInfo() << "Сохранение настроек для диалога";
         Session::getSession().Settings().setValue("centerDialog", geometry().center() - QPoint(width() / 2, height() / 2));
     }
 
     void Dialog::showDialog()
     {
+        qInfo() << "Вход в диалог";
         delete _table;
         _requester->getProgressBar()->setParent(this);
         _requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
@@ -151,7 +154,7 @@ namespace Client
         {
             if (iResult)
             {
-                qDebug() << "Вход успешно выполнен!";
+                qInfo() << "Вход успешно выполнен";
                 _status->setStyleSheet("background:rgba(0, 0, 0, 0); color:rgba(255, 255, 255, 210);");
                 _status->showMessage("Вход успешно выполнен!", 1000);
 
@@ -164,16 +167,16 @@ namespace Client
             {
                 if (error == "Connection refused")
                 {
+                    qWarning() << "Ошибка: " << error;
                     QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
                                                                                                      QTimer::singleShot(1000, &warning, &QMessageBox::close);
                     warning.exec();
-                    qDebug() << "Ошибка: " << error;
                 }
                 else
                 {
+                    qWarning() << "Введен неверный логин или пароль";
                     _status->setStyleSheet("background:rgba(0, 0, 0, 0); color: red;");
                     _status->showMessage("Введен неверный логин или пароль!", 1000);
-                    qDebug() << "Введен неверный логин или пароль!";
                 }
             }
         };
@@ -183,11 +186,13 @@ namespace Client
 
     void Dialog::on_showPassword_clicked(bool iChecked)
     {
+        qInfo() << "Показать пароль: " << iChecked;
         _dialog->password->setEchoMode(iChecked ? QLineEdit::Normal : QLineEdit::Password);
     }
 
     void Dialog::on_exit_clicked()
     {
+        qInfo() << "Выход из диалога";
         close();
     }
 

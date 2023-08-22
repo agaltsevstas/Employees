@@ -7,13 +7,13 @@
 
 #define DIRECTORY "../log/"
 
-Logger::DebugLevel Logger::_debugLevel = Logger::DebugLevel::DEBUG_LEVEL_DISABLED; // Определение уровня подробности лога
-QString Logger::_infoBuffer;                                                   // Определение буфер хранения информационных сообщений
-QString Logger::_warningBuffer;                                                // Определение буфер хранения предупреждений
-QString Logger::_errorBuffer;                                                  // Определение буфер хранения ошибок
-QString Logger::_allMessagesBuffer;                                            // Определение буфер хранения всех видов сообщений
-QScopedPointer<QFile> Logger::_file;                                          // Определение выходного файлового потока
-std::unique_ptr<Logger> Logger::_logger = nullptr;                             // Определение уровня подробности лога
+Logger::DebugLevel Logger::_debugLevel = Logger::DebugLevel::DEBUG_LEVEL_DISABLED;
+QString Logger::_infoBuffer;
+QString Logger::_warningBuffer;
+QString Logger::_errorBuffer;
+QString Logger::_allMessagesBuffer;
+QScopedPointer<QFile> Logger::_file;
+std::unique_ptr<Logger> Logger::_logger = nullptr;
 
 
 void Logger::Instance()
@@ -34,7 +34,7 @@ void Logger::Instance()
         qWarning() << "Logger file is not open";
 }
 
-void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext &iContext, const QString &iMessage)
+void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext &, const QString &iMessage)
 {
     switch (iMessageType)
     {
