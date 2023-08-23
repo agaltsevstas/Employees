@@ -1,0 +1,38 @@
+image: registry.gitlab.com/agaltsev.stas/database # Использование docker container
+variables:
+  REPO_NAME: gitlab.com/agaltsev.stas/database # Переменные окружения, в данном случае мы указываем имя репозитория
+stages: # Шаги / Стадии 
+  - build
+  - test 
+  - deploy
+build:
+  tags:
+    - unit-tests # Тег раннера, на котором будет запущен job
+  stage: build
+  script:
+    - cd ~ && cd $CI_PROJECT_DIR
+    - qmake database.pro
+    - make
+    - cd ~ && cd $CI_PROJECT_DIR/bin/
+    - ./database
+    - echo END build
+unit-tests:
+  tags:
+    - unit-tests # Тег раннера, на котором будет запущен job
+  stage: test
+  script:
+    - cd ~ && cd $CI_PROJECT_DIR/tests/UtilsTest
+    - qmake UtilsTest.pro
+    - make
+    - cd ~ && cd $CI_PROJECT_DIR/bin/tests
+    - ./UtilsTest # Запускаем тесты!
+    - echo END UtilsTest
+production:
+  tags:
+    - unit-tests # Тег раннера, на котором будет запущен job
+  stage: deploy
+  script:
+    - cd ~ && cd $CI_PROJECT_DIR/
+#    - git merge origin/master
+    - echo READY!!!
+
