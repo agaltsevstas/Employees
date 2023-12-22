@@ -12,6 +12,7 @@ namespace Server
     class DataBase : public QWidget
     {
         Q_OBJECT
+        Q_DISABLE_COPY(DataBase);
     public:
 
         explicit DataBase(QWidget *parent = nullptr);

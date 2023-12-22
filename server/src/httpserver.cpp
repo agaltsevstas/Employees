@@ -22,10 +22,8 @@ namespace Server
 {
     struct Tree
     {
-        Tree() noexcept
-        {
-
-        }
+        Tree() noexcept = default;
+        ~Tree() noexcept = default;
 
         Tree(const Tree& other) noexcept
         {
@@ -60,18 +58,6 @@ namespace Server
         QByteArray column; // Название столбца в БД
         QVariant value;    // Значение в поле БД
     };
-
-    template <class Arg, class ... Args>
-    constexpr int countArgs(const Arg& x, const Args& ... args)
-    {
-        return countArgs(args...) + 1;
-    }
-
-    template <typename R, typename T, typename ... Types>
-    constexpr std::integral_constant<unsigned, sizeof ...(Types)> GetArgsCount(R(T::*)(Types ...))
-    {
-        return static_cast<int>(std::integral_constant<unsigned, sizeof ...(Types)>{});
-    }
 
     class ICallback
     {
