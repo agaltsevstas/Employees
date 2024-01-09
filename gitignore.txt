@@ -4,9 +4,11 @@ log/
 build/
 client/build
 client/bin
+client/log
 client/Makefile
 server/build
 server/bin
+server/log
 server/Makefile
 Makefile
 .qmake.stash

@@ -11,49 +11,49 @@ namespace Server
 
     public:
 
-        AuthenticationService();
+        AuthenticationService() = default;
         ~AuthenticationService() = default;
 
         /*!
          * \brief Выход
          */
-        void logout();
+        void logout() noexcept;
 
         /*!
          * \brief Устнановить id пользователя
          * \param iID пользователя
          */
-        void setID(qint64 iID);
+        void setID(qint64 iID) noexcept;
 
         /*!
          * \brief Получить id пользователя
          * \return ID пользователя
          */
-        [[nodiscard]] qint64 getID() const;
+        [[nodiscard]] qint64 getID() const noexcept;
 
         /*!
          * \brief Устноавить имя пользователя
          * \param iUserName - Имя пользователя
          */
-        void setUserName(const QString &iUserName);
+        void setUserName(const QString &iUserName) noexcept;
 
         /*!
          * \brief Получить имя пользователя
          * \return Имя пользователя
          */
-        [[nodiscard]] const QByteArray getUserName() const;
+        [[nodiscard]] const QByteArray getUserName() const noexcept;
 
         /*!
          * \brief Установить роль пользователя
          * \param iRole - Роль пользователя
          */
-        void setRole(const QString &iRole);
+        void setRole(const QString &iRole) noexcept;
 
         /*!
          * \brief Получить роль пользователя
          * \return Роль пользователя
          */
-        [[nodiscard]] const QByteArray getRole() const;
+        [[nodiscard]] const QByteArray getRole() const noexcept;
 
         /*!
          * \brief Получить access token

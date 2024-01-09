@@ -6,11 +6,6 @@
 #include <QString>
 #include <QVector>
 
-#include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <iomanip>
-#include <codecvt>
 
 namespace Utils
 {

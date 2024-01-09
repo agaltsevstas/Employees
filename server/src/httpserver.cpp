@@ -65,10 +65,11 @@ namespace Server
         virtual QHttpServerResponse operator()() = 0;
     };
 
-    template<class TClass, class TCallBack, typename TArgs> struct AbstractCallback : public ICallback
+    template<class TClass, class TCallBack, typename TArgs>
+    struct AbstractCallback : public ICallback
     {
     public:
-        AbstractCallback(TClass& iClass, TCallBack& iCallback, TArgs iArgs) :
+        AbstractCallback(TClass& iClass, TCallBack& iCallback, TArgs&& iArgs) :
         _class(iClass),
         _callback(iCallback),
         _args(iArgs)
@@ -78,7 +79,7 @@ namespace Server
         virtual QHttpServerResponse operator()() override
         {
             if (_callback)
-                return (_class.*(_callback))(_args);
+                return (_class.*(_callback))((std::forward<TArgs>(_args)));
             else
                 return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
         }
@@ -88,13 +89,14 @@ namespace Server
         TArgs _args;
     };
 
-    template <class TClass, class TCallBack, class... TArgs> class Callback : public ICallback
+    template <class TClass, class TCallBack, class... TArgs>
+    class Callback : public ICallback
     {
         using _CallBack = std::function<QHttpServerResponse()>;
     public:
-        Callback(TClass& iClass, const TCallBack& iCallback, const TArgs&... iArgs)
+        Callback(TClass& iClass, const TCallBack& iCallback, TArgs&&... iArgs)
         {
-            _callback = std::bind(iCallback, &iClass, iArgs...);
+            _callback = std::bind(iCallback, &iClass, std::forward<TArgs>(iArgs)...);
         }
 
         QHttpServerResponse operator()() override
@@ -112,7 +114,8 @@ namespace Server
     class HttpServer::HttpServerImpl
     {
         using StatusCode = QHttpServerResponse::StatusCode;
-        template <class TCallBack> friend class AuthorizationService;
+        template <class TCallBack>
+        friend class AuthorizationService;
     public:
         HttpServerImpl() :
           _host(SERVER_HOSTNAME),
@@ -140,7 +143,8 @@ namespace Server
         QHttpServer _server;
     };
 
-    template <class TCallBack> class AuthorizationService
+    template <class TCallBack>
+    class AuthorizationService
     {
         using StatusCode = QHttpServerResponse::StatusCode;
     public:

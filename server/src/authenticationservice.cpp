@@ -100,12 +100,7 @@ namespace Server
         int _version;
     };
 
-    AuthenticationService::AuthenticationService()
-    {
-
-    }
-
-    void AuthenticationService::logout()
+    void AuthenticationService::logout() noexcept
     {
         INFO((*this), "Выход");
         _id = 0;
@@ -113,32 +108,32 @@ namespace Server
         _role.clear();
     }
 
-    void AuthenticationService::setID(qint64 iID)
+    void AuthenticationService::setID(qint64 iID) noexcept
     {
         _id = iID;
     }
 
-    qint64 AuthenticationService::getID() const
+    qint64 AuthenticationService::getID() const noexcept
     {
         return _id;
     }
 
-    void AuthenticationService::setUserName(const QString &iUserName)
+    void AuthenticationService::setUserName(const QString &iUserName) noexcept
     {
         _userName = iUserName;
     }
 
-    const QByteArray AuthenticationService::getUserName() const
+    const QByteArray AuthenticationService::getUserName() const noexcept
     {
         return _userName.toUtf8();
     }
 
-    void AuthenticationService::setRole(const QString &iRole)
+    void AuthenticationService::setRole(const QString &iRole) noexcept
     {
         _role = iRole;
     }
 
-    const QByteArray AuthenticationService::getRole() const
+    const QByteArray AuthenticationService::getRole() const noexcept
     {
         return _role.toUtf8();
     }

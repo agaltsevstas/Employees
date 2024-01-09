@@ -8,7 +8,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Logger.h"
-#include "TradingCompany.h"
+#include "Employee.h"
 #include "Utils.h"
 
 /// Оборачивание строки именем функции, из которой вызвана
