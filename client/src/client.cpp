@@ -3,6 +3,7 @@
 
 #include <QRegularExpression>
 
+
 namespace Client
 {
     const QMap<QString, Employee::Field> Employee::checkParameters =

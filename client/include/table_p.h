@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+
 class Cache;
 class QGridLayout;
 class QGroupBox;

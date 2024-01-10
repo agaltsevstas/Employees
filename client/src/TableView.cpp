@@ -2,12 +2,8 @@
 #include "client.h"
 #include "delegate.h"
 
-#include <QAbstractItemModel>
-#include <QComboBox>
 #include <QCryptographicHash>
-#include <QDoubleSpinBox>
 #include <QHeaderView>
-#include <QLineEdit>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonTableModel>

@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 
 
+class QSqlDatabase;
 class QSqlTableModel;
 
 namespace Server
@@ -112,7 +113,7 @@ namespace Server
         bool createTable();
 
     private:
-        QSqlDatabase _db;
+        QScopedPointer<QSqlDatabase> _db;
     };
 }
 

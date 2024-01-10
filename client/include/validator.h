@@ -3,6 +3,7 @@
 
 #include <QValidator>
 
+
 class TextValidator final : public QValidator
 {
     Q_OBJECT

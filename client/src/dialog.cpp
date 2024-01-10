@@ -6,15 +6,13 @@
 #include "session.h"
 #include "table.h"
 
-#include <QColor>
 #include <QCompleter>
 #include <QGraphicsDropShadowEffect>
 #include <QMessageBox>
 #include <QMouseEvent>
-#include <QScreen>
+#include <QProgressBar>
 #include <QStatusBar>
 #include <QTimer>
-#include <QProgressBar>
 #include <Settings>
 
 #define DIRECTORY "../settings/"

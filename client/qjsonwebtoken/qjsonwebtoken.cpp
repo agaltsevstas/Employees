@@ -6,8 +6,6 @@
 
 #include "qjsonwebtoken.h"
 
-#include <QDebug>
-
 
 QJsonWebToken::QJsonWebToken():
     _payload(QJsonDocument::fromJson("{}"))

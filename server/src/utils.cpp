@@ -1,11 +1,8 @@
 #include "utils.h"
 
 #include <QDateTime>
-#include <QMap>
-#include <QPair>
 #include <QRegularExpression>
-#include <QTextStream>
-#include <boost/algorithm/string.hpp>
+
 
 namespace Utils
 {

@@ -1,8 +1,8 @@
 #ifndef CACHE_H
 #define CACHE_H
 
-#include "QString"
 #include "QScopedPointer"
+
 
 class QJsonDocument;
 

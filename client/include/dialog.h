@@ -2,7 +2,7 @@
 #define DIALOG_H
 
 #include <QDialog>
-#include <QMap>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui

@@ -1,9 +1,6 @@
 #ifndef Utils_h
 #define Utils_h
 
-#pragma once
-
-#include <QString>
 #include <QVector>
 
 

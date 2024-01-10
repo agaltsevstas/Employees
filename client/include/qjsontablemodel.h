@@ -3,7 +3,6 @@
 
 #include <QAbstractTableModel>
 #include <QJsonArray>
-#include <QPair>
 
 
 namespace Client

@@ -2,17 +2,15 @@
 #include "server.h"
 
 #include <QApplication>
+#include <QCryptographicHash>
 #include <QMessageBox>
-#include <QDebug>
 #include <QSqlQuery>
-#include <QSqlResult>
 #include <QSqlRecord>
 #include <QSqlError>
 #include <QSqlTableModel>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QCryptographicHash>
 
 #define DATABASE_POSTGRES "QPSQL"         // Тип базы данных
 #define DATABASE_HOSTNAME "127.0.0.1"     // Хост
@@ -30,16 +28,16 @@ namespace Server
     DataBase::~DataBase()
     {
         qInfo() << "Закрытие БД";
-        _db.close();
+        _db->close();
     }
 
     bool DataBase::connect()
     {
-        _db = QSqlDatabase::addDatabase("QPSQL");
-        _db.setHostName(DATABASE_HOSTNAME);
-        _db.setPort(DATABASE_PORT);
-        _db.setUserName("agaltsevstas");
-        _db.setPassword("");
+        _db.reset(new QSqlDatabase(QSqlDatabase::addDatabase("QPSQL")));
+        _db->setHostName(DATABASE_HOSTNAME);
+        _db->setPort(DATABASE_PORT);
+        _db->setUserName("agaltsevstas");
+        _db->setPassword("");
 
         if (this->open())
         {
@@ -59,7 +57,7 @@ namespace Server
             iColumn == Employee::phone() ||
             iColumn == Employee::email())
         {
-            QSqlQuery query(_db);
+            QSqlQuery query(*_db);
             query.prepare("SELECT * FROM employee WHERE " + iColumn + " = :value;");
             query.bindValue(":value", iValue.toString());
 
@@ -83,7 +81,7 @@ namespace Server
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
 
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         query.prepare("SELECT "
                       "employee.id, "
                       "role.code, "
@@ -138,7 +136,7 @@ namespace Server
 
     bool DataBase::authentication(const QString &iID, QByteArray& oData) const
     {
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         query.prepare("SELECT "
                       "employee.id, "
                       "role.code, "
@@ -196,7 +194,7 @@ namespace Server
         if (index > -1)
             userName.remove(index, userName.size()); // Получение логина от почты
 
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         query.prepare("SELECT "
                       "employee.id, "
                       "role.name as role, "
@@ -238,7 +236,7 @@ namespace Server
     bool DataBase::sendRequest(const QByteArray &iRequest) const
     {
         const QString request = QString::fromUtf8(iRequest);
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         if (!query.exec(request))
         {
             qCritical() << "Ошибка: " << query.lastError().text();
@@ -251,7 +249,7 @@ namespace Server
     bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable) const
     {
         const QString request = QString::fromUtf8(iRequest);
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         if (!query.exec(request))
         {
             qWarning() << "Ошибка: " << query.lastError().text() << "запроса";
@@ -314,7 +312,7 @@ namespace Server
 
     const QSqlTableModel* DataBase::createTableModel()
     {
-        QSqlTableModel* table = new QSqlTableModel(this, _db);
+        QSqlTableModel* table = new QSqlTableModel(this, *_db);
         table->setTable("employee");
         table->select();
         return table;
@@ -322,10 +320,10 @@ namespace Server
 
     bool DataBase::open()
     {
-        _db.setDatabaseName(DATABASE_NAME);
-        if (!_db.open())
+        _db->setDatabaseName(DATABASE_NAME);
+        if (!_db->open())
         {
-            qWarning() << "База данных не существует" << _db.lastError().text();
+            qWarning() << "База данных не существует" << _db->lastError().text();
             QMessageBox::StandardButton reply = QMessageBox::question(this, "База данных не сущуествует", "Создать?", QMessageBox::Yes | QMessageBox::No);
             if (reply == QMessageBox::Yes)
             {
@@ -338,21 +336,21 @@ namespace Server
             }
         }
 
-        qInfo() << "Выполнено подключение к базе данных" << _db.databaseName();
+        qInfo() << "Выполнено подключение к базе данных" << _db->databaseName();
         return true;
     }
 
     bool DataBase::createDataBase()
     {
-        _db.setDatabaseName("postgres");
-        if (!_db.open())
+        _db->setDatabaseName("postgres");
+        if (!_db->open())
         {
-            qInfo() << "Не выполнено подключение к базе данных" << _db.databaseName();
+            qInfo() << "Не выполнено подключение к базе данных" << _db->databaseName();
             return false;
         }
 
         qInfo() << "Попытка создать базу данных" << DATABASE_NAME;
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         if (!query.exec("create database " DATABASE_NAME " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'"))
         {
             qCritical() << "Ошибка: " << query.lastError().text() << ", база данных не создалась";
@@ -367,7 +365,7 @@ namespace Server
 
     bool DataBase::createTable()
     {
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         if (!query.exec("CREATE TABLE IF NOT EXISTS public.employee"
                         "(id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),"
                         "role_id integer NOT NULL,"
@@ -406,7 +404,7 @@ namespace Server
             return false;
         }
 
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         query.prepare("INSERT INTO public.employee ("
                       "id, "
                       "role_id, "
@@ -463,7 +461,7 @@ namespace Server
 
     bool DataBase::deleteRecord(const qint64 &iID) const
     {
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
 
         query.prepare("DELETE FROM employee WHERE id = :ID;");
         query.bindValue(":ID", iID);
@@ -478,7 +476,7 @@ namespace Server
 
     bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QVariant &iValue) const
     {
-        QSqlQuery query(_db);
+        QSqlQuery query(*_db);
         if (iColumn == Employee::role())
         {
             query.prepare("UPDATE employee SET role_id = (select role.id FROM role WHERE role.name = :value) "

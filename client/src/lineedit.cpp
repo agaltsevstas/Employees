@@ -3,6 +3,7 @@
 #include <QFocusEvent>
 #include <QMessageBox>
 
+
 LineEdit::LineEdit(bool isView, QWidget *parent) :
     QLineEdit(parent),
     _isView(isView)

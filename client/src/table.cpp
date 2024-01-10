@@ -7,19 +7,13 @@
 #include "ui_table.h"
 
 #include <QCheckBox>
-#include <QComboBox>
-#include <QTextEdit>
 #include <QJsonTableModel>
-#include <QJsonDocument>
 #include <QJsonObject>
-#include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QScreen>
-#include <QSizePolicy>
-#include <QSplitter>
 #include <QStackedWidget>
 #include <QTimer>
 #include <Settings>

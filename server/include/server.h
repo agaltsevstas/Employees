@@ -2,8 +2,6 @@
 #define CLIENT_H
 
 #include <QMap>
-#include <QPair>
-#include <QList>
 
 
 namespace Server

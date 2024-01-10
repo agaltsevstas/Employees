@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QDoubleSpinBox>
 #include <QComboBox>
-#include <QLineEdit>
 #include <QMouseEvent>
 #include <QJsonTableModel>
 #include <QPainter>

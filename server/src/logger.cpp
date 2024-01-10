@@ -2,7 +2,6 @@
 #include "utils.h"
 
 #include <QDir>
-#include <QFile>
 #include <QThread>
 
 #define DIRECTORY "../log/"

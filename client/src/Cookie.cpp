@@ -2,7 +2,7 @@
 #include "qjsonwebtoken.h"
 
 #include <QDir>
-#include <QFile>
+
 
 #define FILENAME  "cookies.txt"
 #define DIRECTORY "../settings/"

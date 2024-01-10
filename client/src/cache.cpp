@@ -1,7 +1,6 @@
 #include "cache.h"
 
 #include <QDir>
-#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>

@@ -3,6 +3,7 @@
 
 #include <QString>
 
+
 namespace Server
 {
     class AuthenticationService

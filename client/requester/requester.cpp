@@ -3,12 +3,9 @@
 #include "session.h"
 
 #include <QBuffer>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QProgressBar>
 #include <QNetworkCookie>
-#include <QNetworkCookieJar>
-#include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
 

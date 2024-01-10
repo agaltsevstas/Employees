@@ -3,6 +3,7 @@
 
 #include <QLineEdit>
 
+
 class LineEdit final : public QLineEdit
 {
     Q_OBJECT

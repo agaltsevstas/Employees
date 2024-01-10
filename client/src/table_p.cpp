@@ -14,13 +14,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QLineEdit>
 #include <QLabel>
 #include <QMessageBox>
-#include <QProgressBar>
 #include <QPushButton>
 #include <QSplitter>
-#include <QStackedWidget>
 #include <QStringListModel>
 #include <QTimer>
 #include <Validator>

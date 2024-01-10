@@ -2,8 +2,9 @@
 #define TABLEVIEW_H
 
 #include <QTableView>
-class QJsonTableModel;
 
+
+class QJsonTableModel;
 
 namespace Client
 {

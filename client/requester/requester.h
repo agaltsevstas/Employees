@@ -3,10 +3,6 @@
 
 #include <QJsonDocument>
 #include <QMutex>
-#include <QNetworkRequest>
-#include <QObject>
-#include <QScopedPointer>
-#include <QVariantMap>
 
 
 class QProgressBar;

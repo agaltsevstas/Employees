@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "logger.h"
 
+
 Session::Session()
 {
     Cache::Instance();
