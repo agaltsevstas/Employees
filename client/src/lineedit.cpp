@@ -4,14 +4,14 @@
 #include <QMessageBox>
 
 
-LineEdit::LineEdit(bool isView, QWidget *parent) :
+LineEdit::LineEdit(bool isView, QWidget* parent) :
     QLineEdit(parent),
     _isView(isView)
 {
 
 }
 
-LineEdit::LineEdit(const QString &text, bool isView, QWidget *parent) :
+LineEdit::LineEdit(const QString& text, bool isView, QWidget* parent) :
     QLineEdit(text, parent),
     _isView(isView)
 {
@@ -30,7 +30,7 @@ void LineEdit::showQuestion()
         emit startingFocus();
 }
 
-void LineEdit::focusInEvent(QFocusEvent *event)
+void LineEdit::focusInEvent(QFocusEvent* event)
 {
     if (!_isView)
     {

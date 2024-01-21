@@ -10,10 +10,12 @@
 #include <QMessageBox>
 #include <QTimer>
 
+#include <ranges>
+
 
 namespace Client
 {
-    TableView::TableView( QWidget *parent) : QTableView(parent)
+    TableView::TableView(QWidget* parent) : QTableView(parent)
     {
         setObjectName(QString::fromUtf8("tableView"));
         setItemDelegate(new Delegate(this));
@@ -46,22 +48,22 @@ namespace Client
         return EditStrategy::OnFieldChange;
     }
 
-    void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions)
+    void TableView::setModel(const QString& iName, const QJsonDocument& iDatabase, const QJsonDocument& iPermissions)
     {
         setModel(new QJsonTableModel(iName, QJsonDocument(iDatabase), QJsonDocument(iPermissions), this));
     }
 
-    void TableView::setModel(const QString& iName, const QJsonDocument &iDatabase)
+    void TableView::setModel(const QString& iName, const QJsonDocument& iDatabase)
     {
         setModel(new QJsonTableModel(iName, QJsonDocument(iDatabase), this));
     }
 
-    const QAbstractItemModel *TableView::getModel() const noexcept
+    const QAbstractItemModel* TableView::getModel() const noexcept
     {
         return _model;
     }
 
-    void TableView::setModel(QAbstractItemModel *model)
+    void TableView::setModel(QAbstractItemModel* model)
     {
         if (_model)
         {
@@ -94,11 +96,11 @@ namespace Client
 
         QJsonObject record;
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (int i = 1, I = fieldNames.size(); i < I; ++i)
+        for (const auto i : std::views::iota(1, fieldNames.size()))
         {
             bool result = false;
             QPair<QString, QString> field = fieldNames[i];
-            emit getUserData(field.first, [&](const QString &iValue)->bool
+            emit getUserData(field.first, [&](const QString& iValue)->bool
             {
                 if (_model->checkField(_model->rowCount(), i, iValue))
                 {
@@ -132,11 +134,11 @@ namespace Client
         if (!_model)
             return false;
 
-        if (QItemSelectionModel *select = selectionModel())
+        if (QItemSelectionModel* select = selectionModel())
         {
             if (select->hasSelection())
             {
-                for (const auto &selectedRow : select->selectedRows())
+                for (const auto& selectedRow : select->selectedRows())
                 {
                     _model->deleteRow(selectedRow.row());
                 }
@@ -154,11 +156,11 @@ namespace Client
         if (!_model)
             return;
 
-        if (QItemSelectionModel *select = selectionModel())
+        if (QItemSelectionModel* select = selectionModel())
         {
             if (select->hasSelection())
             {
-                for (const auto &selectedRow : select->selectedRows())
+                for (const auto& selectedRow : select->selectedRows())
                 {
                     _model->restoreRow(selectedRow.row());
                 }
@@ -173,11 +175,11 @@ namespace Client
 
         std::optional<bool> allDeleted;
 
-        if (QItemSelectionModel *select = selectionModel())
+        if (QItemSelectionModel* select = selectionModel())
         {
             if (select->hasSelection())
             {
-                for (const auto &selectedRow : select->selectedRows())
+                for (const auto& selectedRow : select->selectedRows())
                 {
                     bool canDelete = _model->canDeleteRow(selectedRow.row());
                     if (allDeleted.has_value() && (*allDeleted & canDelete))
@@ -196,18 +198,18 @@ namespace Client
         return _model->checkChanges();
     }
 
-    void TableView::valueSearchChanged(const QString &iValue)
+    void TableView::valueSearchChanged(const QString& iValue)
     {
         if (!_model)
             return;
 
-        std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
+        std::ranges::for_each(_hiddenIndices, [this](const int index)
         {
             setRowHidden(index, false);
         });
 
         _hiddenIndices = _model->search(iValue);
-        std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
+        std::ranges::for_each(_hiddenIndices, [this](const int index)
         {
             setRowHidden(index, true);
         });
@@ -215,7 +217,7 @@ namespace Client
 
     void TableView::clearSearchChanged()
     {
-        std::for_each(_hiddenIndices.begin(), _hiddenIndices.end(), [this](const int index)
+        std::ranges::for_each(_hiddenIndices, [this](const int index)
         {
             setRowHidden(index, false);
         });

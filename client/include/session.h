@@ -9,7 +9,7 @@ class Session
     Q_DISABLE_COPY(Session);
 
 public:
-    static Session &getSession();
+    static Session& getSession();
     class Cache& Cache();
     class Cookie& Cookie();
     class Settings& Settings();

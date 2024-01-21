@@ -11,8 +11,8 @@ class Settings final : public QSettings
     friend class Session;
 
 private:
-    static Settings &Instance() noexcept;
-    Settings(const QString &fileName, Format format, QObject *parent = nullptr);
+    static Settings& Instance() noexcept;
+    Settings(const QString& fileName, const Format& format, QObject* parent = nullptr);
     ~Settings();
 };
 

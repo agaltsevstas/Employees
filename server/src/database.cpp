@@ -12,6 +12,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
+#include <ranges>
+
 #define DATABASE_POSTGRES "QPSQL"         // Тип базы данных
 #define DATABASE_HOSTNAME "127.0.0.1"     // Хост
 #define DATABASE_PORT      5432           // Порт
@@ -51,7 +53,7 @@ namespace Server
         }
     }
 
-    bool DataBase::checkFieldOnDuplicate(const QByteArray &iColumn, const QVariant &iValue) const
+    bool DataBase::checkFieldOnDuplicate(const QByteArray& iColumn, const QVariant& iValue) const
     {
         if (iColumn == Employee::passport() ||
             iColumn == Employee::phone() ||
@@ -73,7 +75,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData) const
+    bool DataBase::authentication(const QByteArray& iUserName, const QByteArray& iPassword, QString& oID, QString& oRole, QByteArray& oData) const
     {
         QString userName = iUserName;
         QString password = QString(QCryptographicHash::hash(iPassword, QCryptographicHash::Md5).toHex());
@@ -111,8 +113,7 @@ namespace Server
         QJsonObject record;
         if (query.next())
         {
-            auto size = query.record().count();
-            for (decltype(size) i = 0; i < size; ++i)
+            for (const auto i : std::views::iota(0, query.record().count()))
             {
                 if (query.record().fieldName(i) == "code")
                 {
@@ -134,7 +135,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::authentication(const QString &iID, QByteArray& oData) const
+    bool DataBase::authentication(const QString& iID, QByteArray& oData) const
     {
         QSqlQuery query(*_db);
         query.prepare("SELECT "
@@ -165,8 +166,7 @@ namespace Server
         QJsonObject record;
         if (query.next())
         {
-            auto size = query.record().count();
-            for (decltype(size) i = 0; i < size; ++i)
+            for (const auto i : std::views::iota(0, query.record().count()))
             {
                 if (query.record().fieldName(i) == "code")
                 {
@@ -186,7 +186,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData) const
+    bool DataBase::getPeronalData(const qint64& iID, const QByteArray& iRole, const QByteArray& iUserName, QByteArray& oData) const
     {
         QString userName = QString::fromUtf8(iUserName);
         QString role = QString::fromUtf8(iRole);
@@ -224,8 +224,7 @@ namespace Server
         QJsonObject record;
         if (query.next())
         {
-            auto size = query.record().count();
-            for (decltype(size) i = 0; i < size; ++i)
+            for (const auto i : std::views::iota(0, query.record().count()))
                 record.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
         }
 
@@ -233,7 +232,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::sendRequest(const QByteArray &iRequest) const
+    bool DataBase::sendRequest(const QByteArray& iRequest) const
     {
         const QString request = QString::fromUtf8(iRequest);
         QSqlQuery query(*_db);
@@ -246,7 +245,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable) const
+    bool DataBase::sendRequest(const QByteArray& iRequest, QByteArray& oData, const QByteArray& iTable) const
     {
         const QString request = QString::fromUtf8(iRequest);
         QSqlQuery query(*_db);
@@ -263,10 +262,8 @@ namespace Server
             while (query.next())
             {
                 QJsonObject recordObject;
-                for (decltype(query.record().count()) i = 0, I = query.record().count(); i < I; ++i)
-                {
+                for (const auto i : std::views::iota(0, query.record().count()))
                     recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
-                }
 
                 recordsArray.push_back(std::move(recordObject));
             }
@@ -288,7 +285,7 @@ namespace Server
             QJsonObject recordObject;
             while (query.next())
             {
-                for (decltype(query.record().count()) i = 0, I = query.record().count(); i < I; ++i)
+                for (const auto i : std::views::iota(0, query.record().count()))
                 {
                     recordObject.insert(query.record().fieldName(i), QJsonValue::fromVariant(query.value(i)));
                 }
@@ -396,7 +393,7 @@ namespace Server
         return this->open();
     }
 
-    bool DataBase::insertRecord(const QHash<QString, QVariant> &iData) const
+    bool DataBase::insertRecord(const QHash<QString, QVariant>& iData) const
     {
         if (iData.size() != 14)
         {
@@ -459,7 +456,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::deleteRecord(const qint64 &iID) const
+    bool DataBase::deleteRecord(const qint64& iID) const
     {
         QSqlQuery query(*_db);
 
@@ -474,7 +471,7 @@ namespace Server
         return true;
     }
 
-    bool DataBase::updateRecord(const qint64 &iID, const QByteArray &iColumn, const QVariant &iValue) const
+    bool DataBase::updateRecord(const qint64& iID, const QByteArray& iColumn, const QVariant &iValue) const
     {
         QSqlQuery query(*_db);
         if (iColumn == Employee::role())

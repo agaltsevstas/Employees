@@ -28,7 +28,7 @@ namespace Client
         using HandleResponse = std::function<void(const bool, const QString&)>;
 
     public:
-        explicit Table(Requester* iRequester, QWidget *parent = nullptr);
+        explicit Table(Requester* iRequester, QWidget* parent = nullptr);
         ~Table();
 
     Q_SIGNALS:
@@ -38,13 +38,13 @@ namespace Client
         void openDialog();
 
     private Q_SLOTS:
-        void selectionChanged(const QItemSelection &, const QItemSelection &);
-        void showDB(bool iResult, const QString &error);
+        void selectionChanged(const QItemSelection&, const QItemSelection&);
+        void showDB(bool iResult, const QString& error);
         void showDatabase();
-        void updatePersonalData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
-        void createData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
-        void deleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
-        void updateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void updatePersonalData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
+        void createData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
+        void deleteData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
+        void updateData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
         void onRevertClicked();
         void onAutoUpdateClicked(bool isChecked);
         void onUpdateClicked();
@@ -58,17 +58,17 @@ namespace Client
     private:
         void loadSettings();
         void saveSettings();
-        void setPersonalData(const QJsonDocument &iJson);
+        void setPersonalData(const QJsonDocument& iJson);
         void setEnabledDatabaseButtons(bool isEnable);
         bool checkChanges() const noexcept;
 
     private:
-        Ui::Table *_ui = nullptr;
+        Ui::Table* _ui = nullptr;
         QStackedWidget* _stackedWidget = nullptr;
-        TablePrivate *_personalData = nullptr;
-        TablePrivate *_userData = nullptr;
-        TableView *_tableView = nullptr;
-        Requester *_requester = nullptr;
+        TablePrivate* _personalData = nullptr;
+        TablePrivate* _userData = nullptr;
+        TableView* _tableView = nullptr;
+        Requester* _requester = nullptr;
 
         friend class TablePrivate;
     };

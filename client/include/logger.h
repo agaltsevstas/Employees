@@ -39,13 +39,19 @@ public:
      * @param iContext - контекст
      * @param iMessage - записываемое сообщение
      */
-    static void messageHandler(QtMsgType iMessageType, const QMessageLogContext &iContext, const QString &iMessage);
+    static void messageHandler(QtMsgType iMessageType, const QMessageLogContext& iContext, const QString& iMessage);
 
     /*!
-     * @TODO: Установление уровня подробности лога
+     * Установление уровня подробности лога
      * @param iLevel - Уровень лога
      */
     static void SetDebugLevel(DebugLevel iLevel) noexcept;
+
+    /*!
+     * Получение уровня подробности лога
+     * @return Уровень лога
+     */
+    static DebugLevel GetDebugLevel() noexcept;
 
 private:
     static void Instance();
@@ -54,34 +60,34 @@ private:
     ~Logger();
 
 private:
-    static DebugLevel _debugLevel;     // Уровень подробности лога
+    inline static DebugLevel _debugLevel = Logger::DebugLevel::DEBUG_LEVEL_DISABLED; // Уровень подробности лога
     static QString _infoBuffer;        // Буфер для хранения информационных сообщений
     static QString _warningBuffer;     // Буфер для хранения предупреждений
     static QString _errorBuffer;       // Буфер для хранения ошибок
     static QString _allMessagesBuffer; // Буфер для хранения всех видов сообщений
     static QScopedPointer<QFile> _file; // Выходной файловый поток
-    static std::unique_ptr<Logger> _logger; // Объект-одиночка
+    inline static std::unique_ptr<Logger> _logger = nullptr; // Объект-одиночка
 
     /*!
      * @brief Запись информационных сообщений.
      * Запись производится одновременно в файл и буфер в двух потоках
      * @param iMessage - Записываемое сообщение
      */
-    static void WriteInfo(const QString &iMessage);
+    static void WriteInfo(const QString& iMessage);
 
     /*!
      * @brief Запись предупреждений.
      * Запись производится одновременно в файл и буфер в двух потоках
      * @param iMessage - Записываемое сообщение
      */
-    static void WriteWarning(const QString &iMessage);
+    static void WriteWarning(const QString& iMessage);
 
     /*!
      * @brief Запись ошибок.
      * Запись производится одновременно в файл и буфер в двух потоках
      * @param iMessage - Записываемое сообщение
      */
-    static void WriteCritical(const QString &iMessage);
+    static void WriteCritical(const QString& iMessage);
 
     /*!
      * @brief Запись в буфер.
@@ -89,13 +95,13 @@ private:
      * @param iMessageType - Тип сообщения
      * @param iMessage - Записываемое сообщение
      */
-    static void WriteToBuffer(QtMsgType iMessageType, const QString &iMessage);
+    static void WriteToBuffer(QtMsgType iMessageType, const QString& iMessage);
 
     /*!
      * @brief Запись в файл
      * @param iMessage - Записываемое сообщение
      */
-    static void WriteToFile(const QString &iMessage);
+    static void WriteToFile(const QString& iMessage);
 
     /*!
      * @brief Вывод информационных сообщений на экран

@@ -44,7 +44,7 @@ namespace Utils
         {"я", "ja"},
     };
 
-    QString Translit(const QString &iTextCyrillic) noexcept
+    QString Translit(const QString& iTextCyrillic) noexcept
     {
         QString textLatin;
         for (const auto& letter : iTextCyrillic)
@@ -55,7 +55,7 @@ namespace Utils
         return textLatin;
     }
 
-    QString CreateEmail(const QVector<QString> &iAnthroponym) noexcept
+    QString CreateEmail(const QVector<QString>& iAnthroponym) noexcept
     {
         QString email;
         for (auto part: iAnthroponym) // Фамилия, имя, отчество
@@ -67,7 +67,7 @@ namespace Utils
         return email += "@tradingcompany.ru";
     }
 
-    QStringList SplitString(QString iSource, const QString &iDelim) noexcept
+    QStringList SplitString(QString iSource, const QString& iDelim) noexcept
     {
         return iSource.simplified().split(QRegularExpression("[" + iDelim + "]"));
     }
@@ -82,7 +82,7 @@ namespace Utils
         return QDateTime::currentDateTime().toString("yyyy.mm.dd");
     }
 
-    QVector<int> FindAge(const QVector<QString> &iData, const QVector<QString> &iDateOfBirth)
+    QVector<int> FindAge(const QVector<QString>& iData, const QVector<QString>& iDateOfBirth)
     {
         uint currentYear = iData.at(0).toUInt();
         uint currentMonth = iData.at(1).toUInt();
@@ -118,7 +118,7 @@ namespace Utils
         return iSource.left(iNumberUpper) + iSource.right(iNumberUpper + 1).toLower();
     }
 
-    void ToUpperandtolower(QString &iSource, uint iNumberUpper) noexcept
+    void ToUpperandtolower(QString& iSource, uint iNumberUpper) noexcept
     {
         const auto size = iSource.size();
         if (!size)
@@ -127,7 +127,7 @@ namespace Utils
         iSource = iSource.left(iNumberUpper).toUpper() + iSource.right(size - iNumberUpper).toLower();
     }
 
-    void FormatDateToPostgres(QString &iData)
+    void FormatDateToPostgres(QString& iData)
     {
         if (iData.isEmpty() || iData.size() == 4)
             return;

@@ -22,6 +22,8 @@
 #include <QTimer>
 #include <Validator>
 
+#include <ranges>
+
 
 namespace Client
 {
@@ -47,7 +49,7 @@ namespace Client
 
     static QPalette palette;
 
-    static constexpr const QSizePolicy GetSizePolice() noexcept
+    static consteval const QSizePolicy GetSizePolice() noexcept
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
@@ -76,7 +78,11 @@ namespace Client
         return palette;
     }
 
-    TablePrivate::TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent) :
+    TablePrivate::TablePrivate(const QString& iName,
+                               const QJsonDocument& iData,
+                               const QJsonDocument& iPersonalPermissions,
+                               const QJsonDocument& iPermissions,
+                               QWidget* parent) :
         QWidget(parent),
         _isRoleChanged(false),
         _name(iName)
@@ -92,7 +98,7 @@ namespace Client
         setSizePolicy(sizePolicy);
         setMinimumHeight(700);
 
-        QSplitter *splitter = new QSplitter(this);
+        QSplitter* splitter = new QSplitter(this);
         splitter->setSizePolicy(sizePolicy);
         splitter->setOrientation(Qt::Vertical);
         splitter->setObjectName("splitter");
@@ -101,19 +107,19 @@ namespace Client
         sizePolicySplitter.setHorizontalStretch(20);
         splitter->setSizePolicy(sizePolicySplitter);
 
-        QGroupBox *data = new QGroupBox(splitter);
+        QGroupBox* data = new QGroupBox(splitter);
         data->setObjectName("personalData");
         data->setTitle("Личные данные");
         data->setSizePolicy(sizePolicy);
 
-        QWidget *verticalLayoutWidget = new QWidget(splitter);
+        QWidget* verticalLayoutWidget = new QWidget(splitter);
         verticalLayoutWidget->setObjectName("verticalLayoutWidget");
         verticalLayoutWidget->setSizePolicy(sizePolicy);
 
-        QGridLayout *dataLayout = new QGridLayout(data);
+        QGridLayout* dataLayout = new QGridLayout(data);
         dataLayout->setObjectName("dataLayout");
 
-        QGridLayout *buttonLayout = new QGridLayout(verticalLayoutWidget);
+        QGridLayout* buttonLayout = new QGridLayout(verticalLayoutWidget);
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -127,7 +133,7 @@ namespace Client
         const QJsonObject object_permissions = iPersonalPermissions.object(); // обязательно нужно определить
 
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (qsizetype i = 0, I = fieldNames.size(); i < I; ++i)
+        for (const auto i : std::views::iota(0, fieldNames.size()))
         {
             const auto& [field, name] = fieldNames[i];
             const QString toolTip = Client::Employee::helpFields()[field];
@@ -137,7 +143,7 @@ namespace Client
             auto it_permissions = object_permissions.find(field);
             if (it_data != object_data.end())
             {
-                QLabel *label = new QLabel(name, this);
+                QLabel* label = new QLabel(name, this);
                 label->setFont(fontLabel);
                 label->setSizePolicy(sizePolicy);
                 dataLayout->addWidget(label, i, 0, 1, 1);
@@ -148,7 +154,7 @@ namespace Client
                     field == Client::Employee::sex())
                 {
                     QComboBox *comboBox = new QComboBox(this);
-                    connect(comboBox, SIGNAL(currentTextChanged(const QString &)), this, SLOT(update(const QString &)));
+                    connect(comboBox, SIGNAL(currentTextChanged(const QString&)), this, SLOT(update(const QString&)));
                     comboBox->setObjectName(field);
                     comboBox->setToolTip(toolTip);
                     comboBox->setPlaceholderText(placeholderText);
@@ -172,8 +178,8 @@ namespace Client
                 }
                 else if (field == Client::Employee::salary())
                 {
-                    QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
-                    connect(spinBox, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                    QDoubleSpinBox* spinBox = new QDoubleSpinBox(this);
+                    connect(spinBox, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                     spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
                     spinBox->setObjectName(field);
                     spinBox->setToolTip(toolTip);
@@ -196,7 +202,7 @@ namespace Client
                 }
                 else
                 {
-                    QLineEdit *lineEdit = nullptr;
+                    QLineEdit* lineEdit = nullptr;
 
                     if (field == Client::Employee::id())
                     {
@@ -209,7 +215,7 @@ namespace Client
                              field == Client::Employee::patronymic())
                     {
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setValidator(new TextValidator(parent));
                         lineEdit->setClearButtonEnabled(true);
                     }
@@ -217,21 +223,21 @@ namespace Client
                              field == Client::Employee::dateOfHiring())
                     {
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setValidator(new UInt64Validator(0, 99999999, UInt64Validator::Mode::Date, this));
                         lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::passport())
                     {
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Passport, this));
                         lineEdit->setClearButtonEnabled(true);
                     }
                     else if (field == Client::Employee::phone())
                     {
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setValidator(new UInt64Validator(0, 9999999999, UInt64Validator::Mode::Phone, this));
                         lineEdit->setClearButtonEnabled(true);
                     }
@@ -239,7 +245,7 @@ namespace Client
                     {
                         placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setValidator(new TextValidator(parent));
                         lineEdit->setClearButtonEnabled(true);
                     }
@@ -247,7 +253,7 @@ namespace Client
                     {
                         placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setEchoMode(QLineEdit::Password);
                         lineEdit->setClearButtonEnabled(true);
                     }
@@ -255,13 +261,13 @@ namespace Client
                     {
                         lineEdit = new LineEdit(false, this);
                         connect(lineEdit, SIGNAL(startingFocus()), this, SLOT(createEmail()));
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setClearButtonEnabled(true);
                     }
                     else
                     {
                         lineEdit = new QLineEdit(this);
-                        connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(update(const QString &)));
+                        connect(lineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(update(const QString&)));
                         lineEdit->setValidator(new TextValidator(parent));
                         lineEdit->setClearButtonEnabled(true);
                     }
@@ -312,7 +318,7 @@ namespace Client
         {
             if (create_user->isBool() && create_user->toBool() == true)
             {
-                QPushButton *createUser = new QPushButton("Создать пользователя", verticalLayoutWidget);
+                QPushButton* createUser = new QPushButton("Создать пользователя", verticalLayoutWidget);
                 connect(createUser, SIGNAL(clicked()), parent, SLOT(onCreateUserClicked()));
                 createUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
                 createUser->setObjectName("createUser");
@@ -325,7 +331,7 @@ namespace Client
 
             if (delete_user->isBool() && delete_user->toBool() == true)
             {
-                QPushButton *deleteUser = new QPushButton("Удалить пользователя", verticalLayoutWidget);
+                QPushButton* deleteUser = new QPushButton("Удалить пользователя", verticalLayoutWidget);
                 connect(deleteUser, SIGNAL(clicked()), parent, SLOT(onDeleteUserClicked()));
                 deleteUser->setIcon(QPixmap(QString::fromUtf8("../images/delete.png")));
                 deleteUser->setObjectName("deleteUser");
@@ -335,7 +341,7 @@ namespace Client
                 deleteUser->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(deleteUser, 1, 2, 1, 1);
 
-                QPushButton *restoreUser = new QPushButton("Восстановить пользователя", verticalLayoutWidget);
+                QPushButton* restoreUser = new QPushButton("Восстановить пользователя", verticalLayoutWidget);
                 connect(restoreUser, SIGNAL(clicked()), parent, SLOT(onRestoreUserClicked()));
                 restoreUser->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
                 restoreUser->setObjectName("restoreUser");
@@ -349,7 +355,7 @@ namespace Client
 
             if (show_db->isBool() && show_db->toBool() == true)
             {
-                QPushButton *showDatabase = new QPushButton("Показать базу данных", verticalLayoutWidget);
+                QPushButton* showDatabase = new QPushButton("Показать базу данных", verticalLayoutWidget);
                 connect(showDatabase, SIGNAL(clicked()), parent, SLOT(showDatabase()));
                 showDatabase->setIcon(QPixmap(QString::fromUtf8("../images/show.png")));
                 showDatabase->setObjectName("showDatabase");
@@ -358,7 +364,7 @@ namespace Client
                 showDatabase->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(showDatabase, 1, 0, 1, 1);
 
-                QPushButton *search = new QPushButton("Поиск", verticalLayoutWidget);
+                QPushButton* search = new QPushButton("Поиск", verticalLayoutWidget);
                 connect(search, SIGNAL(clicked()), SLOT(onSearchClicked()));
                 search->setObjectName("search");
                 search->setToolTip("Поиск сотрудника в базе данных");
@@ -367,7 +373,7 @@ namespace Client
                 search->setStyleSheet(pushButtonStyle);
                 buttonLayout->addWidget(search, 2, 0, 1, 1);
 
-                QLineEdit *valueSearch = new QLineEdit(verticalLayoutWidget);
+                QLineEdit* valueSearch = new QLineEdit(verticalLayoutWidget);
                 valueSearch->setClearButtonEnabled(true);
                 QList<QAction*> actionList = valueSearch->findChildren<QAction*>();
                 if (!actionList.isEmpty())
@@ -396,14 +402,14 @@ namespace Client
             }
         }
 
-        QCheckBox *autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
+        QCheckBox* autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
         connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
         autoUpdate->setObjectName("autoUpdate");
         autoUpdate->setToolTip("Автоматически отправлять д1анные на сервер");
         autoUpdate->setSizePolicy(sizePolicy);
         buttonLayout->addWidget(autoUpdate, 0, 0, 1, 1);
 
-        QPushButton *update = new QPushButton("Обновить", verticalLayoutWidget);
+        QPushButton* update = new QPushButton("Обновить", verticalLayoutWidget);
         connect(update, SIGNAL(clicked()), parent, SLOT(onUpdateClicked()));
         update->setIcon(QPixmap(QString::fromUtf8("../images/reload.png")));
         update->setToolTip("Отправить данные на сервер");
@@ -412,7 +418,7 @@ namespace Client
         update->setStyleSheet(pushButtonStyle);
         buttonLayout->addWidget(update, 0, 1, 1, 1);
 
-        QPushButton *revert = new QPushButton(verticalLayoutWidget);
+        QPushButton* revert = new QPushButton(verticalLayoutWidget);
         connect(revert, SIGNAL(clicked()), parent, SLOT(onRevertClicked()));
         revert->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
         revert->setObjectName("revert");
@@ -422,7 +428,7 @@ namespace Client
         revert->setStyleSheet(pushButtonStyle);
         buttonLayout->addWidget(revert, 0, 2, 1, buttonLayout->columnCount() / 2);
 
-        QPushButton *exit = new QPushButton("Выход", verticalLayoutWidget);
+        QPushButton* exit = new QPushButton("Выход", verticalLayoutWidget);
         connect(exit, SIGNAL(clicked()), parent, SLOT(onExitClicked()));
         exit->setIcon(QPixmap(QString::fromUtf8("../images/exit.png")));
         exit->setObjectName("exit");
@@ -435,7 +441,7 @@ namespace Client
         splitter->addWidget(data);
         splitter->addWidget(verticalLayoutWidget);
 
-        QGridLayout *gridLayout = new QGridLayout(this);
+        QGridLayout* gridLayout = new QGridLayout(this);
         gridLayout->addWidget(splitter, 0, 0, 1, 1);
         setLayout(gridLayout);
 
@@ -443,7 +449,7 @@ namespace Client
         adjustSize();
     }
 
-    TablePrivate::TablePrivate(const QString &iName, QWidget *parent) :
+    TablePrivate::TablePrivate(const QString& iName, QWidget* parent) :
         QWidget(parent),
         _isRoleChanged(false),
         _name(iName)
@@ -451,27 +457,27 @@ namespace Client
         setObjectName(QString::fromUtf8("userData"));
         QSizePolicy sizePolicy = GetSizePolice();
 
-        QGridLayout *gridLayout = new QGridLayout(this);
+        QGridLayout* gridLayout = new QGridLayout(this);
 
-        QSplitter *splitter = new QSplitter(this);
+        QSplitter* splitter = new QSplitter(this);
         splitter->setOrientation(Qt::Vertical);
         splitter->setObjectName("splitter");
         QSizePolicy sizePolicySplitter = GetSizePolice();
         sizePolicySplitter.setVerticalStretch(20);
         splitter->setSizePolicy(sizePolicySplitter);
 
-        QGroupBox *data = new QGroupBox(splitter);
+        QGroupBox* data = new QGroupBox(splitter);
         data->setObjectName("newEmployeeData");
         data->setTitle("Данные нового сотрудника");
         data->setSizePolicy(sizePolicy);
 
-        QWidget *verticalLayoutWidget = new QWidget(splitter);
+        QWidget* verticalLayoutWidget = new QWidget(splitter);
         verticalLayoutWidget->setObjectName("verticalLayoutWidget");
 
-        QGridLayout *dataLayout = new QGridLayout(data);
+        QGridLayout* dataLayout = new QGridLayout(data);
         dataLayout->setObjectName("dataLayout");
 
-        QGridLayout *buttonLayout = new QGridLayout(verticalLayoutWidget);
+        QGridLayout* buttonLayout = new QGridLayout(verticalLayoutWidget);
         buttonLayout->setObjectName("buttonLayout");
         buttonLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -482,13 +488,13 @@ namespace Client
         sizePolicyLine.setHorizontalStretch(1);
 
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (qsizetype i = 1, I = fieldNames.size(); i < I; ++i)
+        for (const auto i : std::views::iota(1, fieldNames.size()))
         {
             const auto& [field, name] = fieldNames[i];
             const QString toolTip = Client::Employee::helpFields()[field];
             QString placeholderText = toolTip;
 
-            QLabel *label = new QLabel(this);
+            QLabel* label = new QLabel(this);
             label->setFont(fontLabel);
             label->setSizePolicy(GetSizePolice());
             label->setText(name);
@@ -497,7 +503,7 @@ namespace Client
             if (field == Client::Employee::role() ||
                 field == Client::Employee::sex())
             {
-                QComboBox *comboBox = new QComboBox(this);
+                QComboBox* comboBox = new QComboBox(this);
                 comboBox->setObjectName(field);
                 comboBox->setToolTip(toolTip);
                 comboBox->setPlaceholderText(placeholderText);
@@ -513,7 +519,7 @@ namespace Client
             }
             else if (field == Client::Employee::salary())
             {
-                QDoubleSpinBox *spinBox = new QDoubleSpinBox(this);
+                QDoubleSpinBox* spinBox = new QDoubleSpinBox(this);
                 spinBox->setBackgroundRole(QPalette::ColorRole::BrightText);
                 spinBox->setObjectName(field);
                 spinBox->setToolTip(toolTip);
@@ -529,7 +535,7 @@ namespace Client
             }
             else
             {
-                QLineEdit *lineEdit = nullptr;
+                QLineEdit* lineEdit = nullptr;
 
                 if (field == Client::Employee::name() ||
                     field == Client::Employee::surname() ||
@@ -590,7 +596,7 @@ namespace Client
             }
         }
 
-        QPushButton *cancel = new QPushButton("Отмена", verticalLayoutWidget);
+        QPushButton* cancel = new QPushButton("Отмена", verticalLayoutWidget);
         connect(cancel, SIGNAL(clicked()), parent, SLOT(onCancelClicked()));
         cancel->setIcon(QPixmap(QString::fromUtf8("../images/cancel.png")));
         cancel->setObjectName("cancel");
@@ -598,7 +604,7 @@ namespace Client
         cancel->setSizePolicy(sizePolicy);
         cancel->setStyleSheet(pushButtonStyle);
 
-        QPushButton *resetData = new QPushButton("Сбросить данные", verticalLayoutWidget);
+        QPushButton* resetData = new QPushButton("Сбросить данные", verticalLayoutWidget);
         connect(resetData, SIGNAL(clicked()), SLOT(onResetDataClicked()));
         resetData->setIcon(QPixmap(QString::fromUtf8("../images/delete.png")));
         resetData->setObjectName("resetData");
@@ -606,7 +612,7 @@ namespace Client
         resetData->setSizePolicy(sizePolicy);
         resetData->setStyleSheet(pushButtonStyle);
 
-        QPushButton *addUser = new QPushButton("Добавить в базу данных", verticalLayoutWidget);
+        QPushButton* addUser = new QPushButton("Добавить в базу данных", verticalLayoutWidget);
         connect(addUser, SIGNAL(clicked()), parent, SLOT(onAddUserClicked()));
         addUser->setIcon(QPixmap(QString::fromUtf8("../images/add.png")));
         addUser->setObjectName("addUser");
@@ -636,7 +642,7 @@ namespace Client
         }
     }
 
-    void TablePrivate::setEditStrategy(EditStrategy iStrategy)
+    constexpr void TablePrivate::setEditStrategy(EditStrategy iStrategy)
     {
         if (iStrategy != _strategy)
         {
@@ -648,13 +654,13 @@ namespace Client
         }
     }
 
-    void TablePrivate::sendUserData(const QString &iFieldName, const HandleField &handleField)
+    void TablePrivate::sendUserData(const QString& iFieldName, const HandleField& handleField)
     {
         if (!handleField)
             return;
 
         const auto fieldNames = Client::Employee::getFieldNames();
-        for (qsizetype i = 1, I = fieldNames.size(); i < I; ++i)
+        for (const auto i : std::views::iota(1, fieldNames.size()))
         {
             if (fieldNames[i].first == iFieldName)
             {
@@ -669,7 +675,7 @@ namespace Client
                 {
                     value = comboBox->currentText();
                 }
-                else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                else if (QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(widget))
                 {
                     value = spinBox->text();
                 }
@@ -688,7 +694,7 @@ namespace Client
         }
     }
 
-    void TablePrivate::update(const QString &iValue)
+    void TablePrivate::update(const QString& iValue)
     {
         const auto id = findChild<const QLineEdit*>(Client::Employee::id());
         if (!id || _dataCache.empty())
@@ -696,7 +702,7 @@ namespace Client
 
         auto widget = qobject_cast<QWidget*>(sender());
         const QString objectName = widget->objectName();
-        auto fieldName = std::find_if(_dataCache.constBegin(), _dataCache.constEnd(), [&objectName](const auto& data) { return data.first == objectName; });
+        auto fieldName = std::ranges::find_if(_dataCache, [&objectName](const auto& data) { return data.first == objectName; });
         if (fieldName == _dataCache.constEnd())
         {
             Q_ASSERT(false);
@@ -706,7 +712,7 @@ namespace Client
         const auto& [field, value] = *fieldName;
         if (iValue == value)
         {
-            for (decltype(_recordsCache->size()) i = 0, I = _recordsCache->size(); i < I; ++i)
+            for (const auto i : std::views::iota(0, _recordsCache->size()))
             {
                 if (_recordsCache->at(i).isObject())
                 {
@@ -757,7 +763,7 @@ namespace Client
         record.insert("value", iValue);
 
         bool found = false;
-        for (decltype(_recordsCache->size()) i = 0, I = _recordsCache->size(); i < I; ++i)
+        for (const auto i : std::views::iota(0, _recordsCache->size()))
         {
             if (_recordsCache->at(i).isObject())
             {
@@ -795,7 +801,7 @@ namespace Client
     {
         if (_recordsCache && !_recordsCache->empty())
         {
-            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson(), [&](const bool iResult, const QString &error)
+            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson(), [&](const bool iResult, const QString& error)
             {
                 if (iResult)
                 {
@@ -839,7 +845,7 @@ namespace Client
                 }
                 else
                 {
-                    for (qsizetype i =  0, I = _recordsCache->size(); i < I; ++i)
+                    for (const auto i : std::views::iota(0, _recordsCache->size()))
                     {
                         if (_recordsCache->at(i).isObject())
                         {
@@ -864,7 +870,7 @@ namespace Client
                                     {
                                         comboBox->setCurrentText(fieldName->second);
                                     }
-                                    else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                                    else if (QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(widget))
                                     {
                                         spinBox->setValue(fieldName->second.toDouble());
                                     }
@@ -892,7 +898,7 @@ namespace Client
 
     void TablePrivate::onResetDataClicked()
     {
-        for (qsizetype i = 0, I = _dataCache.size(); i < I; ++i)
+        for (const auto i : std::views::iota(0, _dataCache.size()))
         {
             if (auto widget = findChild<QWidget*>(_dataCache[i].first))
             {
@@ -904,7 +910,7 @@ namespace Client
                 {
                     comboBox->setCurrentIndex(-1);
                 }
-                else if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                else if (QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(widget))
                 {
                     spinBox->setValue(10000);
                 }

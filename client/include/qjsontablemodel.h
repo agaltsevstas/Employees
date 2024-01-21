@@ -18,10 +18,14 @@ class QJsonTableModel final : public QAbstractTableModel
     using HandleResponse = std::function<void(const bool, const QString&)>;
 
 public:
-    QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent = nullptr);
-    QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, QObject *parent = nullptr);
+    QJsonTableModel(const QString& iName, const QJsonDocument& iDatabase, const QJsonDocument& iPermissions, QObject* parent = nullptr);
+    QJsonTableModel(const QString& iName, const QJsonDocument& iDatabase, QObject* parent = nullptr);
 
-    enum EditStrategy {OnFieldChange, OnManualSubmit};
+    enum EditStrategy
+    {
+        OnFieldChange,
+        OnManualSubmit
+    };
 
     /*!
      * \brief Установить стратегию для отправки данных на сервер
@@ -33,7 +37,7 @@ public:
      * \brief Получить стратегию для отправки данныз на север
      * \return OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
      */
-    [[nodiscard]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
+    [[nodiscard("getEditStrategy")]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
 
     /*!
      * \brief Отправка изменений на сервер
@@ -47,7 +51,7 @@ public:
      * \param iValue - Значение
      * \return true - проверка прошла, иначе нет
      */
-    bool checkField(int row, int column, const QString &iValue) const;
+    bool checkField(int row, int column, const QString& iValue) const;
 
     /*!
      * \brief Проверить поле на дубликат/валидность
@@ -55,13 +59,13 @@ public:
      * \param iValue - Значение
      * \return true - проверка прошла, иначе нет
      */
-    bool checkField(const QModelIndex &index, const QString &iValue) const;
+    bool checkField(const QModelIndex& index, const QString& iValue) const;
 
     /*!
      * \brief Добавить новую строку
      * \param iEmployee - Пользователь
      */
-    void addRow(const QJsonObject &iEmployee);
+    void addRow(const QJsonObject& iEmployee);
 
     /*!
      * \brief Удаление строки по индексу
@@ -93,21 +97,21 @@ public:
      * \param iValue - Значение
      * \return Возврат всех индексов строк, где присутствует искомое значение
      */
-    [[nodiscard]] QList<int> search(const QString &iValue) const noexcept;
+    [[nodiscard("search")]] QList<int> search(const QString& iValue) const noexcept;
 
     /*!
      * \brief Кастомная модель для роли/пола
      * \param column - номер столбца (роль/пол)
      * \return Кастомная модель
      */
-    [[nodiscard]] QAbstractItemModel *relationModel(int column) const;
+    [[nodiscard("relationModel")]] QAbstractItemModel* relationModel(int column) const;
 
     /*!
      * \brief Число столбцов
      * \param parent - Индекс
      * \return Число столбцов
      */
-    int rowCount(const QModelIndex &parent = QModelIndex()) const noexcept override;
+    [[nodiscard("rowCount")]] int rowCount(const QModelIndex& parent = QModelIndex()) const noexcept override;
 
 Q_SIGNALS:
 
@@ -116,44 +120,44 @@ Q_SIGNALS:
      * \param iRequest - Запрос с данными
      * \param handleResponse - ответ на запрос
      */
-    void sendCreateRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+    void sendCreateRequest(const QByteArray& iRequest, const HandleResponse& handleResponse = Q_NULLPTR);
 
     /*!
      * \brief Отправка запроса на сервер на удаление данных
      * \param iRequest - Запрос с данными
      * \param handleResponse - Ответ на запрос
      */
-    void sendDeleteRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+    void sendDeleteRequest(const QByteArray& iRequest, const HandleResponse& handleResponse = Q_NULLPTR);
 
     /*!
      * \brief Отправка запроса на сервер на обновление данных
      * \param iRequest - Запрос с данными
      * \param handleResponse - Ответ на запрос
      */
-    void sendUpdateRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+    void sendUpdateRequest(const QByteArray& iRequest, const HandleResponse& handleResponse = Q_NULLPTR);
 
 private:
-    bool setDatabase(const QJsonDocument &iDatabase) noexcept;
-    bool setDatabase(const QJsonArray &iDatabase) noexcept;
-    bool setPermissions(const QJsonDocument &iPermissions);
-    bool setPermissions(const QJsonObject &iPermissions);
-    void setJsonObject(int row, const QJsonObject &iJsonObject);
-    [[nodiscard]] QJsonObject getJsonObject(int row) const;
+    bool setDatabase(const QJsonDocument& iDatabase) noexcept;
+    bool setDatabase(const QJsonArray& iDatabase) noexcept;
+    bool setPermissions(const QJsonDocument& iPermissions);
+    bool setPermissions(const QJsonObject& iPermissions);
+    void setJsonObject(int row, const QJsonObject& iJsonObject);
+    [[nodiscard("getJsonObject")]] QJsonObject getJsonObject(int row) const;
     bool isSortColumn(int column) const;
-    bool sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder) const;
+    bool sortColumn(const QJsonValue& first, const QJsonValue& second, int column, Qt::SortOrder order = Qt::SortOrder::AscendingOrder) const;
     void updateRecord(int row, const QString &iColumnName, const QString &iValue);
     bool createEmail(int row);
-    bool checkFieldOnDuplicate(int row, int column, QString &iValue) const;
+    bool checkFieldOnDuplicate(int row, int column, QString& iValue) const;
     bool checkRowOnDeleted(int row) const;
     bool checkRowOnCreated(int row) const;
-    bool checkFieldOnUpdated(const QModelIndex &index) const;
+    bool checkFieldOnUpdated(const QModelIndex& index) const;
 
 private:
-    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const noexcept override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
+    [[nodiscard("headerData")]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const noexcept override;
+    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+    [[nodiscard("data")]] QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    [[nodiscard("flags")]] Qt::ItemFlags flags(const QModelIndex& index) const override;
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 private:

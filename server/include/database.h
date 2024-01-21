@@ -31,7 +31,7 @@ namespace Server
          * \param iValue - Значение
          * \return true - проверка пройдена, иначе false
          */
-        bool checkFieldOnDuplicate(const QByteArray &iColumn, const QVariant &iValue) const;
+        bool checkFieldOnDuplicate(const QByteArray& iColumn, const QVariant& iValue) const;
 
         /*!
          * \brief Аутентификация
@@ -42,7 +42,7 @@ namespace Server
          * \param oData - Получение данных пользователя
          * \return true - успех, иначе false
          */
-        bool authentication(const QByteArray &iUserName, const QByteArray &iPassword, QString &oID, QString &oRole, QByteArray& oData) const;
+        bool authentication(const QByteArray& iUserName, const QByteArray& iPassword, QString& oID, QString& oRole, QByteArray& oData) const;
 
         /*!
          * \brief Аутентификация
@@ -50,7 +50,7 @@ namespace Server
          * \param oData - Получение данных пользователя
          * \return true - успех, иначе false
          */
-        bool authentication(const QString &iID, QByteArray& oData) const;
+        bool authentication(const QString& iID, QByteArray& oData) const;
 
         /*!
          * \brief Получение персональных данных
@@ -60,14 +60,14 @@ namespace Server
          * \param oData - Данные пользователя
          * \return true - успех, иначе false
          */
-        bool getPeronalData(const qint64 &iID, const QByteArray &iRole, const QByteArray &iUserName, QByteArray& oData) const;
+        bool getPeronalData(const qint64& iID, const QByteArray& iRole, const QByteArray& iUserName, QByteArray& oData) const;
 
         /*!
          * \brief Отправка запроса на сервер
          * \param iRequest - Запрос
          * \return true - успех, иначе false
          */
-        bool sendRequest(const QByteArray &iRequest) const;
+        bool sendRequest(const QByteArray& iRequest) const;
 
         /*!
          * \brief Отправка запроса на сервер
@@ -76,21 +76,21 @@ namespace Server
          * \param iTable - Имя таблицы
          * \return true - успех, иначе false
          */
-        bool sendRequest(const QByteArray &iRequest, QByteArray &oData, const QByteArray &iTable = {}) const;
+        bool sendRequest(const QByteArray& iRequest, QByteArray& oData, const QByteArray& iTable = {}) const;
 
         /*!
          * \brief Добавление записи в таблицу
          * \param iData - Новая запись
          * \return true - успех, иначе false
          */
-        bool insertRecord(const QHash<QString, QVariant> &iData) const;
+        bool insertRecord(const QHash<QString, QVariant>& iData) const;
 
         /*!
          * \brief Удаление записи из таблицы по id пользователя
          * \param iID пользователя
          * \return true - успех, иначе false
          */
-        bool deleteRecord(const qint64 &iID) const;
+        bool deleteRecord(const qint64& iID) const;
 
         /*!
          * \brief Обновление записи из таблицы по id пользователя
@@ -99,13 +99,13 @@ namespace Server
          * \param iValue - Значение
          * \return true - успех, иначе false
          */
-        bool updateRecord(const qint64 &iID, const QByteArray &iColumn, const QVariant &iValue) const;
+        bool updateRecord(const qint64& iID, const QByteArray& iColumn, const QVariant& iValue) const;
 
         /*!
          * \brief Создание таблицы в БД
          * \return Созданная таблица
          */
-        const QSqlTableModel* createTableModel();
+        [[nodiscard("createTableModel")]] const QSqlTableModel* createTableModel();
 
     private:
         bool open();

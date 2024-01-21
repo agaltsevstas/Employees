@@ -56,7 +56,7 @@ Cookie::~Cookie()
     file.close();
 }
 
-Cookie &Cookie::Instance() noexcept
+Cookie& Cookie::Instance() noexcept
 {
     static Cookie data;
     return data;
@@ -88,7 +88,7 @@ QString Cookie::getValidToken()
     return {};
 }
 
-void Cookie::addToken(const QString &iKey, const QString &iValue) noexcept
+void Cookie::addToken(const QString& iKey, const QString& iValue) noexcept
 {
     _data[iKey] = iValue;
 }

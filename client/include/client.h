@@ -40,7 +40,7 @@ namespace Client
 
     public:
 
-        [[nodiscard]] inline static const QList<QPair<QString, QString>> getFieldNames() noexcept
+        [[nodiscard("getFieldNames")]] inline static const QList<QPair<QString, QString>> getFieldNames() noexcept
         {
             return
             {
@@ -61,7 +61,7 @@ namespace Client
             };
         }
 
-        [[nodiscard]] inline static QMap<QString, QString> helpFields() noexcept
+        [[nodiscard("helpFields")]] inline static QMap<QString, QString> helpFields() noexcept
         {
             return
             {
@@ -88,7 +88,7 @@ namespace Client
             };
         };
 
-        [[nodiscard]] inline static const QStringList getRoles() noexcept
+        [[nodiscard("getRoles")]] inline static const QStringList getRoles() noexcept
         {
             return
             {
@@ -109,7 +109,7 @@ namespace Client
             };
         }
 
-        [[nodiscard]] inline static const QStringList getSex() noexcept
+        [[nodiscard("getSex")]] inline static const QStringList getSex() noexcept
         {
             return
             {
@@ -133,13 +133,13 @@ namespace Client
         static const QString salary() noexcept       { return "salary"; }
         static const QString password() noexcept     { return "password"; }
 
-        static bool checkField(const QString &iField, QString &iValue);
+        static bool checkField(const QString& iField, QString& iValue);
         static const QString employeeTable() noexcept { return "employee"; }
         static const QString permissionTable() noexcept { return "permission"; }
         static const QString personalDataPermissionTable() noexcept { return "personal_data_permission"; }
         static const QString databasePermissionTable() noexcept { return "database_permission"; }
 
-        [[nodiscard]] static const QList<QString> getTables() noexcept
+        [[nodiscard("getTables")]] inline static const QList<QString> getTables() noexcept
         {
             return
             {
@@ -171,7 +171,7 @@ namespace Client
          * @param iField - Номер поля
          * @return Структура данных
          */
-        static const Type _checkField(QString &iValue, const Field iField);
+        static const Type _checkField(QString& iValue, const Field iField);
     };
 }
 

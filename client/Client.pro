@@ -61,8 +61,8 @@ HEADERS += \
 #/opt/homebrew/lib
 
 SOURCES += \
-    src/cookie.cpp \
     src/cache.cpp \
+    src/cookie.cpp \
     src/delegate.cpp \
     src/lineedit.cpp \
     src/logger.cpp \

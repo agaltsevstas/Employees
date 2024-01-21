@@ -5,26 +5,25 @@
 #include <QApplication>
 #include <QTextCodec>
 
-Server::DataBase* db;
+QScopedPointer<Server::DataBase> db;
 
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
 
-    QTextCodec *utfCodec = QTextCodec::codecForName("UTF-8");
+    QTextCodec* utfCodec = QTextCodec::codecForName("UTF-8");
     QTextCodec::setCodecForLocale(utfCodec);
 
     Logger::Instance();
     qInstallMessageHandler(Logger::messageHandler);
 
-    db = new Server::DataBase();
+    db.reset(new Server::DataBase());
     db->connect();
 
     Server::HttpServer::Start(&app);
 
     int exec = app.exec();
 
-    delete db;
     return exec;
 }

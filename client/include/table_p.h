@@ -20,24 +20,28 @@ namespace Client
         using HandleResponse = std::function<void(const bool, const QString&)>;
 
     public:
-        TablePrivate(const QString &iName, const QJsonDocument &iData, const QJsonDocument &iPersonalPermissions, const QJsonDocument &iPermissions, QWidget *parent = nullptr);
+        TablePrivate(const QString& iName, const QJsonDocument& iData, const QJsonDocument& iPersonalPermissions, const QJsonDocument& iPermissions, QWidget* parent = nullptr);
 
-        explicit TablePrivate(const QString &iName, QWidget *parent = nullptr);
+        explicit TablePrivate(const QString& iName, QWidget* parent = nullptr);
         ~TablePrivate();
 
-        enum EditStrategy {OnFieldChange, OnManualSubmit};
+        enum EditStrategy
+        {
+            OnFieldChange,
+            OnManualSubmit
+        };
 
         /*!
          * \brief Установить стратегию для отправки данных на сервер
          * \param iStrategy - OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
          */
-        void setEditStrategy(EditStrategy iStrategy);
+        constexpr void setEditStrategy(EditStrategy iStrategy);
 
         /*!
          * \brief Получить стратегию для отправки данныз на север
          * \return OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
          */
-        [[nodiscard]] inline EditStrategy getEditStrategy() const noexcept { return _strategy; }
+        [[nodiscard("getEditStrategy")]] inline constexpr EditStrategy getEditStrategy() const noexcept { return _strategy; }
 
         /*!
          * \brief Отправка изменений на сервер
@@ -57,13 +61,13 @@ namespace Client
          * \param iRequest - Запрос с данными
          * \param handleResponse - Ответ на запрос
          */
-        void sendRequest(const QByteArray &iRequest, const HandleResponse &handleResponse = Q_NULLPTR);
+        void sendRequest(const QByteArray& iRequest, const HandleResponse& handleResponse = Q_NULLPTR);
 
         /*!
          * \brief Отправка слова для поиска
          * \param iValue - Значение слова
          */
-        void sendValueSearch(const QString &iValue);
+        void sendValueSearch(const QString& iValue);
 
         /*!
          * \brief Сообщение об очистке поискового слова
@@ -82,7 +86,7 @@ namespace Client
          * \param iFieldName - Имя поля
          * \param handleField - Ответ на запрос
          */
-        void sendUserData(const QString &iFieldName, const HandleField &handleField = Q_NULLPTR);
+        void sendUserData(const QString& iFieldName, const HandleField& handleField = Q_NULLPTR);
 
         /*!
          * \brief Откатить данные с сервера
@@ -98,7 +102,7 @@ namespace Client
         void createEmail();
 
     private Q_SLOTS:
-        void update(const QString &iValue);
+        void update(const QString& iValue);
 
     private:
         bool _isRoleChanged = false;

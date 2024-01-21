@@ -3,7 +3,7 @@
 #define DIRECTORY "../settings/"
 
 
-Settings::Settings(const QString &fileName, Format format, QObject *parent) :
+Settings::Settings(const QString& fileName, const Format& format, QObject* parent) :
     QSettings(fileName, format, parent)
 {
 
@@ -14,7 +14,7 @@ Settings::~Settings()
 
 }
 
-Settings &Settings::Instance() noexcept
+Settings& Settings::Instance() noexcept
 {
     static Settings data(DIRECTORY + QString("settings.ini"), QSettings::IniFormat); // Объект-одиночка
     return data;

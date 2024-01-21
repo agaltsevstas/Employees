@@ -11,9 +11,9 @@ public:
     explicit Delegate(QObject* parent = nullptr) noexcept;
 
 private:
-    [[nodiscard]] QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    bool eventFilter(QObject *object, QEvent *event) override;
+    [[nodiscard("createEditor")]] QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+    bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 #endif // DELEGATE_H

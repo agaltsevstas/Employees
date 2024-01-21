@@ -23,13 +23,13 @@ namespace Server
         { Employee::password(),     Employee::Field::FIELD_PASSWORD}
     };
 
-    bool Employee::checkField(const QString &iField, QString &iValue)
+    bool Employee::checkField(const QString& iField, QString& iValue)
     {
         Field field = checkParameters.value(iField);
         return _checkField(iValue, field).status == Status::ST_OK;
     }
 
-    const Employee::Type Employee::_checkField(QString &iValue, const Field iField)
+    const Employee::Type Employee::_checkField(QString& iValue, const Field iField)
     {
         Type type;
 
@@ -411,11 +411,11 @@ namespace Server
                     throw iField;
             }
         }
-        catch (const QString &exception)
+        catch (const QString& exception)
         {
             qCritical() << "Невернное значение >> " << exception;
         }
-        catch(const Field field)
+        catch (const Field field)
         {
             qCritical() << "Неверный параметр поля >> " + QString::number(field);
         }

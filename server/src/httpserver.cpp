@@ -16,7 +16,7 @@
 #define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 
-extern Server::DataBase *db;
+extern QScopedPointer<Server::DataBase> db;
 
 namespace Server
 {
@@ -63,6 +63,7 @@ namespace Server
     {
     public:
         virtual QHttpServerResponse operator()() = 0;
+        virtual ~ICallback() = default;
     };
 
     template<class TClass, class TCallBack, typename TArgs>
@@ -89,14 +90,13 @@ namespace Server
         TArgs _args;
     };
 
-    template <class TClass, class TCallBack, class... TArgs>
     class Callback : public ICallback
     {
         using _CallBack = std::function<QHttpServerResponse()>;
     public:
-        Callback(TClass& iClass, const TCallBack& iCallback, TArgs&&... iArgs)
+        Callback(auto& iClass, const auto& iCallback, auto&&... iArgs)
         {
-            _callback = std::bind(iCallback, &iClass, std::forward<TArgs>(iArgs)...);
+            _callback = std::bind(iCallback, &iClass, std::forward<decltype(iArgs)>(iArgs)...);
         }
 
         QHttpServerResponse operator()() override
@@ -126,7 +126,7 @@ namespace Server
 
         void _start();
     private:
-        bool _authentication(const QHttpServerRequest &iRequest, QByteArray* oData = nullptr);
+        bool _authentication(const QHttpServerRequest& iRequest, QByteArray* oData = nullptr);
         QHttpServerResponse _login();
         QHttpServerResponse _logout();
         QHttpServerResponse _showPersonalData();
@@ -143,26 +143,50 @@ namespace Server
         QHttpServer _server;
     };
 
+    namespace detail
+    {
+        template <class T, typename... TArgs>
+        concept ConstructArgs = std::is_constructible_v<T, TArgs...>;
+
+        template <typename T>
+        concept ShowDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), T>;
+
+        template <typename T>
+        concept UpdatePersonalData = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+
+        template <typename T>
+        concept UpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+    }
+
     template <class TCallBack>
     class AuthorizationService
     {
         using StatusCode = QHttpServerResponse::StatusCode;
+
+    private:
+        template <class T, typename... TArgs>
+        requires std::is_constructible_v<T, TArgs...>
+        T* constructArgs(TArgs&&... args)
+        {
+            return new Callback(std::forward<TArgs>(args)...);
+        }
+
     public:
-        AuthorizationService(HttpServer::HttpServerImpl &iServer, const QHttpServerRequest &iRequest, const TCallBack& iCallback) :
+        AuthorizationService(HttpServer::HttpServerImpl& iServer, const QHttpServerRequest& iRequest, const TCallBack& iCallback) :
             _authenticationService(iServer._authenticationService),
             _request(iRequest)
         {
             if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), TCallBack>)
             {
-                 _callback.reset(new Callback(iServer, iCallback));
+                _callback.reset(constructArgs<Callback>(iServer, iCallback));
             }
-            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), TCallBack>)
+            else if constexpr (detail::UpdatePersonalData<TCallBack>)
             {
-                _callback.reset(new Callback(iServer, iCallback, std::ref(_trees)));
+                _callback.reset(constructArgs<Callback>(iServer, iCallback, std::ref(_trees)));
             }
-            else if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), TCallBack>)
+            else if constexpr (detail::UpdateDatabase<TCallBack>)
             {
-                _callback.reset(new Callback(iServer, iCallback, std::ref(_trees), _request.method()));
+                _callback.reset(constructArgs<Callback>(iServer, iCallback, std::ref(_trees), _request.method()));
             }
         }
 
@@ -171,7 +195,7 @@ namespace Server
     private:
         bool parseObject(const QJsonValue& iTable);
         bool parseData();
-        bool _checkAccess(const QByteArray &iTable);
+        bool _checkAccess(const QByteArray& iTable);
 
     private:
         QScopedPointer<ICallback> _callback;
@@ -405,7 +429,7 @@ namespace Server
                 Tree tree = iTrees.front();
                 iTrees.pop_front();
 
-                auto fieldName = std::find_if(fieldNames.constBegin(), fieldNames.constEnd(), [&tree](const auto& fieldName)
+                auto fieldName = std::ranges::find_if(fieldNames, [&tree](const auto& fieldName)
                 {
                     return fieldName.first == tree.column;
                 });
@@ -487,7 +511,7 @@ namespace Server
         }
 
         INFO(_authenticationService, "Сервер запущен");
-        _server.route("/login", [this](const QHttpServerRequest &request)
+        _server.route("/login", [this](const QHttpServerRequest& request)
         {
             QByteArray data;
             if (!_authentication(request, &data))
@@ -502,7 +526,7 @@ namespace Server
             return response;
         });
 
-        _server.route("/logout", [this](const QHttpServerRequest &request)
+        _server.route("/logout", [this](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -510,7 +534,7 @@ namespace Server
             return _logout();
         });
 
-        _server.route("/showPersonalData", [this](const QHttpServerRequest &request)
+        _server.route("/showPersonalData", [this](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -528,7 +552,7 @@ namespace Server
             return response;
         });
 
-        _server.route("/showDatabase", [&](const QHttpServerRequest &request)
+        _server.route("/showDatabase", [&](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -536,7 +560,7 @@ namespace Server
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
-        _server.route("/updatePersonalData", [&](const QHttpServerRequest &request)
+        _server.route("/updatePersonalData", [&](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -544,7 +568,7 @@ namespace Server
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkAccess(Employee::personalDataPermissionTable().toUtf8());
         });
 
-        _server.route("/updateDatabase", QHttpServerRequest::Method::Post, [&](const QHttpServerRequest &request)
+        _server.route("/updateDatabase", QHttpServerRequest::Method::Post, [&](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -552,7 +576,7 @@ namespace Server
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
-        _server.route("/updateDatabase", QHttpServerRequest::Method::Delete, [&](const QHttpServerRequest &request)
+        _server.route("/updateDatabase", QHttpServerRequest::Method::Delete, [&](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -560,7 +584,7 @@ namespace Server
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
-        _server.route("/updateDatabase", QHttpServerRequest::Method::Patch, [&](const QHttpServerRequest &request)
+        _server.route("/updateDatabase", QHttpServerRequest::Method::Patch, [&](const QHttpServerRequest& request)
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
@@ -568,7 +592,7 @@ namespace Server
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::databasePermissionTable().toUtf8());
         });
 
-        _server.afterRequest([this](QHttpServerResponse &&response)
+        _server.afterRequest([this](QHttpServerResponse&& response)
         {
             if (response.statusCode() != StatusCode::ResetContent)
             {

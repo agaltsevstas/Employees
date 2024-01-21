@@ -14,33 +14,32 @@ public:
      * \brief Проверка одного из токенов access или refresh на валидацию
      * \return true - хотя бы один из токенов валиден, false - все токены невалидны
      */
-
     bool isValid() const;
+
     /*!
      * \brief Получение хотя бы одного валидного токена в приоритете: 1 access token, 2 refresh token
      * \return Значение валидного токена, иначе empty
      */
-
-    QString getValidToken();
+    [[nodiscard("getValidToken")]] QString getValidToken();
 
     /*!
      * \brief Добавление refresh или access token
      * \param iKey - Название: refresh или acess token
      * \param iValue - Значение: refresh или acess token
      */
-    void addToken(const QString &iKey, const QString &iValue) noexcept;
+    void addToken(const QString& iKey, const QString& iValue) noexcept;
 
     /*!
      * \brief Получение username из токена
      * \return username
      */
-    QString getUserName() const;
+    [[nodiscard("getUserName")]] QString getUserName() const;
 
     /*!
      * \brief Получить данные Coockie
      * \return данные Coockie
      */
-    const QMap<QString, QString>& get() const noexcept { return _data; }
+    [[nodiscard("get")]] inline const QMap<QString, QString>& get() const noexcept { return _data; }
 
     /*!
      * \brief Очистить Coockie
@@ -54,7 +53,7 @@ public:
     bool isEmpty() const noexcept;
 
 private:
-    static Cookie &Instance() noexcept;
+    static Cookie& Instance() noexcept;
     Cookie();
     ~Cookie();
 

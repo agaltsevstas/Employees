@@ -20,7 +20,7 @@
 
 namespace Client
 {
-    Dialog::Dialog(QWidget *parent) :
+    Dialog::Dialog(QWidget* parent) :
         QDialog(parent),
         _dialog(new Ui::Dialog),
         _requester(new Requester(this))
@@ -107,7 +107,7 @@ namespace Client
         // Установка главного окна по центру экрана по умолчанию
         move(Session::getSession().Settings().value("centerDialog", qApp->primaryScreen()->availableGeometry().center()).toPoint());
 
-        connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString &iLogin)
+        connect(completer, QOverload<const QString&>::of(&QCompleter::activated), [this](const QString& iLogin)
         {
             _dialog->password->setText(Session::getSession().Cache().getPassword(iLogin));
         });
@@ -148,7 +148,7 @@ namespace Client
         QString token = login + ":" + password;
         _requester->setToken(std::move(token));
 
-        Requester::HandleResponse handleResponse = [this](bool iResult, const QString &error)
+        Requester::HandleResponse handleResponse = [this](bool iResult, const QString& error)
         {
             if (iResult)
             {
@@ -194,7 +194,7 @@ namespace Client
         close();
     }
 
-    void Dialog::mouseMoveEvent(QMouseEvent *event)
+    void Dialog::mouseMoveEvent(QMouseEvent* event)
     {
         if (event->buttons() | Qt::LeftButton )
         {
@@ -205,7 +205,7 @@ namespace Client
         }
     }
 
-    void Dialog::mousePressEvent(QMouseEvent *event)
+    void Dialog::mousePressEvent(QMouseEvent* event)
     {
         if (event->button() == Qt::LeftButton )
         {

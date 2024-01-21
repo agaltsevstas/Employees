@@ -5,6 +5,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <ranges>
+
 #define FILENAME  "cache.json"
 #define DIRECTORY "../settings/"
 
@@ -44,7 +46,7 @@ Cache::~Cache()
     file.close();
 }
 
-Cache &Cache::Instance() noexcept
+Cache& Cache::Instance() noexcept
 {
     static Cache data;
     return data;
@@ -55,17 +57,17 @@ QStringList Cache::getLogins() const
     return getList("Authorization", "Login");
 }
 
-QString Cache::getPassword(const QString &iLogin) const
+QString Cache::getPassword(const QString& iLogin) const
 {
     return getValue("Authorization", "Password", iLogin);
 }
 
-bool Cache::findUser(const QString &iLogin, const QString &iPassword) const
+bool Cache::findUser(const QString& iLogin, const QString& iPassword) const
 {
     return findValue("Authorization", "Login", iLogin) && !findValue("Authorization", "Password", iPassword);
 }
 
-void Cache::addUser(const QString &iLogin, const QString &iPassword)
+void Cache::addUser(const QString& iLogin, const QString& iPassword)
 {
     QList<QPair<QString, QString>> userData = {{"Login",    iLogin},
                                                {"Password", iPassword}};
@@ -77,20 +79,20 @@ QStringList Cache::getSearchWords() const
     return getList("Search");
 }
 
-void Cache::addSearchWord(const QString &iWord)
+void Cache::addSearchWord(const QString& iWord)
 {
     if (!findValue("Search", iWord))
         insert("Search", iWord);
 }
 
-void Cache::addSearchWords(const QStringList &iWords)
+void Cache::addSearchWords(const QStringList& iWords)
 {
-    for (const auto &word : iWords)
+    for (const auto& word : iWords)
         if (!findValue("Search", word))
             addSearchWord(word);
 }
 
-void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &iUserData)
+void Cache::insert(const QString& iTable, const QList<QPair<QString, QString>>& iUserData)
 {
     if (iUserData.size() != 2)
         return;
@@ -98,7 +100,7 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
     if (_cache->isArray())
     {
         QJsonArray newArray = _cache->array();
-        for (qsizetype i = 0, I = newArray.count(); i < I; ++i)
+        for (const auto i : std::views::iota(0, newArray.count()))
         {
             if (newArray[i].isObject() && newArray[i].toObject().contains(iTable))
             {
@@ -109,7 +111,7 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
                     {
                         bool isFound = false;
                         QJsonArray newValues = values.toArray();
-                        for (qsizetype j = 0, J = newValues.count(); j < J; ++j)
+                        for (const auto j : std::views::iota(0, newValues.count()))
                         {
                             if (newValues[j].isObject())
                             {
@@ -124,7 +126,7 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
                                          userData.front() == iUserData.front())
                                 {
                                     QJsonObject newValue;
-                                    for (const auto &[key, value] : iUserData)
+                                    for (const auto& [key, value] : iUserData)
                                         newValue.insert(key, value);
 
                                     newValues.replace(j, std::move(newValue));
@@ -139,7 +141,7 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
                         if (!isFound)
                         {
                             QJsonObject newValue;
-                            for (const auto &[key, value] : iUserData)
+                            for (const auto& [key, value] : iUserData)
                                 newValue.insert(key, value);
 
                             newValues.append(std::move(newValue));
@@ -154,7 +156,7 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
         }
 
         QJsonObject newValue;
-        for (const auto &[key, value] : iUserData)
+        for (const auto& [key, value] : iUserData)
             newValue.insert(key, value);
 
         QJsonArray newValues = { std::move(newValue) };
@@ -165,19 +167,19 @@ void Cache::insert(const QString &iTable, const QList<QPair<QString, QString>> &
     }
 }
 
-void Cache::insert(const QString &iTable, const QString &iValue)
+void Cache::insert(const QString& iTable, const QString& iValue)
 {
     if (_cache->isArray())
     {
         bool isFound = false;
         QJsonArray newArray = _cache->array();
-        for (qsizetype i = 0, I = newArray.count(); i < I; ++i)
+        for (const auto i : std::views::iota(0, newArray.count()))
         {
             if (newArray[i].isObject() && newArray[i].toObject().contains(iTable))
             {
                 isFound = true;
                 QJsonObject newObject = newArray[i].toObject();
-                for (const auto &values : newObject)
+                for (const auto& values : newObject)
                 {
                     if (values.isArray())
                     {
@@ -206,19 +208,19 @@ void Cache::insert(const QString &iTable, const QString &iValue)
     }
 }
 
-bool Cache::findValue(const QString &iTable, const QString iKey, const QString &iValue) const
+bool Cache::findValue(const QString& iTable, const QString& iKey, const QString& iValue) const
 {
     if (_cache->isArray())
     {
-        for (const auto &table: _cache->array())
+        for (const auto& table: _cache->array())
         {
             if (table.isObject() && table.toObject().contains(iTable))
             {
-                for (const auto &array : table.toObject())
+                for (const auto& array : table.toObject())
                 {
                     if (array.isArray())
                     {
-                        for (const auto &value: array.toArray())
+                        for (const auto& value: array.toArray())
                         {
                             if (value.isObject() && value.toObject().contains(iKey))
                             {
@@ -235,19 +237,19 @@ bool Cache::findValue(const QString &iTable, const QString iKey, const QString &
     return false;
 }
 
-bool Cache::findValue(const QString &iTable, const QString &iValue) const
+bool Cache::findValue(const QString& iTable, const QString& iValue) const
 {
     if (_cache->isArray())
     {
-        for (const auto &table: _cache->array())
+        for (const auto& table: _cache->array())
         {
             if (table.isObject() && table.toObject().contains(iTable))
             {
-                for (const auto &array : table.toObject())
+                for (const auto& array : table.toObject())
                 {
                     if (array.isArray())
                     {
-                        for (const auto &value: array.toArray())
+                        for (const auto& value: array.toArray())
                         {
                             if (value.isString() && value.toString() == iValue)
                                 return true;
@@ -261,11 +263,11 @@ bool Cache::findValue(const QString &iTable, const QString &iValue) const
     return false;
 }
 
-QString Cache::getValue(const QString &iTable, const QString iFindKey, const QString &iFindValue) const
+QString Cache::getValue(const QString& iTable, const QString& iFindKey, const QString& iFindValue) const
 {
     if (_cache->isArray())
     {
-        for (const auto &table: _cache->array())
+        for (const auto& table: _cache->array())
         {
             if (table.isObject() && table.toObject().contains(iTable))
             {
@@ -273,11 +275,11 @@ QString Cache::getValue(const QString &iTable, const QString iFindKey, const QSt
                 {
                     if (array.isArray())
                     {
-                        for (const auto &value: array.toArray())
+                        for (const auto& value: array.toArray())
                         {
                             if (value.isObject())
                             {
-                                for (const auto &val : value.toObject())
+                                for (const auto& val : value.toObject())
                                 {
                                     if (val.isString() && val.toString() == iFindValue)
                                         return value.toObject().value(iFindKey).toString();
@@ -293,20 +295,20 @@ QString Cache::getValue(const QString &iTable, const QString iFindKey, const QSt
     return {};
 }
 
-QStringList Cache::getList(const QString &iTable, const QString &iKey) const
+QStringList Cache::getList(const QString& iTable, const QString& iKey) const
 {
     QStringList list;
     if (_cache->isArray())
     {
-        for (const auto &object: _cache->array())
+        for (const auto& object: _cache->array())
         {
             if (object.isObject() && object.toObject().contains(iTable))
             {
-                for (const auto &array : object.toObject())
+                for (const auto& array : object.toObject())
                 {
                     if (array.isArray())
                     {
-                        for (const auto &value: array.toArray())
+                        for (const auto& value: array.toArray())
                         {
                             if (value.isObject() && value.toObject().contains(iKey))
                                 list.emplace_back(value.toObject().value(iKey).toString());
@@ -320,20 +322,20 @@ QStringList Cache::getList(const QString &iTable, const QString &iKey) const
     return list;
 }
 
-QStringList Cache::getList(const QString &iTable) const
+QStringList Cache::getList(const QString& iTable) const
 {
     QStringList list;
     if (_cache->isArray())
     {
-        for (const auto &object: _cache->array())
+        for (const auto& object: _cache->array())
         {
             if (object.isObject() && object.toObject().contains(iTable))
             {
-                for (const auto &array : object.toObject())
+                for (const auto& array : object.toObject())
                 {
                     if (array.isArray())
                     {
-                        for (const auto &value: array.toArray())
+                        for (const auto& value: array.toArray())
                         {
                             if (value.isString())
                                 list.emplace_back(value.toString());

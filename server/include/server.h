@@ -40,7 +40,7 @@ namespace Server
 
     public:
 
-        [[nodiscard]] inline static const QList<QPair<QString, QString>> getFieldNames() noexcept
+        [[nodiscard("getFieldNames")]] inline static const QList<QPair<QString, QString>> getFieldNames() noexcept
         {
             return
             {
@@ -61,7 +61,7 @@ namespace Server
             };
         }
 
-        [[nodiscard]] inline static const QMap<QString, QString> helpFields() noexcept
+        [[nodiscard("helpFields")]] inline static const QMap<QString, QString> helpFields() noexcept
         {
             return
             {
@@ -103,7 +103,7 @@ namespace Server
         static const QString salary() noexcept       { return "salary"; }
         static const QString password() noexcept     { return "password"; }
 
-        static bool checkField(const QString &iField, QString &iValue);
+        static bool checkField(const QString& iField, QString& iValue);
         static const QString employeeTable() noexcept { return "employee"; }
         static const QString roleTable() noexcept { return "role"; }
         static const QString permissionTable() noexcept { return "permission"; }
@@ -132,7 +132,7 @@ namespace Server
          * @param iField - Номер поля
          * @return Структура данных
          */
-        static const Type _checkField(QString &iValue, const Field iField);
+        static const Type _checkField(QString& iValue, const Field iField);
     };
 }
 

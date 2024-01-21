@@ -26,10 +26,10 @@ namespace Server
      * @param httpOnly - Если установлено значение true, браузер не разрешает клиентским сценариям доступ к файлу cookie.
      * @param sameSite - Может ли файл cookie быть прочитан только одним и тем же сайтом, что является более сильным ограничением, чем домен. Допустимые значения: «Нестрогий» и «Строгий».
      */
-        HttpCookie(const QByteArray iName, const QByteArray iValue, const int iMaxAge,
-                   const QByteArray iPath = "/", const QByteArray iComment = QByteArray(),
-                   const QByteArray iDomain = QByteArray(), const bool iSecure = false,
-                   const bool iHttpOnly = false, const QByteArray iSameSite = QByteArray())
+        HttpCookie(const QByteArray& iName, const QByteArray& iValue, const int iMaxAge,
+                   const QByteArray& iPath = "/", const QByteArray& iComment = QByteArray(),
+                   const QByteArray& iDomain = QByteArray(), const bool iSecure = false,
+                   const bool iHttpOnly = false, const QByteArray& iSameSite = QByteArray())
         {
             _name = iName;
             _value = iValue;
@@ -43,7 +43,7 @@ namespace Server
             _version = 1;
         }
 
-        QByteArray toByteArray(const AuthenticationService &parent) const
+        QByteArray toByteArray(const AuthenticationService& parent) const
         {
             INFO(parent, "Создание access token");
             QByteArray buffer(_name);
@@ -118,7 +118,7 @@ namespace Server
         return _id;
     }
 
-    void AuthenticationService::setUserName(const QString &iUserName) noexcept
+    void AuthenticationService::setUserName(const QString& iUserName) noexcept
     {
         _userName = iUserName;
     }
@@ -128,7 +128,7 @@ namespace Server
         return _userName.toUtf8();
     }
 
-    void AuthenticationService::setRole(const QString &iRole) noexcept
+    void AuthenticationService::setRole(const QString& iRole) noexcept
     {
         _role = iRole;
     }
@@ -182,7 +182,7 @@ namespace Server
                           "Lax").toByteArray(*this);
     }
 
-    bool AuthenticationService::checkAuthentication(QByteArray &ioToken)
+    bool AuthenticationService::checkAuthentication(QByteArray& ioToken)
     {
         if (QJsonWebToken accessToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_ACCESS_SECRET); accessToken.isValid())
         {

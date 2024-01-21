@@ -11,7 +11,7 @@
 #include <Validator>
 
 
-static QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+constinit QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
 static constexpr QSizePolicy GetSizePolice() noexcept
 {
@@ -25,9 +25,9 @@ Delegate::Delegate(QObject* parent) noexcept : QStyledItemDelegate(parent)
 
 }
 
-QWidget *Delegate::createEditor(QWidget *parent,
-                                const QStyleOptionViewItem &option,
-                                const QModelIndex &index) const
+QWidget *Delegate::createEditor(QWidget* parent,
+                                const QStyleOptionViewItem& option,
+                                const QModelIndex& index) const
 {
     if (const auto& model = qobject_cast<const QJsonTableModel*>(index.model()))
     {
@@ -42,7 +42,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 3:
             case 4:
             {
-                QLineEdit *lineEdit = new QLineEdit(parent);
+                QLineEdit* lineEdit = new QLineEdit(parent);
                 lineEdit->setToolTip(toolTip);
                 lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
@@ -52,9 +52,9 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 1:
             case 5:
             {
-                if (auto *childModel = model->relationModel(index.column()))
+                if (auto childModel = model->relationModel(index.column()))
                 {
-                    QComboBox *comboBox = new QComboBox(parent);
+                    QComboBox* comboBox = new QComboBox(parent);
                     comboBox->setModel(childModel);
                     comboBox->setToolTip(toolTip);
                     comboBox->setDuplicatesEnabled(false);
@@ -70,7 +70,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 6:
             case 10:
             {
-                QLineEdit *lineEdit = new QLineEdit(parent);
+                QLineEdit* lineEdit = new QLineEdit(parent);
                 lineEdit->setToolTip(toolTip);
                 lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
@@ -79,7 +79,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             }
             case 7:
             {
-                QLineEdit *lineEdit = new QLineEdit(parent);
+                QLineEdit* lineEdit = new QLineEdit(parent);
                 lineEdit->setToolTip(toolTip);
                 lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
@@ -88,7 +88,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             }
             case 8:
             {
-                QLineEdit *lineEdit = new QLineEdit(parent);
+                QLineEdit* lineEdit = new QLineEdit(parent);
                 lineEdit->setToolTip(toolTip);
                 lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
@@ -97,7 +97,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             }
             case 9:
             {
-                LineEdit *lineEdit = new LineEdit(true, parent);
+                LineEdit* lineEdit = new LineEdit(true, parent);
                 connect(lineEdit, &LineEdit::startingFocus, [&model, &index]()
                 {
                     const_cast<QJsonTableModel*>(model)->createEmail(index.row());
@@ -110,7 +110,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             }
             case 12:
             {
-                QDoubleSpinBox *spinBox = new QDoubleSpinBox(parent);
+                QDoubleSpinBox* spinBox = new QDoubleSpinBox(parent);
                 spinBox->setToolTip(toolTip);
                 spinBox->setValue(model->data(index, Qt::DisplayRole).toInt());
                 spinBox->setFrame(false);
@@ -120,7 +120,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
             case 13:
             {
                 placeholderText = placeholderText.left(placeholderText.indexOf("\n"));
-                QLineEdit *lineEdit = new QLineEdit(parent);
+                QLineEdit* lineEdit = new QLineEdit(parent);
                 lineEdit->setToolTip(toolTip);
                 lineEdit->setPlaceholderText(placeholderText);
                 lineEdit->setText(model->data(index, Qt::DisplayRole).toString());
@@ -135,7 +135,7 @@ QWidget *Delegate::createEditor(QWidget *parent,
     return QStyledItemDelegate::createEditor(parent, option, index);
 }
 
-void Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void Delegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     if (option.state & QStyle::State_MouseOver)
     {
@@ -152,11 +152,11 @@ void Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, cons
 }
 
 /* Фильтр помогает открывать QComboBox по двойному клику вместо тройного */
-bool Delegate::eventFilter(QObject *object, QEvent *event)
+bool Delegate::eventFilter(QObject* object, QEvent* event)
 {
     if (qobject_cast<const QComboBox*>(object) && event && event->type() == QEvent::FocusIn)
     {
-        QMouseEvent *currentEvent = static_cast<QMouseEvent*>(event);
+        QMouseEvent* currentEvent = static_cast<QMouseEvent*>(event);
         QMouseEvent nextEvent(QEvent::MouseButtonPress, currentEvent->pos(), Qt::LeftButton , Qt::LeftButton, Qt::NoModifier);
         QApplication::sendEvent(object, &nextEvent);
     }

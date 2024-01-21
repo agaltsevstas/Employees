@@ -16,9 +16,13 @@ namespace Client
         using HandleField = std::function<bool(const QString&)>;
 
     public:
-        explicit TableView(QWidget *parent = nullptr);
+        explicit TableView(QWidget* parent = nullptr);
 
-        enum EditStrategy {OnFieldChange, OnManualSubmit};
+        enum EditStrategy
+        {
+            OnFieldChange,
+            OnManualSubmit
+        };
 
         /*!
          * \brief Установить стратегию для отправки данных на сервер
@@ -30,7 +34,7 @@ namespace Client
          * \brief Получить стратегию для отправки данныз на север
          * \return OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
          */
-        EditStrategy getEditStrategy() const noexcept;
+        [[nodiscard("getEditStrategy")]] EditStrategy getEditStrategy() const noexcept;
 
         /*!
          * \brief Установить БД
@@ -38,20 +42,20 @@ namespace Client
          * \param iDatabase - БД
          * \param iPermissions - Права
          */
-        void setModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions);
+        void setModel(const QString& iName, const QJsonDocument& iDatabase, const QJsonDocument& iPermissions);
 
         /*!
          * \brief Установить модель данных
          * \param iName - Имя модели
          * \param iDatabase - БД
          */
-        void setModel(const QString& iName, const QJsonDocument &iDatabase);
+        void setModel(const QString& iName, const QJsonDocument& iDatabase);
 
         /*!
          * \brief Получить БД
          * \return БД
          */
-        [[nodiscard]] const QAbstractItemModel *getModel() const noexcept;
+        [[nodiscard("getModel")]] const QAbstractItemModel* getModel() const noexcept;
 
         /*!
          * \brief Отправка изменений на сервер
@@ -79,7 +83,7 @@ namespace Client
          * \brief Проверка на удаление пользователя
          * \return true - можно удалить, иначе false
          */
-        [[nodiscard]] std::optional<bool> canDeleteUser();
+        [[nodiscard("canDeleteUser")]] std::optional<bool> canDeleteUser();
 
         /*!
          * \brief Проверка на какие-либо изменения
@@ -94,34 +98,34 @@ namespace Client
          * \param iRequest - Запрос с данными
          * \param handleResponse - ответ на запрос
          */
-        void sendCreateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void sendCreateData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
 
         /*!
          * \brief Отправка запроса на сервер на удаление данных
          * \param iRequest - Запрос с данными
          * \param handleResponse - Ответ на запрос
          */
-        void sendDeleteData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void sendDeleteData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
 
         /*!
          * \brief Отправка запроса на сервер на обновление данных
          * \param iRequest - Запрос с данными
          * \param handleResponse - Ответ на запрос
          */
-        void sendUpdateData(const QByteArray &iData, const HandleResponse &handleResponse = Q_NULLPTR);
+        void sendUpdateData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
 
         /*!
          * \brief Получение пользовательских данных
          * \param iFieldName - Имя поля
          * \param handleField - Ответ на запрос
          */
-        void getUserData(const QString &iFieldName, const HandleField&);
+        void getUserData(const QString& iFieldName, const HandleField& handleField);
 
     private:
-        void setModel(QAbstractItemModel *model) override;
+        void setModel(QAbstractItemModel* model) override;
 
     public Q_SLOTS:
-        void valueSearchChanged(const QString &iValue);
+        void valueSearchChanged(const QString& iValue);
         void clearSearchChanged();
 
     private:

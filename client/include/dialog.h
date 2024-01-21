@@ -44,10 +44,10 @@ namespace Client
 
     private:
         int _dx, _dy; // Значения для mouse
-        Ui::Dialog *_dialog = nullptr;
-        Table *_table = nullptr;
-        QStatusBar *_status = nullptr;
-        Requester *_requester = nullptr;
+        Ui::Dialog* _dialog = nullptr;
+        Table* _table = nullptr;
+        QStatusBar* _status = nullptr;
+        Requester* _requester = nullptr;
     };
 }
 #endif // DIALOG_H

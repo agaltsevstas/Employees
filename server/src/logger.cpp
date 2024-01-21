@@ -6,13 +6,11 @@
 
 #define DIRECTORY "../log/"
 
-Logger::DebugLevel Logger::_debugLevel = Logger::DebugLevel::DEBUG_LEVEL_DISABLED;
 QString Logger::_infoBuffer;
 QString Logger::_warningBuffer;
 QString Logger::_errorBuffer;
 QString Logger::_allMessagesBuffer;
 QScopedPointer<QFile> Logger::_file;
-std::unique_ptr<Logger> Logger::_logger = nullptr;
 
 
 void Logger::Instance()
@@ -33,7 +31,7 @@ void Logger::Instance()
         qWarning() << "Logger file is not open";
 }
 
-void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext &, const QString &iMessage)
+void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext&, const QString& iMessage)
 {
     switch (iMessageType)
     {
@@ -58,7 +56,12 @@ void Logger::SetDebugLevel(Logger::DebugLevel iDebugLevel) noexcept
     _debugLevel = iDebugLevel;
 }
 
-void Logger::WriteInfo(const QString &iMessage)
+Logger::DebugLevel Logger::GetDebugLevel() noexcept
+{
+    return _debugLevel;
+}
+
+void Logger::WriteInfo(const QString& iMessage)
 {
     if (_debugLevel >= DEBUG_LEVEL_INFO)
     {
@@ -69,7 +72,7 @@ void Logger::WriteInfo(const QString &iMessage)
     }
 }
 
-void Logger::WriteWarning(const QString &iMessage)
+void Logger::WriteWarning(const QString& iMessage)
 {
     if (_debugLevel >= DEBUG_LEVEL_WARNING)
     {
@@ -80,7 +83,7 @@ void Logger::WriteWarning(const QString &iMessage)
     }
 }
 
-void Logger::WriteCritical(const QString &iMessage)
+void Logger::WriteCritical(const QString& iMessage)
 {
     if (_debugLevel >= DEBUG_LEVEL_ERROR)
     {
@@ -91,7 +94,7 @@ void Logger::WriteCritical(const QString &iMessage)
     }
 }
 
-void Logger::WriteToBuffer(QtMsgType iMessageType, const QString &message)
+void Logger::WriteToBuffer(QtMsgType iMessageType, const QString& message)
 {
     _allMessagesBuffer += message;
     switch (iMessageType)
@@ -110,7 +113,7 @@ void Logger::WriteToBuffer(QtMsgType iMessageType, const QString &message)
     }
 }
 
-void Logger::WriteToFile(const QString &iMessage)
+void Logger::WriteToFile(const QString& iMessage)
 {
     QTextStream(_file.get()) << iMessage;
 }

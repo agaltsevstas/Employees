@@ -9,17 +9,19 @@
 #include <QTimer>
 #include <Validator>
 
+#include <ranges>
+
 
 inline void swap(QJsonValueRef first, QJsonValueRef second) noexcept
 {
-    QJsonValue temp(first);
-    first = QJsonValue(second);
-    second = temp;
+    QJsonValue temp(std::move(first));
+    first = QJsonValue(std::move(second));
+    second = std::move(temp);
 }
 
 class JsonTableModel : public QAbstractTableModel
 {
-public: JsonTableModel(const QString &iHeader, const QStringList& iData, QObject *parent = nullptr) :
+public: JsonTableModel(const QString& iHeader, const QStringList& iData, QObject* parent = nullptr) :
         QAbstractTableModel(parent),
        _header(iHeader),
        _data(iData)
@@ -33,17 +35,17 @@ private:
         return _header;
     }
 
-    inline int columnCount(const QModelIndex &) const noexcept override
+    inline int columnCount(const QModelIndex&) const noexcept override
     {
         return 1;
     }
 
-    inline int rowCount(const QModelIndex &) const noexcept override
+    inline int rowCount(const QModelIndex&) const noexcept override
     {
         return _data.size();
     }
 
-    QVariant data(const QModelIndex &index, int role) const override
+    QVariant data(const QModelIndex& index, int role) const override
     {
         switch (role)
         {
@@ -68,7 +70,7 @@ private:
 };
 
 
-QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, const QJsonDocument &iPermissions, QObject *parent) :
+QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument& iDatabase, const QJsonDocument& iPermissions, QObject* parent) :
     QAbstractTableModel(parent), _name(iName)
 {
     setObjectName("jsonTableModel");
@@ -76,7 +78,7 @@ QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDat
     setPermissions(iPermissions);
 }
 
-QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument &iDatabase, QObject *parent) :
+QJsonTableModel::QJsonTableModel(const QString& iName, const QJsonDocument& iDatabase, QObject* parent) :
     QAbstractTableModel(parent), _name(iName)
 {
     setObjectName("jsonTableModel");
@@ -95,19 +97,19 @@ void QJsonTableModel::setEditStrategy(EditStrategy iStrategy)
     }
 }
 
-bool QJsonTableModel::setDatabase(const QJsonDocument &iDatabase) noexcept
+bool QJsonTableModel::setDatabase(const QJsonDocument& iDatabase) noexcept
 {
     return setDatabase(iDatabase.array());
 }
 
-bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
+bool QJsonTableModel::setDatabase(const QJsonArray& iDatabase) noexcept
 {
     if (iDatabase.isEmpty())
         return false;
 
     QJsonArray newDatabase = iDatabase;
 
-    for (qsizetype i = 0, I = newDatabase.size(); i < I; ++i)
+    for (const auto i : std::views::iota(0, newDatabase.size()))
     {
         if (newDatabase[i].isObject())
         {
@@ -146,19 +148,19 @@ bool QJsonTableModel::setDatabase(const QJsonArray &iDatabase) noexcept
     return true;
 }
 
-bool QJsonTableModel::setPermissions(const QJsonDocument &iPermissions)
+bool QJsonTableModel::setPermissions(const QJsonDocument& iPermissions)
 {
     return setPermissions(iPermissions.object());
 }
 
-bool QJsonTableModel::setPermissions(const QJsonObject &iPermissions)
+bool QJsonTableModel::setPermissions(const QJsonObject& iPermissions)
 {
     if (iPermissions.isEmpty())
         return false;
 
     const auto fieldNames = Client::Employee::getFieldNames();
     _headers.append({{fieldNames.front().first, fieldNames.front().second}, false});
-    for (qsizetype i = 1, I = fieldNames.size(); i < I; ++i)
+    for (const auto i : std::views::iota(1, fieldNames.size()))
     {
         const auto& [fieldNameEng, fieldNameRus] = fieldNames[i];
 
@@ -188,7 +190,7 @@ void QJsonTableModel::submitAll()
                         if (objectDeleted.contains(Client::Employee::id()))
                         {
                             const auto id = objectDeleted.value(Client::Employee::id());
-                            for (qsizetype i = 0, I = _recordsCache.size(); i < I; ++i)
+                            for (const auto i : std::views::iota(0, _recordsCache.size()))
                             {
                                 if (_recordsCache[i].isObject())
                                 {
@@ -302,7 +304,7 @@ void QJsonTableModel::submitAll()
                             const auto column = recordsUpdated.value("column").toString();
                             const auto value = recordsUpdated.value("value");
 
-                            for (qsizetype i = 0, I = _recordsCache.size(); i < I; ++i)
+                            for (const auto i : std::views::iota(0, _recordsCache.size()))
                             {
                                 if (_recordsCache[i].isObject())
                                 {
@@ -340,7 +342,7 @@ void QJsonTableModel::submitAll()
                             const auto column = recordsUpdated.value("column").toString();
                             const auto value = recordsUpdated.value("value");
 
-                            for (qsizetype i = 0, I = _recordsCache.size(); i < I; ++i)
+                            for (const auto i : std::views::iota(0, _recordsCache.size()))
                             {
                                 if (_recordsCache[i].isObject())
                                 {
@@ -378,7 +380,7 @@ void QJsonTableModel::submitAll()
         qInfo() << "Пустые данные БД для обновления";
 }
 
-bool QJsonTableModel::checkField(int row, int column, const QString &value) const
+bool QJsonTableModel::checkField(int row, int column, const QString& value) const
 {
     if (column < 0)
         return false;
@@ -416,12 +418,12 @@ bool QJsonTableModel::checkField(int row, int column, const QString &value) cons
     return false;
 }
 
-bool QJsonTableModel::checkField(const QModelIndex &index, const QString &iValue) const
+bool QJsonTableModel::checkField(const QModelIndex& index, const QString& iValue) const
 {
     return checkField(index.row(), index.column(), iValue);
 }
 
-void QJsonTableModel::addRow(const QJsonObject &iEmployee)
+void QJsonTableModel::addRow(const QJsonObject& iEmployee)
 {
     qInfo() << "Добавление пользователя: " << iEmployee;
     const qint64 newID = _array.last().toObject().value(Client::Employee::id()).toInteger() + 1;
@@ -452,12 +454,12 @@ void QJsonTableModel::deleteRow(int row)
     QJsonObject jsonObject = getJsonObject(row);
     const auto id = jsonObject[Client::Employee::id()];
 
-    for (qsizetype i = 0, I = _recordsCreatedCache.size(); i < I; ++i)
+    for (const auto i : std::views::iota(0, _recordsCreatedCache.size()))
     {
         if (_recordsCreatedCache[i].isArray())
         {
             QJsonArray recordCreated = _recordsCreatedCache[i].toArray();
-            for (qsizetype j = 0, J = recordCreated.size(); j < J; ++j)
+            for (const auto j : std::views::iota(0, recordCreated.size()))
             {
                 if (recordCreated[j].isObject())
                 {
@@ -505,7 +507,7 @@ void QJsonTableModel::restoreRow(int row)
     qInfo() << "Восстановление строки в БД >> " << QString::number(row);
     const qint64 id = getJsonObject(row)[Client::Employee::id()].toInteger();
 
-    _recordsDeletedCache.erase(std::find_if(_recordsDeletedCache.begin(), _recordsDeletedCache.end(), [&](const auto& recordDeleted)
+    _recordsDeletedCache.erase(std::ranges::find_if(_recordsDeletedCache, [&](const auto& recordDeleted)
     {
         return recordDeleted.isObject() &&recordDeleted.toObject().contains(Client::Employee::id()) && recordDeleted.toObject().value(Client::Employee::id()) == id;
     }));
@@ -539,20 +541,20 @@ bool QJsonTableModel::checkChanges() const noexcept
     return !_recordsCreatedCache.empty() || !_recordsDeletedCache.empty() || !_recordsUpdatedCache.empty();
 }
 
-QList<int> QJsonTableModel::search(const QString &iValue) const noexcept
+QList<int> QJsonTableModel::search(const QString& iValue) const noexcept
 {
     QList<int> hiddenIndices;
     QStringList values = iValue.split(" ");
 
-    for (qsizetype i = 0, I = _array.count(); i < I; ++i)
+    for (const auto i : std::views::iota(0, _array.count()))
     {
         if (_array[i].isObject())
         {
             qsizetype foundCount = 0;
-            for (const auto &v : values)
+            for (const auto& v : values)
             {
                 const QJsonObject row = _array[i].toObject();
-                for (const auto &column : row)
+                for (const auto& column : row)
                 {
                     if (column.isString())
                     {
@@ -605,7 +607,7 @@ bool QJsonTableModel::createEmail(int row)
             const QString email = rowObject.take(Client::Employee::email()).toString();
 
             QString newEmail = Utils::CreateEmail(QVector<QString>{surname, name, patronymic});
-            const int column = std::distance(_headers.constBegin(), std::find_if(_headers.constBegin(), _headers.constEnd(), [&](const auto& header)
+            const int column = std::distance(_headers.constBegin(), std::ranges::find_if(_headers.constBegin(), _headers.constEnd(), [&](const auto& header)
             {
                 return header.first.first == Client::Employee::email();
             }));
@@ -658,7 +660,7 @@ bool QJsonTableModel::createEmail(int row)
     return false;
 }
 
-bool QJsonTableModel::checkFieldOnDuplicate(int row, int column, QString &iValue) const
+bool QJsonTableModel::checkFieldOnDuplicate(int row, int column, QString& iValue) const
 {
     const QString& field = _headers[column].first.first;
     const QString& fieldName = _headers[column].first.second;
@@ -667,7 +669,7 @@ bool QJsonTableModel::checkFieldOnDuplicate(int row, int column, QString &iValue
         field == Client::Employee::phone() ||
         field == Client::Employee::email())
     {
-        for (qsizetype i = 0, I = _array.count(); i < I; ++i)
+        for (const auto i : std::views::iota(0, _array.count()))
         {
             if (i != row)
             {
@@ -752,7 +754,7 @@ bool QJsonTableModel::checkRowOnCreated(int row) const
     return false;
 }
 
-bool QJsonTableModel::checkFieldOnUpdated(const QModelIndex &index) const
+bool QJsonTableModel::checkFieldOnUpdated(const QModelIndex& index) const
 {
     const auto& [field, name] = _headers[index.column()].first;
     const auto id = getJsonObject(index.row())[Client::Employee::id()];
@@ -782,7 +784,7 @@ bool QJsonTableModel::checkFieldOnUpdated(const QModelIndex &index) const
     return false;
 }
 
-void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QString &iValue)
+void QJsonTableModel::updateRecord(int row, const QString& iColumnName, const QString& iValue)
 {
     const auto id = getJsonObject(row)[Client::Employee::id()].toInt();
     const auto value = _recordsCache[id].toObject().value(iColumnName);
@@ -792,12 +794,12 @@ void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QS
     record.insert("column", iColumnName);
     record.insert("value", iValue);
 
-    for (qsizetype i = 0, I = _recordsCreatedCache.size(); i < I; ++i)
+    for (const auto i : std::views::iota(0, _recordsCreatedCache.size()))
     {
         if (_recordsCreatedCache[i].isArray())
         {
             QJsonArray recordCreated = _recordsCreatedCache[i].toArray();
-            for (qsizetype j = 0, J = recordCreated.size(); j < J; ++j)
+            for (const auto j : std::views::iota(0, recordCreated.size()))
             {
                 if (recordCreated[j].isObject())
                 {
@@ -815,7 +817,7 @@ void QJsonTableModel::updateRecord(int row, const QString &iColumnName, const QS
     }
 
     bool found = false;
-    for (qsizetype i = 0, I = _recordsUpdatedCache.size(); i < I; ++i)
+    for (const auto i : std::views::iota(0, _recordsUpdatedCache.size()))
     {
         if (_recordsUpdatedCache[i].isObject())
         {
@@ -883,17 +885,17 @@ QVariant QJsonTableModel::headerData(int section, Qt::Orientation orientation, i
     }
 }
 
-int QJsonTableModel::rowCount(const QModelIndex &) const noexcept
+int QJsonTableModel::rowCount(const QModelIndex&) const noexcept
 {
     return _array.size();
 }
 
-int QJsonTableModel::columnCount(const QModelIndex &) const noexcept
+int QJsonTableModel::columnCount(const QModelIndex&) const noexcept
 {
     return _headers.size();
 }
 
-void QJsonTableModel::setJsonObject(int row, const QJsonObject &iJsonObject)
+void QJsonTableModel::setJsonObject(int row, const QJsonObject& iJsonObject)
 {
     _array[row] = std::move(iJsonObject);
 }
@@ -903,7 +905,7 @@ QJsonObject QJsonTableModel::getJsonObject(int row) const
     return _array[row].toObject();
 }
 
-bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool QJsonTableModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     if (index.isValid() && role == Qt::EditRole)
     {
@@ -926,7 +928,7 @@ bool QJsonTableModel::setData(const QModelIndex &index, const QVariant &value, i
     return false;
 }
 
-QVariant QJsonTableModel::data(const QModelIndex &index, int role) const
+QVariant QJsonTableModel::data(const QModelIndex& index, int role) const
 {
     switch (role)
     {
@@ -969,7 +971,7 @@ QVariant QJsonTableModel::data(const QModelIndex &index, int role) const
     return {};
 }
 
-Qt::ItemFlags QJsonTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags QJsonTableModel::flags(const QModelIndex& index) const
 {
     if (index.isValid())
     {
@@ -987,7 +989,7 @@ Qt::ItemFlags QJsonTableModel::flags(const QModelIndex &index) const
     return {};
 }
 
-bool QJsonTableModel::sortColumn(const QJsonValue &first, const QJsonValue &second, int column, Qt::SortOrder order) const
+bool QJsonTableModel::sortColumn(const QJsonValue& first, const QJsonValue& second, int column, Qt::SortOrder order) const
 {
     auto value_1 = first.toObject()[_headers[column].first.first];
     auto value_2 = second.toObject()[_headers[column].first.first];
@@ -1012,9 +1014,9 @@ bool QJsonTableModel::sortColumn(const QJsonValue &first, const QJsonValue &seco
 void QJsonTableModel::sort(int column, Qt::SortOrder order)
 {
     qInfo() << "Сортировка в столбце" << column;
-    std::sort(_array.begin(), _array.end(), [&](const auto &first, const auto &second)
+    std::sort(_array.begin(), _array.end(), [&](const auto& lhs, const auto& rhs)
     {
-        return sortColumn(first, second, column, order);
+        return sortColumn(lhs, rhs, column, order);
     });
 
     emit layoutChanged();
@@ -1023,5 +1025,5 @@ void QJsonTableModel::sort(int column, Qt::SortOrder order)
 bool QJsonTableModel::isSortColumn(int column) const
 {
     qInfo() << "Проверка столбца на отсортированность " << column;
-    return std::is_sorted(std::begin(_array), std::end(_array), [&](const auto &lhs, const auto &rhs) { return sortColumn(lhs, rhs, column); });
+    return std::ranges::is_sorted(_array, [&](const auto& lhs, const auto& rhs) { return sortColumn(lhs, rhs, column); });
 }

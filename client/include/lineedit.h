@@ -9,8 +9,8 @@ class LineEdit final : public QLineEdit
     Q_OBJECT
 public:
 
-    explicit LineEdit(bool isView = false, QWidget *parent = nullptr);
-    explicit LineEdit(const QString &text, bool isView = false, QWidget *parent = nullptr);
+    explicit LineEdit(bool isView = false, QWidget* parent = nullptr);
+    explicit LineEdit(const QString& text, bool isView = false, QWidget* parent = nullptr);
     ~LineEdit();
 
     /*!
@@ -22,7 +22,7 @@ Q_SIGNALS:
     void startingFocus();
 
 private:
-    void focusInEvent(QFocusEvent *event) override;
+    void focusInEvent(QFocusEvent* event) override;
 
 private:
     bool _isView = false;

@@ -2,12 +2,12 @@
 #include "utils.h"
 
 
-TextValidator::TextValidator(QObject *parent) : QValidator(parent)
+TextValidator::TextValidator(QObject* parent) : QValidator(parent)
 {
 
 }
 
-QValidator::State TextValidator::validate(QString &input, int&) const
+QValidator::State TextValidator::validate(QString& input, int&) const
 {
     Utils::ToUpperandtolower(input);
     return QValidator::Acceptable;
@@ -23,7 +23,7 @@ UInt64Validator::UInt64Validator(quint64 minimum, quint64 maximum, Mode mode, QO
 
 }
 
-void UInt64Validator::setBottom(quint64 minimum) noexcept
+constexpr void UInt64Validator::setBottom(quint64 minimum) noexcept
 {
     if (_min == minimum)
         return;
@@ -32,7 +32,7 @@ void UInt64Validator::setBottom(quint64 minimum) noexcept
     emit changed();
 }
 
-void UInt64Validator::setTop(quint32 maximum) noexcept
+constexpr void UInt64Validator::setTop(quint32 maximum) noexcept
 {
     if (_max == maximum)
         return;
@@ -47,7 +47,7 @@ void UInt64Validator::setRange(quint32 minimum, quint32 maximum) noexcept
     setTop(maximum);
 }
 
-QValidator::State UInt64Validator::validate(QString &input, int &position) const
+QValidator::State UInt64Validator::validate(QString& input, int& position) const
 {
     if (input.isEmpty())
     {

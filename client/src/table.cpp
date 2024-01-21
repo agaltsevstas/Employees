@@ -18,14 +18,16 @@
 #include <QTimer>
 #include <Settings>
 
+#include <ranges>
+
 
 namespace Client
 {
-    [[nodiscard]] auto findTableInJson(const QJsonDocument &iJson, const QString& iTable)->int
+    [[nodiscard]] auto findTableInJson(const QJsonDocument& iJson, const QString& iTable)->int
     {
         if (iJson.isArray())
         {
-            for (decltype(iJson.array().size()) i = 0, I = iJson.array().size(); i < I; ++i)
+            for (const auto i : std::views::iota(0, iJson.array().size()))
             {
                 if (iJson.array()[i].isObject())
                 {
@@ -41,7 +43,7 @@ namespace Client
         return -1;
     };
 
-    Table::Table(Requester* iRequester, QWidget *parent) :
+    Table::Table(Requester* iRequester, QWidget* parent) :
         QWidget(parent),
         _ui(new Ui::Table()),
         _stackedWidget(new QStackedWidget(_ui->groupBox)),
@@ -98,7 +100,7 @@ namespace Client
             Session::getSession().Settings().setValue("update", autoUpdate->isChecked());
     }
 
-    void Table::selectionChanged(const QItemSelection &, const QItemSelection &)
+    void Table::selectionChanged(const QItemSelection&, const QItemSelection&)
     {
         QPushButton* deleteUser = _personalData->findChild<QPushButton*>("deleteUser");
         QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser");
@@ -129,7 +131,7 @@ namespace Client
         }
     }
 
-    void Table::setPersonalData(const QJsonDocument &iJson)
+    void Table::setPersonalData(const QJsonDocument& iJson)
     {
         if (!iJson.isArray())
         {
@@ -231,7 +233,7 @@ namespace Client
 
     void Table::onRevertClicked()
     {
-        Requester::HandleResponse handleResponse = [this](bool iResult, const QString &error)
+        Requester::HandleResponse handleResponse = [this](bool iResult, const QString& error)
         {
             if (iResult)
             {
@@ -266,14 +268,14 @@ namespace Client
         if (QPushButton* restoreUser = _personalData->findChild<QPushButton*>("restoreUser"); restoreUser && restoreUser->isVisible())
             restoreUser->setEnabled(isEnable && _tableView && _tableView->selectionModel()->hasSelection());
 
-        if (QPushButton *search = _personalData->findChild<QPushButton*>("search"))
+        if (QPushButton* search = _personalData->findChild<QPushButton*>("search"))
             search->setEnabled(isEnable);
 
-        if (QLineEdit *valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
+        if (QLineEdit* valueSearch = _personalData->findChild<QLineEdit*>("valueSearch"))
             valueSearch->setEnabled(isEnable);
     }
 
-    void Table::showDB(const bool iResult, const QString &error)
+    void Table::showDB(const bool iResult, const QString& error)
     {   
         if (iResult)
         {
@@ -322,7 +324,7 @@ namespace Client
             connect(_personalData, &TablePrivate::sendValueSearch, _tableView, &TableView::valueSearchChanged);
             connect(_personalData, &TablePrivate::sendClearSearch, _tableView, &TableView::clearSearchChanged);
 
-            if (QPushButton *showDatabase = _ui->groupBox->findChild<QPushButton*>("showDatabase"))
+            if (QPushButton* showDatabase = _ui->groupBox->findChild<QPushButton*>("showDatabase"))
                 showDatabase->setText("Скрыть базу данных");
 
             showFullScreen();
@@ -340,7 +342,7 @@ namespace Client
 
     void Table::showDatabase()
     {
-        QPushButton *showDatabase = qobject_cast<QPushButton*>(sender());
+        QPushButton* showDatabase = qobject_cast<QPushButton*>(sender());
         if (!showDatabase)
             return;
 
@@ -380,22 +382,22 @@ namespace Client
 
     }
 
-    void Table::updatePersonalData(const QByteArray &iData, const HandleResponse &handleResponse)
+    void Table::updatePersonalData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
         _requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
     }
 
-    void Table::createData(const QByteArray &iData, const HandleResponse &handleResponse)
+    void Table::createData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::POST, iData);
     }
 
-    void Table::deleteData(const QByteArray &iData, const HandleResponse &handleResponse)
+    void Table::deleteData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::DELETE, iData);
     }
 
-    void Table::updateData(const QByteArray &iData, const HandleResponse &handleResponse)
+    void Table::updateData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
         _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
     }

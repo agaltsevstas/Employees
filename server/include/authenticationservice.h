@@ -30,50 +30,50 @@ namespace Server
          * \brief Получить id пользователя
          * \return ID пользователя
          */
-        [[nodiscard]] qint64 getID() const noexcept;
+        [[nodiscard("getID")]] qint64 getID() const noexcept;
 
         /*!
          * \brief Устноавить имя пользователя
          * \param iUserName - Имя пользователя
          */
-        void setUserName(const QString &iUserName) noexcept;
+        void setUserName(const QString& iUserName) noexcept;
 
         /*!
          * \brief Получить имя пользователя
          * \return Имя пользователя
          */
-        [[nodiscard]] const QByteArray getUserName() const noexcept;
+        [[nodiscard("getUserName")]] const QByteArray getUserName() const noexcept;
 
         /*!
          * \brief Установить роль пользователя
          * \param iRole - Роль пользователя
          */
-        void setRole(const QString &iRole) noexcept;
+        void setRole(const QString& iRole) noexcept;
 
         /*!
          * \brief Получить роль пользователя
          * \return Роль пользователя
          */
-        [[nodiscard]] const QByteArray getRole() const noexcept;
+        [[nodiscard("getRole")]] const QByteArray getRole() const noexcept;
 
         /*!
          * \brief Получить access token
          * \return access token
          */
-        [[nodiscard]] const QByteArray getAccessToken();
+        [[nodiscard("getAccessToken")]] const QByteArray getAccessToken();
 
         /*!
          * \brief Получить refresh token
          * \return
          */
-        [[nodiscard]] const QByteArray getRefreshToken();
+        [[nodiscard("getRefreshToken")]] const QByteArray getRefreshToken();
 
         /*!
          * \brief Проверка аутентификации
          * \param ioToken - access/refresh token
          * \return
          */
-        bool checkAuthentication(QByteArray &ioToken);
+        bool checkAuthentication(QByteArray& ioToken);
 
     private:
         qint64 _id;
