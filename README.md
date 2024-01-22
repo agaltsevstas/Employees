@@ -42,6 +42,126 @@ cd bin/
 ./Employees
 ```
 
+### Код
+В проекте используются шаблоны (template), сокращенные шаблоны (auto), концепты (concept), семантика перемещения (move, forward), сжатие ссылок (reference collapse), паттерны (SFINAE, PIMPL, Adapter, Proxy, Facade, Singleton).
+Пример кода httpserver.cpp:
+``` C++
+class HttpServer::HttpServerImpl
+{
+    using StatusCode = QHttpServerResponse::StatusCode;
+    template <class TCallBack>
+    friend class AuthorizationService;
+public:
+    HttpServerImpl() : _host(SERVER_HOSTNAME), _port(SERVER_PORT) {}
+
+    void _start();
+private:
+    bool _authentication(const QHttpServerRequest& iRequest, QByteArray* oData = nullptr);
+    QHttpServerResponse _login();
+    QHttpServerResponse _logout();
+    QHttpServerResponse _showPersonalData();
+    QHttpServerResponse _showDatabase();
+    QHttpServerResponse _updatePersonalData(QQueue<Tree>& iTrees);
+    QHttpServerResponse _updateDatabase(QQueue<Tree>& iTrees, QHttpServerRequest::Method iMethod);
+
+private:
+    AuthenticationService _authenticationService;
+
+private:
+    QString _host;
+    int _port;
+    QHttpServer _server;
+};
+
+class ICallback
+{
+public:
+    virtual QHttpServerResponse operator()() = 0;
+    virtual ~ICallback() = default;
+};
+
+class Callback : public ICallback
+{
+    using _CallBack = std::function<QHttpServerResponse()>;
+public:
+    Callback(auto& iClass, const auto& iCallback, auto&&... iArgs)
+    {
+        _callback = std::bind(iCallback, &iClass, std::forward<decltype(iArgs)>(iArgs)...);
+    }
+
+    QHttpServerResponse operator()() override
+    {
+        if (_callback)
+            return _callback();
+        else
+            return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+private:
+    _CallBack _callback;
+};
+
+namespace details
+{
+    template <class T, typename... TArgs>
+    concept TConstructArgs = std::is_constructible_v<T, TArgs...>;
+
+    template <typename T>
+    concept TShowDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), T>;
+
+    template <typename T>
+    concept TUpdatePersonalData = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+
+    template <typename T>
+    concept TUpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+}
+
+template <class TCallBack>
+class AuthorizationService
+{
+    using StatusCode = QHttpServerResponse::StatusCode;
+
+private:
+    template <typename... TArgs>
+    requires std::is_constructible_v<Callback, TArgs...>
+    Callback* constructArgs(TArgs&&... args)
+    {
+        return new Callback(std::forward<TArgs>(args)...);
+    }
+
+public:
+    AuthorizationService(HttpServer::HttpServerImpl& iServer, const QHttpServerRequest& iRequest, const TCallBack& iCallback) :
+        _authenticationService(iServer._authenticationService), _request(iRequest)
+    {
+        if constexpr (details::TShowDatabase<TCallBack>)
+        {
+            _callback.reset(constructArgs(iServer, iCallback));
+        }
+        else if constexpr (details::TUpdatePersonalData<TCallBack>)
+        {
+            _callback.reset(constructArgs(iServer, iCallback, std::ref(_trees)));
+        }
+        else if constexpr (details::TUpdateDatabase<TCallBack>)
+        {
+            _callback.reset(constructArgs(iServer, iCallback, std::ref(_trees), _request.method()));
+        }
+    }
+
+    QHttpServerResponse checkAccess(const QByteArray &iTable);
+
+private:
+    bool parseObject(const QJsonValue& iTable);
+    bool parseData();
+    bool _checkAccess(const QByteArray& iTable);
+
+private:
+    QScopedPointer<ICallback> _callback;
+    AuthenticationService& _authenticationService;
+    const QHttpServerRequest &_request;
+    QQueue<Tree> _trees;
+};
+```
+
 ## Запуск юнит-тестов
 Запуск можно выполнить 2 способами:
 * cmake

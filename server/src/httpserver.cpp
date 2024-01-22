@@ -59,35 +59,38 @@ namespace Server
         QVariant value;    // Значение в поле БД
     };
 
+    class HttpServer::HttpServerImpl
+    {
+        using StatusCode = QHttpServerResponse::StatusCode;
+        template <class TCallBack>
+        friend class AuthorizationService;
+    public:
+        HttpServerImpl() : _host(SERVER_HOSTNAME), _port(SERVER_PORT) {}
+
+        void _start();
+    private:
+        bool _authentication(const QHttpServerRequest& iRequest, QByteArray* oData = nullptr);
+        QHttpServerResponse _login();
+        QHttpServerResponse _logout();
+        QHttpServerResponse _showPersonalData();
+        QHttpServerResponse _showDatabase();
+        QHttpServerResponse _updatePersonalData(QQueue<Tree>& iTrees);
+        QHttpServerResponse _updateDatabase(QQueue<Tree>& iTrees, QHttpServerRequest::Method iMethod);
+
+    private:
+        AuthenticationService _authenticationService;
+
+    private:
+        QString _host;
+        int _port;
+        QHttpServer _server;
+    };
+
     class ICallback
     {
     public:
         virtual QHttpServerResponse operator()() = 0;
         virtual ~ICallback() = default;
-    };
-
-    template<class TClass, class TCallBack, typename TArgs>
-    struct AbstractCallback : public ICallback
-    {
-    public:
-        AbstractCallback(TClass& iClass, TCallBack& iCallback, TArgs&& iArgs) :
-        _class(iClass),
-        _callback(iCallback),
-        _args(iArgs)
-        {
-
-        }
-        virtual QHttpServerResponse operator()() override
-        {
-            if (_callback)
-                return (_class.*(_callback))((std::forward<TArgs>(_args)));
-            else
-                return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
-        }
-    protected:
-        TClass _class;
-        TCallBack _callback;
-        TArgs _args;
     };
 
     class Callback : public ICallback
@@ -111,51 +114,19 @@ namespace Server
         _CallBack _callback;
     };
 
-    class HttpServer::HttpServerImpl
-    {
-        using StatusCode = QHttpServerResponse::StatusCode;
-        template <class TCallBack>
-        friend class AuthorizationService;
-    public:
-        HttpServerImpl() :
-          _host(SERVER_HOSTNAME),
-          _port(SERVER_PORT)
-        {
-
-        }
-
-        void _start();
-    private:
-        bool _authentication(const QHttpServerRequest& iRequest, QByteArray* oData = nullptr);
-        QHttpServerResponse _login();
-        QHttpServerResponse _logout();
-        QHttpServerResponse _showPersonalData();
-        QHttpServerResponse _showDatabase();
-        QHttpServerResponse _updatePersonalData(QQueue<Tree>& iTrees);
-        QHttpServerResponse _updateDatabase(QQueue<Tree>& iTrees, QHttpServerRequest::Method iMethod);
-
-    private:
-        AuthenticationService _authenticationService;
-
-    private:
-        QString _host;
-        int _port;
-        QHttpServer _server;
-    };
-
-    namespace detail
+    namespace details
     {
         template <class T, typename... TArgs>
-        concept ConstructArgs = std::is_constructible_v<T, TArgs...>;
+        concept TConstructArgs = std::is_constructible_v<T, TArgs...>;
 
         template <typename T>
-        concept ShowDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), T>;
+        concept TShowDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), T>;
 
         template <typename T>
-        concept UpdatePersonalData = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+        concept TUpdatePersonalData = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
 
         template <typename T>
-        concept UpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+        concept TUpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
     }
 
     template <class TCallBack>
@@ -164,29 +135,28 @@ namespace Server
         using StatusCode = QHttpServerResponse::StatusCode;
 
     private:
-        template <class T, typename... TArgs>
-        requires std::is_constructible_v<T, TArgs...>
-        T* constructArgs(TArgs&&... args)
+        template <typename... TArgs>
+        requires std::is_constructible_v<Callback, TArgs...>
+        Callback* constructArgs(TArgs&&... args)
         {
             return new Callback(std::forward<TArgs>(args)...);
         }
 
     public:
         AuthorizationService(HttpServer::HttpServerImpl& iServer, const QHttpServerRequest& iRequest, const TCallBack& iCallback) :
-            _authenticationService(iServer._authenticationService),
-            _request(iRequest)
+            _authenticationService(iServer._authenticationService), _request(iRequest)
         {
-            if constexpr (std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(), TCallBack>)
+            if constexpr (details::TShowDatabase<TCallBack>)
             {
-                _callback.reset(constructArgs<Callback>(iServer, iCallback));
+                _callback.reset(constructArgs(iServer, iCallback));
             }
-            else if constexpr (detail::UpdatePersonalData<TCallBack>)
+            else if constexpr (details::TUpdatePersonalData<TCallBack>)
             {
-                _callback.reset(constructArgs<Callback>(iServer, iCallback, std::ref(_trees)));
+                _callback.reset(constructArgs(iServer, iCallback, std::ref(_trees)));
             }
-            else if constexpr (detail::UpdateDatabase<TCallBack>)
+            else if constexpr (details::TUpdateDatabase<TCallBack>)
             {
-                _callback.reset(constructArgs<Callback>(iServer, iCallback, std::ref(_trees), _request.method()));
+                _callback.reset(constructArgs(iServer, iCallback, std::ref(_trees), _request.method()));
             }
         }
 

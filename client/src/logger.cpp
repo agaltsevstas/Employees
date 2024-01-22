@@ -98,7 +98,7 @@ void Logger::WriteCritical(const QString& iMessage)
 void Logger::WriteToBuffer(QtMsgType iMessageType, const QString& message)
 {
     _allMessagesBuffer += message;
-    switch (iMessageType)
+    switch (static_cast<int>(iMessageType))
     {
         case QtInfoMsg:
             _infoBuffer += message;
