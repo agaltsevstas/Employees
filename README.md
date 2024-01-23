@@ -4,47 +4,10 @@
 <img src="images/database.png"/>
 </p>
 
-
-## Поддерживаемые платформы
-* Linux 
-  * Среда разработки Qt Creator
-* macOS
-  * Среда разработки Xcode
-
-## Требования:
-* cmake
-* qt5-qmake
-* boost (не ниже версии 1.56)
-
-## Загрузка, установка и запуск
-Установку можно выполнить 2 способами:
-* cmake
-* qmake
-
-### Загрузка
-```
-git clone https://gitlab.com/cplusplusprojects/Employees.git
-cd Employees
-```
-### Установка с помощью cmake
-```
-cmake CMakeLists.txt
-make
-```
-### Установка с помощью qmake
-```
-qmake Employees.pro
-make
-```
-### Запуск
-```
-cd bin/
-./Employees
-```
-
-### Код
+## Код
 В проекте используются шаблоны (template), сокращенные шаблоны (auto), концепты (concept), семантика перемещения (move, forward), сжатие ссылок (reference collapse), паттерны (SFINAE, PIMPL, Adapter, Proxy, Facade, Singleton).
-Пример кода httpserver.cpp:
+
+Пример кода ```httpserver.cpp```:
 ``` C++
 class HttpServer::HttpServerImpl
 {
@@ -160,6 +123,43 @@ private:
     const QHttpServerRequest &_request;
     QQueue<Tree> _trees;
 };
+```
+
+## Поддерживаемые платформы
+* Linux 
+  * Среда разработки Qt Creator
+* macOS
+  * Среда разработки Xcode
+
+## Требования:
+* cmake
+* qt5-qmake
+* boost (не ниже версии 1.56)
+
+## Загрузка, установка и запуск
+Установку можно выполнить 2 способами:
+* cmake
+* qmake
+
+### Загрузка
+```
+git clone https://gitlab.com/cplusplusprojects/Employees.git
+cd Employees
+```
+### Установка с помощью cmake
+```
+cmake CMakeLists.txt
+make
+```
+### Установка с помощью qmake
+```
+qmake Employees.pro
+make
+```
+### Запуск
+```
+cd bin/
+./Employees
 ```
 
 ## Запуск юнит-тестов

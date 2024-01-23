@@ -93,6 +93,32 @@ namespace Server
         virtual ~ICallback() = default;
     };
 
+#if 0
+    template<class TClass, class TCallBack, typename TArgs>
+    struct AbstractCallback : public ICallback
+    {
+    public:
+        AbstractCallback(TClass& iClass, TCallBack& iCallback, TArgs&& iArgs) :
+            _class(iClass),
+            _callback(iCallback),
+            _args(iArgs)
+        {
+
+        }
+        virtual QHttpServerResponse operator()() override
+        {
+            if (_callback)
+                return (_class.*(_callback))((std::forward<TArgs>(_args)));
+            else
+                return QHttpServerResponse(QHttpServerResponse::StatusCode::BadRequest);
+        }
+    protected:
+        TClass _class;
+        TCallBack _callback;
+        TArgs _args;
+    };
+#endif
+
     class Callback : public ICallback
     {
         using _CallBack = std::function<QHttpServerResponse()>;
