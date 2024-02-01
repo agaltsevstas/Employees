@@ -41,6 +41,7 @@ macx
 
 INCLUDEPATH += $$PWD/include
 HEADERS += \
+    include/exception.h \
     include/authenticationservice.h \
     include/httpserver.h \
     include/database.h \

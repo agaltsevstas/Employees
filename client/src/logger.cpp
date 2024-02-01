@@ -12,6 +12,7 @@ QString Logger::_warningBuffer;
 QString Logger::_errorBuffer;
 QString Logger::_allMessagesBuffer;
 QScopedPointer<QFile> Logger::_file;
+std::unique_ptr<Logger> Logger::_logger = nullptr;
 
 
 void Logger::Instance()

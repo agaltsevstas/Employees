@@ -1,4 +1,5 @@
 #include "database.h"
+#include "exception.h"
 #include "server.h"
 
 #include <QApplication>
@@ -33,7 +34,7 @@ namespace Server
         _db->close();
     }
 
-    bool DataBase::connect()
+    void DataBase::connect()
     {
         _db.reset(new QSqlDatabase(QSqlDatabase::addDatabase("QPSQL")));
         _db->setHostName(DATABASE_HOSTNAME);
@@ -41,16 +42,17 @@ namespace Server
         _db->setUserName("agaltsevstas");
         _db->setPassword("");
 
-        if (this->open())
+        try
         {
-            qInfo() << "Успешное подключение к БД";
-            return true;
+            if (!this->open())
+                throw Error();
         }
-        else
+        catch (...)
         {
-            qFatal("Неуспешное подключение к БД");
-            return false;
+            std::rethrow_exception(std::current_exception());
         }
+
+        qInfo() << "Успешное подключение к БД";
     }
 
     bool DataBase::checkFieldOnDuplicate(const QByteArray& iColumn, const QVariant& iValue) const
@@ -323,14 +325,9 @@ namespace Server
             qWarning() << "База данных не существует" << _db->lastError().text();
             QMessageBox::StandardButton reply = QMessageBox::question(this, "База данных не сущуествует", "Создать?", QMessageBox::Yes | QMessageBox::No);
             if (reply == QMessageBox::Yes)
-            {
                 return this->createDataBase();
-            }
             else
-            {
-                qInfo() << "Выход из программы";
-                QApplication::quit();
-            }
+                return false;
         }
 
         qInfo() << "Выполнено подключение к базе данных" << _db->databaseName();
@@ -340,24 +337,51 @@ namespace Server
     bool DataBase::createDataBase()
     {
         _db->setDatabaseName("postgres");
-        if (!_db->open())
+        try
         {
-            qInfo() << "Не выполнено подключение к базе данных" << _db->databaseName();
-            return false;
-        }
+            if (!_db->open())
+                throw OpenDBError(_db->databaseName());
 
-        qInfo() << "Попытка создать базу данных" << DATABASE_NAME;
-        QSqlQuery query(*_db);
-        if (!query.exec("create database " DATABASE_NAME " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'"))
+            qInfo() << "Попытка создать базу данных" << DATABASE_NAME;
+            QSqlQuery query(*_db);
+            if (!query.exec("create database " DATABASE_NAME " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'"))
+                throw CreateDBError(query.lastError().text());
+
+            qInfo() << "База данных:" << DATABASE_NAME <<  "успешно создалась";
+            QMessageBox::information(this,  "Успешно!", "База данных " + QString(DATABASE_NAME) + " успешно создалась");
+            return this->createTable();
+        }
+        catch (const OpenDBError& iException)
         {
-            qCritical() << "Ошибка: " << query.lastError().text() << ", база данных не создалась";
+            qCritical() << "Не выполнено подключение к базе данных " << iException.what();
+            std::exception_ptr exception = std::make_exception_ptr(iException);
+            std::rethrow_exception(exception);
+        }
+        catch (const OpenTableError& iException)
+        {
+            qCritical() << "Не выполнено подключение к таблице " << iException.what();
+            std::exception_ptr exception = std::make_exception_ptr(iException);
+            std::rethrow_exception(exception);
+        }
+        catch (const CreateTableError& iException)
+        {
+            qCritical() << "Ошибка: " << iException.what() << ", таблица не создалась";
+            std::exception_ptr exception = std::make_exception_ptr(iException);
+            std::rethrow_exception(exception);
+        }
+        catch (const CreateDBError& iException)
+        {
+            qCritical() << "Ошибка: " << iException.what() << ", база данных не создалась";
             QMessageBox::critical(this,  "Ошибка!", "База данных " + QString(DATABASE_NAME) + " не создалась");
+            std::exception_ptr exception = std::make_exception_ptr(iException);
+            std::rethrow_exception(exception);
+        }
+        catch (...)
+        {
             return false;
         }
 
-        qInfo() << "База данных:" << DATABASE_NAME <<  "успешно создалась";
-        QMessageBox::information(this,  "Успешно!", "База данных " + QString(DATABASE_NAME) + " успешно создалась");
-        return this->createTable();
+        return true;
     }
 
     bool DataBase::createTable()
@@ -384,13 +408,14 @@ namespace Server
                         "ON UPDATE NO ACTION"
                         "ON DELETE NO ACTION)"))
         {
-            throw std::runtime_error("DBConnector::getColumnsName: database is not open");
-            qCritical() << "Ошибка: " << query.lastError().text() << ", таблица не создалась";
-            return false;
+            throw CreateTableError(query.lastError().text());
         }
 
+        if (!open())
+            throw OpenTableError(Employee::employeeTable());
+
         qInfo() << "Таблица успешно создалась";
-        return this->open();
+        return true;
     }
 
     bool DataBase::insertRecord(const QHash<QString, QVariant>& iData) const

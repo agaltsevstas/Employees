@@ -787,7 +787,7 @@ bool QJsonTableModel::checkFieldOnUpdated(const QModelIndex& index) const
 void QJsonTableModel::updateRecord(int row, const QString& iColumnName, const QString& iValue)
 {
     const auto id = getJsonObject(row)[Client::Employee::id()].toInt();
-    const auto value = _recordsCache[id].toObject().value(iColumnName);
+    const auto value = _recordsCache[id].toObject().value(iColumnName).toString();
 
     QJsonObject record;
     record.insert(Client::Employee::id(), id);
@@ -912,7 +912,7 @@ bool QJsonTableModel::setData(const QModelIndex& index, const QVariant& value, i
         QString message = value.toString();
         const QString& field = _headers[index.column()].first.first;
         QJsonObject jsonObject = getJsonObject(index.row());
-        if (!message.isEmpty() && jsonObject.contains(field) && message != jsonObject[field])
+        if (!message.isEmpty() && jsonObject.contains(field) && message != jsonObject[field].toString())
         {
             if (checkField(index, message))
             {

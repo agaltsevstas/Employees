@@ -23,7 +23,7 @@ namespace Server
          * \brief Подключение к БД
          * \return true - успех, иначе false
          */
-        bool connect();
+        void connect();
 
         /*!
          * \brief Проверка значение на дубликат

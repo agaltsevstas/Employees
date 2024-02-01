@@ -65,7 +65,7 @@ private:
     static QString _errorBuffer;       // Буфер для хранения ошибок
     static QString _allMessagesBuffer; // Буфер для хранения всех видов сообщений
     static QScopedPointer<QFile> _file; // Выходной файловый поток
-    inline static std::unique_ptr<Logger> _logger = nullptr; // Объект-одиночка
+    static std::unique_ptr<Logger> _logger; // Объект-одиночка
 
     /*!
      * @brief Запись информационных сообщений.

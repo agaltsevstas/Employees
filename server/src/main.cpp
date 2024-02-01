@@ -18,12 +18,18 @@ int main(int argc, char* argv[])
     Logger::Instance();
     qInstallMessageHandler(Logger::messageHandler);
 
-    db.reset(new Server::DataBase());
-    db->connect();
+    try
+    {
+        db.reset(new Server::DataBase());
+        db->connect();
+    }
+    catch (...)
+    {
+        qInfo() << "Выход из программы";
+        app.exit();
+        return EXIT_FAILURE;
+    }
 
     Server::HttpServer::Start(&app);
-
-    int exec = app.exec();
-
-    return exec;
+    return app.exec();
 }
