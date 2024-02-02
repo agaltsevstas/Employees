@@ -642,7 +642,7 @@ namespace Client
         }
     }
 
-    constexpr void TablePrivate::setEditStrategy(EditStrategy iStrategy)
+    void TablePrivate::setEditStrategy(EditStrategy iStrategy)
     {
         if (iStrategy != _strategy)
         {
@@ -702,7 +702,7 @@ namespace Client
 
         auto widget = qobject_cast<QWidget*>(sender());
         const QString objectName = widget->objectName();
-        auto fieldName = std::ranges::find_if(_dataCache, [&objectName](const auto& data) { return data.first == objectName; });
+        const auto fieldName = std::ranges::find_if(_dataCache, [&objectName](const auto& data) { return data.first == objectName; });
         if (fieldName == _dataCache.constEnd())
         {
             Q_ASSERT(false);

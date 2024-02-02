@@ -4,9 +4,10 @@
 #include <QApplication>
 #include <QTextCodec>
 
+
 int main(int argc, char* argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
     QTextCodec* utfCodec = QTextCodec::codecForName("UTF-8");
     QTextCodec::setCodecForLocale(utfCodec);
@@ -15,5 +16,5 @@ int main(int argc, char* argv[])
 
     Client::Dialog dialog;
     dialog.show();
-    return a.exec();
+    return app.exec();
 }

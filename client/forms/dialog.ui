@@ -331,7 +331,7 @@ border-bottom-left-radius: 50px;</string>
     <string notr="true">color:rgba(255, 255, 255, 220);</string>
    </property>
    <property name="text">
-    <string>Agaltsev.stas</string>
+    <string>Agaltsev Stas</string>
    </property>
   </widget>
   <widget class="QLabel" name="contacts">
@@ -401,7 +401,32 @@ border-bottom-left-radius: 50px;</string>
     <string notr="true">color:rgba(255, 255, 255, 220);</string>
    </property>
    <property name="text">
-    <string>GitLab: &lt;a style=&quot;color: white&quot;; href=&quot;https://gitlab.com/agaltsev.stas&quot;&gt;gitlab.com/agaltsev.stas&lt;/a&gt;</string>
+    <string>GitHub: &lt;a style=&quot;color: white&quot;; href=&quot;https://github.com/agaltsevstas&quot;&gt;github.com/agaltsevstas&lt;/a&gt;</string>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="gitlab_2">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>170</y>
+     <width>191</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Academy Engraved LET</family>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color:rgba(255, 255, 255, 220);</string>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;GitLab: &lt;a href=&quot;https://gitlab.com/agaltsev.stas&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#FFCA86;&quot;&gt;gitlab.com/agaltsev.stas&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="openExternalLinks">
     <bool>true</bool>

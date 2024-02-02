@@ -8,6 +8,7 @@
 #include <QNetworkCookie>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QThread>
 
 
 namespace Client
@@ -89,8 +90,10 @@ namespace Client
 
     QNetworkRequest Requester::RequesterImpl::createRequest(const QString &iApi)
     {
+        const QString url = _pathTemplate.arg(_host).arg(_port).arg(iApi);
+        const QString uuid = QUuid::createUuid().toString().remove("{").remove("}");
         QNetworkRequest request;
-        QString url = _pathTemplate.arg(_host).arg(_port).arg(iApi);
+
         request.setUrl(QUrl(url));
         request.setRawHeader("Content-Type", "application/json");
         if (Session::getSession().Cookie().isValid())
@@ -102,6 +105,8 @@ namespace Client
             emit _requester.logout();
             request.setRawHeader("Authorization", QString("Basic %1").arg(_requester.getToken().toUtf8().toBase64()).toLocal8Bit());
         }
+
+        request.setRawHeader("x-request-id", uuid.toUtf8());
         if (_sslConfig != Q_NULLPTR)
             request.setSslConfiguration(*_sslConfig);
         return request;
@@ -179,17 +184,20 @@ namespace Client
 
         QNetworkRequest request = _requester->createRequest(iApi);
         QNetworkReply *reply;
+        // QThread thread;
         switch (iType)
         {
             case Type::POST:
             {
                 request.setRawHeader("Content-Length", QByteArray::number(iData.size()));
                 reply = _manager->post(request, iData);
+                // _mutex.lock();
                 break;
             }
             case Type::GET:
             {
                 reply = _manager->get(request);
+                // _mutex.lock();
                 break;
             }
             case Type::DELETE:
@@ -198,11 +206,13 @@ namespace Client
                     reply = _manager->deleteResource(request);
                 else
                     reply = _requester->sendCustomRequest(request, "DELETE", iData);
+                // _mutex.lock();
                 break;
             }
             case Type::PATCH:
             {
                 reply = _requester->sendCustomRequest(request, "PATCH", iData);
+                // _mutex.lock();
                 break;
             }
             default:
@@ -234,9 +244,10 @@ namespace Client
                     }
                 }
 
-                /// Временно убрал
-//                if (iApi == "logout")
-//                    Session::getSession().Cookie().clear();
+                /* Временно убрал, но можно вернуть, чтобы cookie не сохранялись в файле
+                if (iApi == "logout")
+                   Session::getSession().Cookie().clear();
+                */
 
                 if (handleResponse)
                     handleResponse(true, reply->errorString());
@@ -250,6 +261,7 @@ namespace Client
             reply->close();
             reply->deleteLater();
             delete reply;
+            // _mutex.unlock();
         });
     }
 }

@@ -35,7 +35,7 @@ namespace Client
          * \brief Установить стратегию для отправки данных на сервер
          * \param iStrategy - OnFieldChange - данные отправляются автоматически, OnManualSubmit - данные отправляются вручную
          */
-        constexpr void setEditStrategy(EditStrategy iStrategy);
+        void setEditStrategy(EditStrategy iStrategy);
 
         /*!
          * \brief Получить стратегию для отправки данныз на север

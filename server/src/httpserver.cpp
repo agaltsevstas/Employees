@@ -65,10 +65,12 @@ namespace Server
         template <class TCallBack>
         friend class AuthorizationService;
     public:
-        HttpServerImpl() : _host(SERVER_HOSTNAME), _port(SERVER_PORT) {}
+        HttpServerImpl() noexcept : _host(SERVER_HOSTNAME), _port(SERVER_PORT) {}
+        ~HttpServerImpl();
 
         void _start();
     private:
+        bool _checkRequestID(const QHttpServerRequest& iRequest);
         bool _authentication(const QHttpServerRequest& iRequest, QByteArray* oData = nullptr);
         QHttpServerResponse _login();
         QHttpServerResponse _logout();
@@ -84,6 +86,7 @@ namespace Server
         QString _host;
         int _port;
         QHttpServer _server;
+        QMap<qint64, QSet<QString>> _requestIDs;
     };
 
     class ICallback
@@ -200,9 +203,26 @@ namespace Server
         QQueue<Tree> _trees;
     };
 
+    HttpServer::HttpServerImpl::~HttpServerImpl()
+    {
+        _server.disconnect();
+    }
+
+    bool HttpServer::HttpServerImpl::_checkRequestID(const QHttpServerRequest &iRequest)
+    {
+        QByteArray requestID = iRequest.value("x-request-id");
+        auto& user = _requestIDs[_authenticationService.getID()];
+        if (user.constFind(requestID) != user.constEnd())
+            return false;
+        else
+            user.insert(std::move(requestID));
+
+        return true;
+    }
+
     bool HttpServer::HttpServerImpl::_authentication(const QHttpServerRequest &iRequest, QByteArray* oData)
     {
-        QByteArray authentication = iRequest.value("authorization").simplified();
+        QByteArray authentication = iRequest.value("authorization");
         if (!authentication.isNull())
         {
             if (authentication.startsWith("Basic"))
@@ -499,8 +519,7 @@ namespace Server
 
     void HttpServer::HttpServerImpl::_start()
     {
-        const auto sslPort = _server.listen(QHostAddress(_host), _port);
-        if (!sslPort)
+        if (const auto sslPort = _server.listen(QHostAddress(_host), _port); !sslPort)
         {
             qWarning() << "Серверу не удалось прослушать порт";
             return;
@@ -512,6 +531,9 @@ namespace Server
             QByteArray data;
             if (!_authentication(request, &data))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
 
             auto login = _login();
             if (login.statusCode() == StatusCode::BadRequest)
@@ -527,6 +549,9 @@ namespace Server
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
+
             return _logout();
         });
 
@@ -534,6 +559,9 @@ namespace Server
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
 
             auto login = _login();
             if (login.statusCode() == StatusCode::BadRequest)
@@ -553,6 +581,9 @@ namespace Server
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
+
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
@@ -560,6 +591,9 @@ namespace Server
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
 
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkAccess(Employee::personalDataPermissionTable().toUtf8());
         });
@@ -569,6 +603,9 @@ namespace Server
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
+
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
@@ -577,6 +614,9 @@ namespace Server
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
+
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
         });
 
@@ -584,6 +624,9 @@ namespace Server
         {
             if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+
+            if (!_checkRequestID(request))
+                return QHttpServerResponse(StatusCode::TooManyRequests);
 
             return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::databasePermissionTable().toUtf8());
         });
