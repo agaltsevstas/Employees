@@ -106,7 +106,7 @@ namespace Client
             request.setRawHeader("Authorization", QString("Basic %1").arg(_requester.getToken().toUtf8().toBase64()).toLocal8Bit());
         }
 
-        request.setRawHeader("x-request-id", uuid.toUtf8());
+        request.setRawHeader("X-Request-ID", uuid.toUtf8());
         if (_sslConfig != Q_NULLPTR)
             request.setSslConfiguration(*_sslConfig);
         return request;

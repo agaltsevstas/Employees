@@ -210,7 +210,7 @@ namespace Server
 
     bool HttpServer::HttpServerImpl::_checkRequestID(const QHttpServerRequest &iRequest)
     {
-        QByteArray requestID = iRequest.value("x-request-id");
+        QByteArray requestID = iRequest.value("X-Request-ID");
         auto& user = _requestIDs[_authenticationService.getID()];
         if (user.constFind(requestID) != user.constEnd())
             return false;
@@ -222,7 +222,7 @@ namespace Server
 
     bool HttpServer::HttpServerImpl::_authentication(const QHttpServerRequest &iRequest, QByteArray* oData)
     {
-        QByteArray authentication = iRequest.value("authorization");
+        QByteArray authentication = iRequest.value("Authorization");
         if (!authentication.isNull())
         {
             if (authentication.startsWith("Basic"))
