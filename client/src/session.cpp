@@ -12,7 +12,6 @@ Session::Session()
     Settings::Instance();
     Logger::Instance();
     qInstallMessageHandler(Logger::messageHandler);
-    Logger::SetDebugLevel(Logger::DebugLevel::DEBUG_LEVEL_DISABLED);
 }
 
 Session::~Session()
