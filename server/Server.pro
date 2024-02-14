@@ -1,4 +1,4 @@
-TARGET = Employees
+TARGET = Server
 QT += core gui
 QT += sql
 QT += core network # Для работы с сетевыми классами
