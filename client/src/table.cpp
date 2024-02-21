@@ -20,7 +20,7 @@
 
 #include <ranges>
 
-extern QScopedPointer<Client::Requester> requester;
+extern Client::Requester* requester;
 
 namespace Client
 {
@@ -66,7 +66,7 @@ namespace Client
         _ui->gridLayout->addWidget(_stackedWidget, 0, 0, 1, 1);
         _ui->gridLayout->addWidget(requester->getProgressBar(), 1, 0, 1, 1);
 
-        connect(requester.get(), &Requester::logout, this, &Table::onExitClicked);
+        connect(requester, &Requester::logout, this, &Table::onExitClicked);
     }
 
     Table::~Table()

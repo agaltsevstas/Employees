@@ -17,7 +17,7 @@
 
 #define DIRECTORY "../settings/"
 
-extern QScopedPointer<Client::Requester> requester;
+extern Client::Requester* requester;
 
 namespace Client
 {
