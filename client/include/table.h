@@ -28,7 +28,7 @@ namespace Client
         using HandleResponse = std::function<void(const bool, const QString&)>;
 
     public:
-        explicit Table(Requester* iRequester, QWidget* parent = nullptr);
+        explicit Table(QWidget* parent = nullptr);
         ~Table();
 
     Q_SIGNALS:
@@ -68,7 +68,6 @@ namespace Client
         TablePrivate* _personalData = nullptr;
         TablePrivate* _userData = nullptr;
         TableView* _tableView = nullptr;
-        Requester* _requester = nullptr;
 
         friend class TablePrivate;
     };

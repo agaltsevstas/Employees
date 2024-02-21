@@ -4,6 +4,7 @@ QT += sql
 QT += core network # Для работы с сетевыми классами
 QT += widgets
 QT += core5compat
+QT += concurrent
 QT += httpserver
 CONFIG += c++20
 CONFIG -= app_bundle

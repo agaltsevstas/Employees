@@ -1,7 +1,6 @@
 #include "table.h"
 #include "table_p.h"
 #include "client.h"
-#include "requester.h"
 #include "session.h"
 #include "tableView.h"
 #include "ui_table.h"
@@ -16,10 +15,12 @@
 #include <QScreen>
 #include <QStackedWidget>
 #include <QTimer>
+#include <Requester>
 #include <Settings>
 
 #include <ranges>
 
+extern QScopedPointer<Client::Requester> requester;
 
 namespace Client
 {
@@ -43,15 +44,14 @@ namespace Client
         return -1;
     };
 
-    Table::Table(Requester* iRequester, QWidget* parent) :
+    Table::Table(QWidget* parent) :
         QWidget(parent),
         _ui(new Ui::Table()),
-        _stackedWidget(new QStackedWidget(_ui->groupBox)),
-        _requester(iRequester)
+        _stackedWidget(new QStackedWidget(_ui->groupBox))
     {
         _ui->setupUi(this);
         setObjectName("Table");
-        setPersonalData(_requester->getJson());
+        setPersonalData(requester->getJson());
 
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
@@ -64,9 +64,9 @@ namespace Client
         _stackedWidget->setCurrentWidget(_personalData);
 
         _ui->gridLayout->addWidget(_stackedWidget, 0, 0, 1, 1);
-        _ui->gridLayout->addWidget(_requester->getProgressBar(), 1, 0, 1, 1);
+        _ui->gridLayout->addWidget(requester->getProgressBar(), 1, 0, 1, 1);
 
-        connect(_requester, &Requester::logout, this, &Table::onExitClicked);
+        connect(requester.get(), &Requester::logout, this, &Table::onExitClicked);
     }
 
     Table::~Table()
@@ -195,7 +195,7 @@ namespace Client
         }
 
         qInfo() << "Выход из таблицы";
-        _requester->getProgressBar()->setParent(NULL);
+        requester->getProgressBar()->setParent(NULL);
         showNormal();
         close();           // Закрытие окна
         emit openDialog(); // Вызов главного окна
@@ -238,11 +238,11 @@ namespace Client
             if (iResult)
             {
                 qInfo() << "Данные успешно обновлены";
-                setPersonalData(_requester->getJson());
+                setPersonalData(requester->getJson());
                 if (_tableView && _tableView->getModel())
                 {
                     Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
-                    _requester->sendRequest("showDatabase", handleResponse);
+                    requester->sendRequest("showDatabase", handleResponse);
                 }
             }
             else
@@ -254,7 +254,8 @@ namespace Client
             }
         };
 
-        _requester->sendRequest("showPersonalData", handleResponse);
+
+        requester->sendRequest("showPersonalData", handleResponse);
     }
 
     void Table::setEnabledDatabaseButtons(bool isEnable)
@@ -279,13 +280,13 @@ namespace Client
     {   
         if (iResult)
         {
-            if (!_requester->getJson().isArray())
+            if (!requester->getJson().isArray())
             {
-                Q_ASSERT(_requester->getJson().isArray());
+                Q_ASSERT(requester->getJson().isArray());
                 return;
             }
 
-            const QJsonDocument json = _requester->getJson();
+            const QJsonDocument json = requester->getJson();
             auto index_database = findTableInJson(json, "employee");
             auto index_database_permissions = findTableInJson(json, "database_permission");
             if (index_database == -1 || index_database_permissions == -1)
@@ -376,7 +377,7 @@ namespace Client
             {
                 Requester::HandleResponse handleResponse;
                 handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
-                _requester->sendRequest("showDatabase", handleResponse);
+                requester->sendRequest("showDatabase", handleResponse);
             }
         }
 
@@ -384,22 +385,22 @@ namespace Client
 
     void Table::updatePersonalData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        _requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
+        requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
     }
 
     void Table::createData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::POST, iData);
+        requester->sendRequest("updateDatabase", handleResponse, Requester::Type::POST, iData);
     }
 
     void Table::deleteData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::DELETE, iData);
+        requester->sendRequest("updateDatabase", handleResponse, Requester::Type::DELETE, iData);
     }
 
     void Table::updateData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        _requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
+        requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
     }
 
     void Table::onCreateUserClicked()

@@ -47,7 +47,6 @@ namespace Client
         Ui::Dialog* _dialog = nullptr;
         Table* _table = nullptr;
         QStatusBar* _status = nullptr;
-        Requester* _requester = nullptr;
     };
 }
 #endif // DIALOG_H

@@ -3,7 +3,9 @@
 
 #include <QApplication>
 #include <QTextCodec>
+#include <Requester>
 
+QScopedPointer<Client::Requester> requester;
 
 int main(int argc, char* argv[])
 {
@@ -13,6 +15,8 @@ int main(int argc, char* argv[])
     QTextCodec::setCodecForLocale(utfCodec);
 
     Session::getSession();
+
+    requester.reset(new Client::Requester());
 
     Client::Dialog dialog;
     dialog.show();

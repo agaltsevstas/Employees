@@ -1,5 +1,6 @@
+CONFIG -= flat
+
 INCLUDEPATH += $$PWD
 
-SOURCES += $$PWD/requester.cpp
-
 HEADERS += $$PWD/requester.h
+SOURCES += $$PWD/requester.cpp

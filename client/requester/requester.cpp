@@ -8,7 +8,6 @@
 #include <QNetworkCookie>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QThread>
 
 
 namespace Client
@@ -161,7 +160,6 @@ namespace Client
 
     void Requester::printProgress(qint64 bytesReceived, qint64 bytesTotal)
     {
-//        QMutexLocker locker(&mutex);
         if (bytesTotal > 0 && bytesReceived > 0)
             _progress->setValue((int)(bytesReceived * 100 / bytesTotal));
     }
@@ -183,21 +181,18 @@ namespace Client
         _progress->setValue(0);
 
         QNetworkRequest request = _requester->createRequest(iApi);
-        QNetworkReply *reply;
-        // QThread thread;
+        QNetworkReply *reply = Q_NULLPTR;
         switch (iType)
         {
             case Type::POST:
             {
                 request.setRawHeader("Content-Length", QByteArray::number(iData.size()));
                 reply = _manager->post(request, iData);
-                // _mutex.lock();
                 break;
             }
             case Type::GET:
             {
                 reply = _manager->get(request);
-                // _mutex.lock();
                 break;
             }
             case Type::DELETE:
@@ -206,13 +201,11 @@ namespace Client
                     reply = _manager->deleteResource(request);
                 else
                     reply = _requester->sendCustomRequest(request, "DELETE", iData);
-                // _mutex.lock();
                 break;
             }
             case Type::PATCH:
             {
                 reply = _requester->sendCustomRequest(request, "PATCH", iData);
-                // _mutex.lock();
                 break;
             }
             default:
@@ -225,7 +218,6 @@ namespace Client
         {
             if (_requester->checkFinishRequest(reply))
             {
-//                QMutexLocker locker(&mutex);
                 _progress->setHidden(true);
                 _json = _requester->parseReply(reply);
                 _token.clear();
@@ -261,7 +253,6 @@ namespace Client
             reply->close();
             reply->deleteLater();
             delete reply;
-            // _mutex.unlock();
         });
     }
 }

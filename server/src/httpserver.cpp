@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QtConcurrent>
 
 #define SERVER_HOSTNAME "127.0.0.1" // Хост
 #define SERVER_PORT      5433       // Порт
@@ -236,10 +237,10 @@ namespace Server
                     QString id, role;
                     if (oData && db->authentication(userName, password, id, role, *oData))
                     {
-                        INFO(_authenticationService, "Аутентификации пройдена");
                         _authenticationService.setID(id.toULongLong());
                         _authenticationService.setUserName(userName);
                         _authenticationService.setRole(role);
+                        INFO(_authenticationService, "Аутентификации пройдена");
                         return true;
                     }
                 }
@@ -525,110 +526,135 @@ namespace Server
             return;
         }
 
-        INFO(_authenticationService, "Сервер запущен");
+        qInfo() << "Сервер запущен";
         _server.route("/login", [this](const QHttpServerRequest& request)
         {
-            QByteArray data;
-            if (!_authentication(request, &data))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                QByteArray data;
+                if (!_authentication(request, &data))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            auto login = _login();
-            if (login.statusCode() == StatusCode::BadRequest)
-                return login;
+                auto login = _login();
+                if (login.statusCode() == StatusCode::BadRequest)
+                    return login;
 
-            QHttpServerResponse response(data + login.data());
-            response.addHeader("Content-Type", "application/json");
-            return response;
+                QHttpServerResponse response(data + login.data());
+                response.addHeader("Content-Type", "application/json");
+
+                return response;
+            });
         });
 
         _server.route("/logout", [this](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            return _logout();
+                return _logout();
+            });
         });
 
         _server.route("/showPersonalData", [this](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            auto login = _login();
-            if (login.statusCode() == StatusCode::BadRequest)
-                return login;
+                auto login = _login();
+                if (login.statusCode() == StatusCode::BadRequest)
+                    return login;
 
-            auto showPersonalData = _showPersonalData();
-            if (showPersonalData.statusCode() == StatusCode::BadRequest)
-                return showPersonalData;
+                auto showPersonalData = _showPersonalData();
+                if (showPersonalData.statusCode() == StatusCode::BadRequest)
+                    return showPersonalData;
 
-            QHttpServerResponse response(login.data() + showPersonalData.data());
-            response.addHeader("Content-Type", "application/json");
-            return response;
+                QHttpServerResponse response(login.data() + showPersonalData.data());
+                response.addHeader("Content-Type", "application/json");
+                return response;
+            });
         });
 
         _server.route("/showDatabase", [&](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkAccess(Employee::permissionTable().toUtf8());
+                return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_showDatabase).checkAccess(Employee::permissionTable().toUtf8());
+            });
         });
 
         _server.route("/updatePersonalData", [&](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
                 return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
+                if (!_checkRequestID(request))
                 return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkAccess(Employee::personalDataPermissionTable().toUtf8());
+                return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkAccess(Employee::personalDataPermissionTable().toUtf8());
+            });
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Post, [&](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
+                return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
+            });
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Delete, [&](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
+                return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::permissionTable().toUtf8());
+            });
         });
 
         _server.route("/updateDatabase", QHttpServerRequest::Method::Patch, [&](const QHttpServerRequest& request)
         {
-            if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
-            if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
-            return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::databasePermissionTable().toUtf8());
+                return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::databasePermissionTable().toUtf8());
+            });
         });
 
         _server.afterRequest([this](QHttpServerResponse&& response)

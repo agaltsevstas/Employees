@@ -5,7 +5,7 @@
 </p>
 
 ## Код
-В проекте используются шаблоны (template), сокращенные шаблоны (auto), концепты (concept), семантика перемещения (move, forward), сжатие ссылок (reference collapse), паттерны (SFINAE, PIMPL, Adapter, Proxy, Facade, Singleton).
+В проекте используются шаблоны (template), сокращенные шаблоны (auto), концепты (concept), семантика перемещения (move, forward), сжатие ссылок (reference collapse), паттерны (SFINAE, PIMPL, Adapter, Proxy, Facade, Singleton, Active object).
 
 Пример кода ```httpserver.cpp```:
 ``` C++
@@ -124,6 +124,11 @@ private:
     QQueue<Tree> _trees;
 };
 ```
+
+## Многопоточность
+QtConcurrent, предлагающие высокоуровневый API для поддержки многопоточности, так что программисту не нужно вникать в детали низкоуровневого API класса QThread и связанных с ним классов. Этот высокоуровневый API освобождает нас от многих забот, обычно ассоциируемых с многопоточным программированием.
+QtConcurrent – функции QFuture.
+QtConcurrent::run - внутри находится threadpool.
 
 ## Поддерживаемые платформы
 * Linux 
