@@ -4,8 +4,8 @@
 #include <QDir>
 
 
-#define FILENAME  "cookies.txt"
-#define DIRECTORY "../settings/"
+constinit const auto FILENAME = "cookies.txt";
+constinit const auto DIRECTORY = "../settings/";
 
 
 Cookie::Cookie()

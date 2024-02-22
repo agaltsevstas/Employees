@@ -12,9 +12,9 @@
 
 namespace Client
 {
-    #define CLIENT_HTTP_TEMPLATE   "http://%1:%2//%3"
-    #define CLIENT_HOSTNAME        "127.0.0.1"        // Хост
-    #define CLIENT_PORT             5433              // Порт
+    constinit const auto CLIENT_HTTP_TEMPLATE = "http://%1:%2//%3";
+    constinit const auto CLIENT_HOSTNAME = "127.0.0.1"; // Хост
+    constinit const auto CLIENT_PORT = 5433; // Порт
 
     class Requester::RequesterImpl
     {

@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QThread>
 
-#define DIRECTORY "../log/"
+constinit const auto DIRECTORY = "../log/";
 
 QString Logger::_infoBuffer;
 QString Logger::_warningBuffer;

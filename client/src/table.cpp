@@ -233,7 +233,7 @@ namespace Client
 
     void Table::onRevertClicked()
     {
-        Requester::HandleResponse handleResponse = [this](bool iResult, const QString& error)
+        requester->sendRequest("showPersonalData", [this](bool iResult, const QString& error)
         {
             if (iResult)
             {
@@ -252,10 +252,7 @@ namespace Client
                 QTimer::singleShot(1000, &warning, &QMessageBox::close);
                 warning.exec();
             }
-        };
-
-
-        requester->sendRequest("showPersonalData", handleResponse);
+        });
     }
 
     void Table::setEnabledDatabaseButtons(bool isEnable)

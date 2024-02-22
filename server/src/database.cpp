@@ -15,14 +15,14 @@
 
 #include <ranges>
 
-#define DATABASE_POSTGRES "QPSQL"         // Тип базы данных
-#define DATABASE_HOSTNAME "127.0.0.1"     // Хост
-#define DATABASE_PORT      5432           // Порт
-#define DATABASE_NAME     "employees"     // Название базы данных
-
 
 namespace Server
 {
+    constinit const auto DATABASE_POSTGRES = "QPSQL"; // Тип базы данных
+    constinit const auto DATABASE_HOSTNAME = "127.0.0.1"; // Хост
+    constinit const auto DATABASE_PORT = 5432; // Порт
+    constinit const auto DATABASE_NAME = "employees"; // Название базы данных
+
     DataBase::DataBase(QWidget *parent) : QWidget(parent)
     {
 
@@ -36,7 +36,7 @@ namespace Server
 
     void DataBase::connect()
     {
-        _db.reset(new QSqlDatabase(QSqlDatabase::addDatabase("QPSQL")));
+        _db.reset(new QSqlDatabase(QSqlDatabase::addDatabase(DATABASE_POSTGRES)));
         _db->setHostName(DATABASE_HOSTNAME);
         _db->setPort(DATABASE_PORT);
         _db->setUserName("agaltsevstas");
@@ -344,7 +344,7 @@ namespace Server
 
             qInfo() << "Попытка создать базу данных" << DATABASE_NAME;
             QSqlQuery query(*_db);
-            if (!query.exec("create database " DATABASE_NAME " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'"))
+            if (!query.exec("create database " + QString(DATABASE_NAME) + " TEMPLATE=template0 ENCODING 'UTF-8' LC_COLLATE 'ru_RU.UTF-8' LC_CTYPE 'ru_RU.UTF-8'"))
                 throw CreateDBError(query.lastError().text());
 
             qInfo() << "База данных:" << DATABASE_NAME <<  "успешно создалась";

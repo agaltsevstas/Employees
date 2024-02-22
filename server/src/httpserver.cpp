@@ -10,9 +10,6 @@
 #include <QJsonDocument>
 #include <QtConcurrent>
 
-#define SERVER_HOSTNAME "127.0.0.1" // Хост
-#define SERVER_PORT      5433       // Порт
-
 #define INFO(object, str) qInfo() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
@@ -21,6 +18,9 @@ extern QScopedPointer<Server::DataBase> db;
 
 namespace Server
 {
+    constinit const auto SERVER_HOSTNAME = "127.0.0.1"; // Хост
+    constinit const auto SERVER_PORT = 5433; // Порт
+
     struct Tree
     {
         Tree() noexcept = default;
@@ -71,8 +71,8 @@ namespace Server
 
         void _start();
     private:
-        bool _checkRequestID(const QHttpServerRequest& iRequest);
         bool _authentication(const QHttpServerRequest& iRequest, QByteArray* oData = nullptr);
+        bool _checkRequestID(const QHttpServerRequest& iRequest);
         QHttpServerResponse _login();
         QHttpServerResponse _logout();
         QHttpServerResponse _showPersonalData();

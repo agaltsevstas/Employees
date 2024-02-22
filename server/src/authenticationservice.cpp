@@ -1,9 +1,6 @@
 #include "authenticationservice.h"
 #include "qjsonwebtoken.h"
 
-#define JWT_ACCESS_SECRET "jwt-access-secret-key"
-#define JWT_REFRESH_SECRET "jwt-refresh-secret-key"
-
 #define INFO(object, str) qInfo() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
@@ -11,6 +8,9 @@
 
 namespace Server
 {
+    constinit const auto JWT_ACCESS_SECRET = "jwt-access-secret-key";
+    constinit const auto JWT_REFRESH_SECRET = "jwt-refresh-secret-key";
+
     class HttpCookie
     {
     public:

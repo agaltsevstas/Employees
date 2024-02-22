@@ -7,8 +7,6 @@
 
 class QProgressBar;
 class QNetworkAccessManager;
-class QSslConfiguration;
-class QNetworkReply;
 
 namespace Client
 {
@@ -53,13 +51,13 @@ namespace Client
          */
         QProgressBar *getProgressBar() const { return _progress.get(); }
 
-    signals:
+    Q_SIGNALS:
         /*!
          * \brief Сигнал о выходе из личного кабинета
          */
         void logout();
 
-    private slots:
+    private Q_SLOTS:
         void printProgress(qint64 bytesReceived, qint64 bytesTotal);
 
     private:

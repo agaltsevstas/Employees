@@ -15,8 +15,6 @@
 #include <Requester>
 #include <Settings>
 
-#define DIRECTORY "../settings/"
-
 extern Client::Requester* requester;
 
 namespace Client

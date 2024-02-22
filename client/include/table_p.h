@@ -88,6 +88,8 @@ namespace Client
          */
         void sendUserData(const QString& iFieldName, const HandleField& handleField = Q_NULLPTR);
 
+    private Q_SLOTS:
+
         /*!
          * \brief Откатить данные с сервера
          */
