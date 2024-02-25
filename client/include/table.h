@@ -4,12 +4,8 @@
 #include <QWidget>
 
 
-class QPushButton;
 class QStackedWidget;
-class QGridLayout;
-class QLabel;
 class QItemSelection;
-class Settings;
 
 namespace Ui
 {
@@ -18,17 +14,16 @@ namespace Ui
 
 namespace Client
 {
-    class Requester;
     class TablePrivate;
     class TableView;
 
     class Table : public QWidget
     {
         Q_OBJECT
-        using HandleResponse = std::function<void(const bool, const QString&)>;
+        using HandleResponse = std::function<void(const bool, const QVariant&)>;
 
     public:
-        explicit Table(QWidget* parent = nullptr);
+        explicit Table(const QJsonDocument iData, QWidget* parent = nullptr);
         ~Table();
 
     Q_SIGNALS:
@@ -39,7 +34,7 @@ namespace Client
 
     private Q_SLOTS:
         void selectionChanged(const QItemSelection&, const QItemSelection&);
-        void showDB(bool iResult, const QString& error);
+        void showDB(bool iResult, const QVariant& error);
         void showDatabase();
         void updatePersonalData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);
         void createData(const QByteArray& iData, const HandleResponse& handleResponse = Q_NULLPTR);

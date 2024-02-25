@@ -5,7 +5,8 @@
 #include <QTextCodec>
 #include <Requester>
 
-Client::Requester* requester;
+
+QScopedPointer<Client::Requester> requester;
 
 int main(int argc, char* argv[])
 {
@@ -16,7 +17,7 @@ int main(int argc, char* argv[])
 
     Session::getSession();
 
-    requester = new Client::Requester();
+    requester.reset(new Client::Requester());
 
     Client::Dialog dialog;
     dialog.show();

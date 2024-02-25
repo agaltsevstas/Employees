@@ -15,7 +15,7 @@ class JsonTableModel;
 class QJsonTableModel final : public QAbstractTableModel
 {
     Q_OBJECT
-    using HandleResponse = std::function<void(const bool, const QString&)>;
+    using HandleResponse = std::function<void(const bool, const QVariant&)>;
 
 public:
     QJsonTableModel(const QString& iName, const QJsonDocument& iDatabase, const QJsonDocument& iPermissions, QObject* parent = nullptr);

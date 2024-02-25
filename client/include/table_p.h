@@ -4,12 +4,8 @@
 #include <QWidget>
 
 
-class Cache;
-class QGridLayout;
-class QGroupBox;
-class QLabel;
-class QLineEdit;
 class QJsonArray;
+
 
 namespace Client
 {
@@ -17,7 +13,7 @@ namespace Client
     {
         Q_OBJECT
         using HandleField = std::function<bool(const QString&)>;
-        using HandleResponse = std::function<void(const bool, const QString&)>;
+        using HandleResponse = std::function<void(const bool, const QVariant&)>;
 
     public:
         TablePrivate(const QString& iName, const QJsonDocument& iData, const QJsonDocument& iPersonalPermissions, const QJsonDocument& iPermissions, QWidget* parent = nullptr);

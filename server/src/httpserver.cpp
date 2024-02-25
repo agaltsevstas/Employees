@@ -156,7 +156,7 @@ namespace Server
         concept TUpdatePersonalData = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
 
         template <typename T>
-        concept TUpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+        concept TUpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), T>;
     }
 
     template <class TCallBack>
@@ -606,10 +606,10 @@ namespace Server
             return QtConcurrent::run([&]()
             {
                 if (!_authentication(request))
-                return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
 
                 if (!_checkRequestID(request))
-                return QHttpServerResponse(StatusCode::TooManyRequests);
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
 
                 return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updatePersonalData).checkAccess(Employee::personalDataPermissionTable().toUtf8());
             });

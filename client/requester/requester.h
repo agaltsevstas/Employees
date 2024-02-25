@@ -2,54 +2,57 @@
 #define REQUESTER_H
 
 #include <QJsonDocument>
-#include <QMutex>
 
 
-class QProgressBar;
 class QNetworkAccessManager;
+class QNetworkReply;
+class QNetworkRequest;
+class QSslConfiguration;
 
 namespace Client
 {
-    class Requester : public QObject
+    class Request;
+    class Answer;
+
+
+    class Requester final : public QObject
     {
         Q_OBJECT
+        Q_DISABLE_COPY_MOVE(Requester)
     public:
 
-        using HandleResponse = std::function<void(const bool, const QString&)>;
+        using HandleResponse = std::function<void(const bool, const QVariant&)>;
 
         enum class Type
         {
-            POST,
             GET,
+            POST,
             PATCH,
             DELETE
         };
 
-        explicit Requester(QObject *parent = 0);
+    public:
+
+        explicit Requester(QObject* parent = 0);
         ~Requester();
 
-        void sendRequest(const QString &iApi,
-                         const HandleResponse &handleResponse = Q_NULLPTR,
-                         const Type iType = Type::GET,
-                         const QByteArray &iData = {});
+        void getResource(const QString& iApi,
+                         const HandleResponse& handleResponse = Q_NULLPTR);
+        void patchResource(const QString& iApi,
+                           const QByteArray& iData,
+                           const HandleResponse& handleResponse = Q_NULLPTR);
+        void postResource(const QString& iApi,
+                          const QByteArray& iData,
+                          const HandleResponse& handleResponse = Q_NULLPTR);
+        void deleteResource(const QString& iApi,
+                            const QByteArray& iData,
+                            const HandleResponse& handleResponse = Q_NULLPTR);
 
         /*!
          * \brief Устновить токен (access/refresh)
          * \param iToken - Токен (access/refresh)
          */
-        void setToken(const QString &iToken) { _token = iToken; }
-
-        /*!
-         * \brief Получить данные формата JSon
-         * \return Данные формата QJsonDocument
-         */
-        const QJsonDocument getJson() const { return _json; }
-
-        /*!
-         * \brief Получить прогресс выполнения ответа на запрос
-         * \return Прогресс ответа на запрос
-         */
-        QProgressBar *getProgressBar() const { return _progress.get(); }
+        void setToken(const QString& iToken) noexcept;
 
     Q_SIGNALS:
         /*!
@@ -57,21 +60,79 @@ namespace Client
          */
         void logout();
 
-    private Q_SLOTS:
-        void printProgress(qint64 bytesReceived, qint64 bytesTotal);
-
     private:
         const QString getToken();
 
     private:
-        QString _token;
+        Requester::HandleResponse _handleResponse;
+        Request* _request;
+        Answer* _answer;
+        QThread* _thread;
+        friend class Request;
+        friend class Answer;
+    };
+
+    class Request final : public QObject
+    {
+        Q_OBJECT
+        Q_DISABLE_COPY_MOVE(Request)
+
+        using HandleResponse = Requester::HandleResponse;
+        using Type = Requester::Type;
+        using enum Type;
+
+    public:
+        ~Request();
+
+    private:
+        Request(QObject* parent = 0);
+
+        void sendRequest(const Type iType,
+                         const QString& iApi,
+                         const QByteArray& iData = {});
+
+        /*!
+         * \brief Устновить токен (access/refresh)
+         * \param iToken - Токен (access/refresh)
+         */
+        void setToken(const QString& iToken) noexcept { _token = iToken; }
+
+        [[nodiscard]] QSharedPointer<QNetworkRequest> createRequest(const QString &iApi);
+
+        [[nodiscard]] QNetworkReply* sendCustomRequest(QSharedPointer<QNetworkRequest>& iRequest,
+                                                       const QString& iType,
+                                                       const QByteArray& iData);
+
+    private:
+        void customEvent(QEvent *event) override;
+
+    Q_SIGNALS:
+        void finished(const bool iResult, const QVariant& iData);
+
+    private:
+        QSslConfiguration *_sslConfig;
         QNetworkAccessManager *_manager;
-        QJsonDocument _json;
-        QScopedPointer<QProgressBar> _progress;
-        QMutex _mutex;
-        class RequesterImpl;
-        QScopedPointer<RequesterImpl> _requester;
-        friend class RequesterImpl;
+        QString _token;
+        friend class Requester;
+    };
+
+    class Answer final : public QObject
+    {
+        Q_OBJECT
+        Q_DISABLE_COPY_MOVE(Answer)
+
+    public:
+        ~Answer();
+
+    private:
+        explicit Answer(Requester* iRequester);
+
+    public Q_SLOTS:
+        void replyFinished(const bool iResult, const QVariant& iData);
+
+    private:
+        Requester &_requester;
+        friend class Requester;
     };
 }
 

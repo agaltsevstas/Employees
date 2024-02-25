@@ -6,7 +6,7 @@
 
 class Session
 {
-    Q_DISABLE_COPY(Session);
+    Q_DISABLE_COPY_MOVE(Session);
 
 public:
     static Session& getSession();

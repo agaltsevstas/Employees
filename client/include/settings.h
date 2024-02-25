@@ -7,7 +7,7 @@
 class Settings final : public QSettings
 {
     Q_OBJECT
-    Q_DISABLE_COPY(Settings)
+    Q_DISABLE_COPY_MOVE(Settings)
     friend class Session;
 
 private:

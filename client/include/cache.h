@@ -8,7 +8,7 @@ class QJsonDocument;
 
 class Cache
 {
-    Q_DISABLE_COPY(Cache);
+    Q_DISABLE_COPY_MOVE(Cache);
     friend class Session;
 
 public:

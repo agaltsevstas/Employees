@@ -6,7 +6,7 @@
 
 class Cookie final
 {
-    Q_DISABLE_COPY(Cookie);
+    Q_DISABLE_COPY_MOVE(Cookie);
     friend class Session;
 
 public:

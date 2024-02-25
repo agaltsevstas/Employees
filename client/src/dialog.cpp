@@ -15,7 +15,8 @@
 #include <Requester>
 #include <Settings>
 
-extern Client::Requester* requester;
+
+extern QScopedPointer<Client::Requester> requester;
 
 namespace Client
 {
@@ -59,8 +60,6 @@ namespace Client
         _status->setObjectName("status");
         _status->setGeometry(QRect(290, 395, 270, 20));
         _status->setStyleSheet("background:rgba(0, 0, 0, 0);");
-        requester->getProgressBar()->setParent(this);
-        requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
 
         loadSettings();
 
@@ -81,8 +80,6 @@ namespace Client
 
             on_enter_clicked();
         }
-
-
     }
 
     Dialog::~Dialog()
@@ -121,9 +118,7 @@ namespace Client
     {
         qInfo() << "Вход в диалог";
         delete _table;
-        requester->getProgressBar()->setParent(this);
-        requester->getProgressBar()->setGeometry(QRect(290, 420, 300, 20));
-        requester->sendRequest("logout");
+        requester->getResource("logout");
         show();
     }
 
@@ -145,25 +140,25 @@ namespace Client
 
         QString token = login + ":" + password;
         requester->setToken(std::move(token));
-        requester->sendRequest("login", [this](bool iResult, const QString& error)
+
+        requester->getResource("login", [this](const bool iResult, const QVariant& iData)
         {
             if (iResult)
             {
-                qInfo() << "Вход успешно выполнен";
                 _status->setStyleSheet("background:rgba(0, 0, 0, 0); color:rgba(255, 255, 255, 210);");
                 _status->showMessage("Вход успешно выполнен!", 1000);
 
-                _table = new Table();
+                _table = new Table(iData.toJsonDocument());
                 connect(_table, &Table::openDialog, this, &Dialog::showDialog);
                 QTimer::singleShot(1000, _table, SLOT(show()));
                 QTimer::singleShot(1000, this, SLOT(close()));
             }
             else
             {
-                if (error == "Connection refused")
+                if (iData.toString() == "Connection refused")
                 {
-                    qWarning() << "Ошибка: " << error;
-                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+                    qWarning() << "Ошибка: " << iData.toString();
+                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), iData.toString(), QMessageBox::NoButton, this);
                     QTimer::singleShot(1000, &warning, &QMessageBox::close);
                     warning.exec();
                 }

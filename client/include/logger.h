@@ -12,7 +12,7 @@ class QFile;
  */
 class Logger
 {
-    Q_DISABLE_COPY(Logger);
+    Q_DISABLE_COPY_MOVE(Logger);
     friend std::default_delete<Logger>;
     friend class Session;
 

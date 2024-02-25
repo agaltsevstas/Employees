@@ -178,7 +178,7 @@ void QJsonTableModel::submitAll()
 {
     if (!_recordsDeletedCache.empty())
     {
-        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, _recordsDeletedCache}}).toJson(), [&](const bool iResult, const QString &error)
+        sendDeleteRequest(QJsonDocument(QJsonObject{{_name, _recordsDeletedCache}}).toJson(), [&](const bool iResult, const QVariant& error)
         {
             if (iResult)
             {
@@ -235,7 +235,7 @@ void QJsonTableModel::submitAll()
                     return;
 
                 qWarning() << "Ошибка: " << error;
-                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error.toString(), QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
             }
@@ -248,7 +248,7 @@ void QJsonTableModel::submitAll()
 
     if (!_recordsCreatedCache.empty())
     {
-        sendCreateRequest(QJsonDocument(QJsonObject{{_name, _recordsCreatedCache}}).toJson(), [&](const bool iResult, const QString &error)
+        sendCreateRequest(QJsonDocument(QJsonObject{{_name, _recordsCreatedCache}}).toJson(), [&](const bool iResult, const QVariant& error)
         {
             if (iResult)
             {
@@ -274,7 +274,7 @@ void QJsonTableModel::submitAll()
                     return;
 
                 qWarning() << "Ошибка: " << error;
-                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error.toString(), QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
             }
@@ -287,7 +287,7 @@ void QJsonTableModel::submitAll()
 
     if (!_recordsUpdatedCache.empty())
     {
-        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, _recordsUpdatedCache}}).toJson(), [&](const bool iResult, const QString &error)
+        sendUpdateRequest(QJsonDocument(QJsonObject{{_name, _recordsUpdatedCache}}).toJson(), [&](const bool iResult, const QVariant& error)
         {
             if (iResult)
             {
@@ -368,7 +368,7 @@ void QJsonTableModel::submitAll()
                     return;
 
                 qWarning() << "Ошибка: " << error;
-                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, tableView);
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error.toString(), QMessageBox::NoButton, tableView);
                 QTimer::singleShot(1500, &warning, &QMessageBox::close);
                 warning.exec();
             }

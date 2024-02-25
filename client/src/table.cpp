@@ -20,7 +20,8 @@
 
 #include <ranges>
 
-extern Client::Requester* requester;
+
+extern QScopedPointer<Client::Requester> requester;
 
 namespace Client
 {
@@ -44,14 +45,14 @@ namespace Client
         return -1;
     };
 
-    Table::Table(QWidget* parent) :
+    Table::Table(const QJsonDocument iData, QWidget* parent) :
         QWidget(parent),
         _ui(new Ui::Table()),
         _stackedWidget(new QStackedWidget(_ui->groupBox))
     {
         _ui->setupUi(this);
         setObjectName("Table");
-        setPersonalData(requester->getJson());
+        setPersonalData(iData);
 
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
@@ -64,9 +65,8 @@ namespace Client
         _stackedWidget->setCurrentWidget(_personalData);
 
         _ui->gridLayout->addWidget(_stackedWidget, 0, 0, 1, 1);
-        _ui->gridLayout->addWidget(requester->getProgressBar(), 1, 0, 1, 1);
 
-        connect(requester, &Requester::logout, this, &Table::onExitClicked);
+        connect(requester.get(), &Requester::logout, this, &Table::onExitClicked);
     }
 
     Table::~Table()
@@ -195,7 +195,6 @@ namespace Client
         }
 
         qInfo() << "Выход из таблицы";
-        requester->getProgressBar()->setParent(NULL);
         showNormal();
         close();           // Закрытие окна
         emit openDialog(); // Вызов главного окна
@@ -233,22 +232,22 @@ namespace Client
 
     void Table::onRevertClicked()
     {
-        requester->sendRequest("showPersonalData", [this](bool iResult, const QString& error)
+        requester->getResource("showPersonalData", [this](const bool iResult, const QVariant& iData)
         {
             if (iResult)
             {
                 qInfo() << "Данные успешно обновлены";
-                setPersonalData(requester->getJson());
+                setPersonalData(iData.toJsonDocument());
                 if (_tableView && _tableView->getModel())
                 {
                     Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
-                    requester->sendRequest("showDatabase", handleResponse);
+                    requester->getResource("showDatabase", handleResponse);
                 }
             }
             else
             {
-                qWarning() << "Ошибка: " << error;
-                QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+                qWarning() << "Ошибка: " << iData.toString();
+                QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), iData.toString(), QMessageBox::NoButton, this);
                 QTimer::singleShot(1000, &warning, &QMessageBox::close);
                 warning.exec();
             }
@@ -273,17 +272,17 @@ namespace Client
             valueSearch->setEnabled(isEnable);
     }
 
-    void Table::showDB(const bool iResult, const QString& error)
+    void Table::showDB(const bool iResult, const QVariant& iData)
     {   
         if (iResult)
         {
-            if (!requester->getJson().isArray())
+            if (!iData.isValid() || !iData.toJsonDocument().isArray())
             {
-                Q_ASSERT(requester->getJson().isArray());
+                Q_ASSERT(iData.toJsonDocument().isArray());
                 return;
             }
 
-            const QJsonDocument json = requester->getJson();
+            const QJsonDocument json = iData.toJsonDocument();
             auto index_database = findTableInJson(json, "employee");
             auto index_database_permissions = findTableInJson(json, "database_permission");
             if (index_database == -1 || index_database_permissions == -1)
@@ -329,10 +328,10 @@ namespace Client
         }
         else
         {
-            QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), error, QMessageBox::NoButton, this);
+            QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), iData.toString(), QMessageBox::NoButton, this);
             QTimer::singleShot(1000, &warning, &QMessageBox::close);
             warning.exec();
-            qWarning() << "Ошибка: " << error;
+            qWarning() << "Ошибка: " << iData.toString();
         }
 
         setEnabledDatabaseButtons(iResult);
@@ -374,30 +373,29 @@ namespace Client
             {
                 Requester::HandleResponse handleResponse;
                 handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
-                requester->sendRequest("showDatabase", handleResponse);
+                requester->getResource("showDatabase", handleResponse);
             }
         }
-
     }
 
     void Table::updatePersonalData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        requester->sendRequest("updatePersonalData", handleResponse, Requester::Type::PATCH, iData);
+        requester->patchResource("updatePersonalData", iData, handleResponse);
     }
 
     void Table::createData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        requester->sendRequest("updateDatabase", handleResponse, Requester::Type::POST, iData);
+        requester->postResource("updateDatabase", iData, handleResponse);
     }
 
     void Table::deleteData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        requester->sendRequest("updateDatabase", handleResponse, Requester::Type::DELETE, iData);
+        requester->deleteResource("updateDatabase", iData, handleResponse);
     }
 
     void Table::updateData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        requester->sendRequest("updateDatabase", handleResponse, Requester::Type::PATCH, iData);
+        requester->patchResource("updateDatabase", iData, handleResponse);
     }
 
     void Table::onCreateUserClicked()

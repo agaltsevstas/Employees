@@ -801,7 +801,7 @@ namespace Client
     {
         if (_recordsCache && !_recordsCache->empty())
         {
-            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson(), [&](const bool iResult, const QString& error)
+            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson(), [&](const bool iResult, const QVariant& error)
             {
                 if (iResult)
                 {
@@ -881,7 +881,7 @@ namespace Client
                     }
 
                     qWarning() << "Ошибка: " << error;
-                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error, QMessageBox::NoButton, this);
+                    QMessageBox warning(QMessageBox::Icon::Warning, tr("Ошибка"), error.toString(), QMessageBox::NoButton, this);
                     QTimer::singleShot(1500, &warning, &QMessageBox::close);
                     warning.exec();
                 }
