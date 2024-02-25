@@ -22,7 +22,7 @@ namespace Client
     struct HttpRequestEvent : public QEvent
     {
     private:
-        inline static constexpr QEvent::Type Type = static_cast<QEvent::Type>(QEvent::Type::User + 2);
+        inline static constexpr QEvent::Type Type = static_cast<QEvent::Type>(QEvent::Type::User + 1);
     public:
         HttpRequestEvent(Requester::Type iType,
                          const QString& iApi,

@@ -7,8 +7,7 @@
 
 constinit const auto FILENAME = "cookies.txt";
 constinit const auto DIRECTORY = "../settings/";
-
-static QMutex mutex;
+constinit QMutex mutex;
 
 Cookie::Cookie()
 {
