@@ -54,6 +54,12 @@ public:
      */
     static DebugLevel GetDebugLevel() noexcept;
 
+    /*!
+     * @brief Запись в файл клиента
+     * @param iMessage - Записываемое сообщение
+     */
+    static void WriteToClientFile(const QString& iMessage);
+
 private:
     Logger() {}
     ~Logger();
@@ -64,7 +70,8 @@ private:
     static QString _warningBuffer;     // Буфер для хранения предупреждений
     static QString _errorBuffer;       // Буфер для хранения ошибок
     static QString _allMessagesBuffer; // Буфер для хранения всех видов сообщений
-    static QScopedPointer<QFile> _file; // Выходной файловый поток
+    static QScopedPointer<QFile> _serverFile; // Выходной файловый поток
+    static QScopedPointer<QFile> _clientFile; // Выходной файловый поток
     static std::unique_ptr<Logger> _logger; // Объект-одиночка
 
     /*!
@@ -97,10 +104,10 @@ private:
     static void WriteToBuffer(QtMsgType iMessageType, const QString& iMessage);
 
     /*!
-     * @brief Запись в файл
+     * @brief Запись в файл сервера
      * @param iMessage - Записываемое сообщение
      */
-    static void WriteToFile(const QString& iMessage);
+    static void WriteToServerFile(const QString& iMessage);
 
     /*!
      * @brief Вывод информационных сообщений на экран

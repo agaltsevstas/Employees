@@ -13,52 +13,12 @@
 #include <QNetworkCookie>
 
 
+static constinit QMutex mutex; // static, потому что в cookie.cpp уже есть mutex
+
 namespace Client
 {
     constinit const auto CLIENT_HOSTNAME = "127.0.0.1"; // Хост
     constinit const auto CLIENT_PORT = 5433; // Порт
-
-
-    struct HttpRequestEvent : public QEvent
-    {
-    private:
-        inline static constexpr QEvent::Type Type = static_cast<QEvent::Type>(QEvent::Type::User + 1);
-    public:
-        HttpRequestEvent(Requester::Type iType,
-                         const QString& iApi,
-                         const QByteArray& iData = {}):
-            QEvent(Type),
-            type(iType),
-            api(iApi),
-            data(iData)
-        {
-
-        }
-        Requester::Type type;
-        const QString api;
-        const QByteArray data;
-    };
-
-    Request::Request(QObject* parent) :
-        QObject(parent),
-        _sslConfig(0),
-        _manager(new QNetworkAccessManager(this))
-    {
-
-    }
-
-    Request::~Request()
-    {
-
-    }
-
-    void Request::sendRequest(const Type iType,
-                              const QString& iApi,
-                              const QByteArray& iData)
-    {
-        auto event = new HttpRequestEvent(iType, iApi, iData);
-        qApp->postEvent(this, event);
-    }
 
     QJsonDocument parseReply(QNetworkReply* iReply)
     {
@@ -98,6 +58,70 @@ namespace Client
         }
 
         return jsonDocument;
+    }
+
+    struct HttpRequestEvent : public QEvent
+    {
+    private:
+        inline static constexpr QEvent::Type Type = static_cast<QEvent::Type>(QEvent::Type::User + 1);
+    public:
+        HttpRequestEvent(Requester::Type iType,
+                         const QString& iApi,
+                         const QByteArray& iData = {},
+                         const Requester::HandleResponse& iHandleResponse = Q_NULLPTR):
+            QEvent(Type),
+            type(iType),
+            api(iApi),
+            data(iData),
+            handleResponse(iHandleResponse)
+        {
+
+        }
+        Requester::Type type;
+        const QString api;
+        const QByteArray data;
+        const Requester::HandleResponse handleResponse;
+    };
+
+    struct LoggerRequestEvent : public QEvent
+    {
+    private:
+        inline static constexpr QEvent::Type Type = static_cast<QEvent::Type>(QEvent::Type::User + 2);
+    public:
+        LoggerRequestEvent(const QByteArray& iData):
+            QEvent(Type),
+            data(iData)
+        {
+
+        }
+
+        const QByteArray data;
+    };
+
+    Request::Request(QObject* parent) :
+        QObject(parent),
+        _sslConfig(0),
+        _manager(new QNetworkAccessManager(this))
+    {
+
+    }
+
+    Request::~Request()
+    {
+
+    }
+
+    void Request::sendRequest(const Type iType,
+                              const QString& iApi,
+                              const HandleResponse& iHandleResponse,
+                              const QByteArray& iData)
+    {
+        QEvent* event = Q_NULLPTR;
+        if (iApi == "log")
+            event = new LoggerRequestEvent(iData);
+        else
+            event = new HttpRequestEvent(iType, iApi, iData, iHandleResponse);
+        qApp->postEvent(this, event);
     }
 
     QSharedPointer<QNetworkRequest> Request::createRequest(const QString& iApi)
@@ -141,6 +165,7 @@ namespace Client
     {
         if (auto event = dynamic_cast<HttpRequestEvent*>(iEvent); event)
         {
+            mutex.lock();
             QSharedPointer<QNetworkRequest> request = createRequest(event->api);
             QNetworkReply *reply = Q_NULLPTR;
             switch (event->type)
@@ -175,7 +200,8 @@ namespace Client
             }
 
             QtFuture::connect(reply, &QNetworkReply::finished).
-            then([reply]()
+            // Async запускает обработку reply, чтобы освободить поток для отправки данных Logger клиента на сервер
+            then(QtFuture::Launch::Async, [reply]() -> QNetworkReply*
             {
                 auto replyError = reply->error();
                 if (replyError == QNetworkReply::NoError)
@@ -183,7 +209,7 @@ namespace Client
                     int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                     if ((code >= 200) && (code < 300))
                     {
-                        qInfo() << "Ответ на запрос";
+                         qInfo() << "Ответ на запрос";
                     }
                 }
                 else
@@ -191,10 +217,10 @@ namespace Client
 
                 return reply;
             }).
-            then(QtFuture::Launch::Async, parseReply). // return QJsonDocument
-                then([this, reply, api = std::move(event->api)](const QJsonDocument& json) -> void
+            then(parseReply). // return QJsonDocument
+            then([this, reply, api = std::move(event->api), handleResponse = std::move(event->handleResponse)](const QJsonDocument& json) -> void
             {
-                _token.clear();
+                // _token.clear(); // Закоментировал для отправления log данных
 
                 QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
                 if (!variantCookies.isNull())
@@ -217,13 +243,21 @@ namespace Client
                 reply->deleteLater();
                 // delete reply; // необязательно после deleteLater
 
-                emit finished(true, json);
+                emit finished(true, json, handleResponse);
             }).
-            onFailed([this](const QString& error) -> void
+            onFailed([this, handleResponse = std::move(event->handleResponse)](const QString& error) -> void
             {
-                emit finished(false, error);
+                emit finished(false, error, handleResponse);
             });
         }
+        else if (auto event = dynamic_cast<LoggerRequestEvent*>(iEvent); event)
+        {
+            QSharedPointer<QNetworkRequest> request = createRequest("log");
+            request->setRawHeader("Content-Length", QByteArray::number(event->data.size()));
+            _manager->post(*request, event->data); // Отправляет request без reply
+        }
+        else
+            Q_ASSERT(0);
     }
 
     Answer::Answer(Requester* iRequester) :
@@ -239,10 +273,11 @@ namespace Client
     }
 
     /// Отправление ответа в текущем потоке
-    void Answer::replyFinished(const bool iResult, const QVariant& iData)
+    void Answer::replyFinished(const bool iResult, const QVariant& iData, const Requester::HandleResponse& iHandleResponse)
     {
-        if (_requester._handleResponse)
-            _requester._handleResponse(iResult, iData);
+        if (iHandleResponse)
+            iHandleResponse(iResult, iData);
+        mutex.unlock();
     }
 
     Requester::Requester(QObject* parent) :
@@ -282,53 +317,45 @@ namespace Client
         return _request->_token;
     }
 
-    void Requester::getResource(const QString& iApi, const HandleResponse& handleResponse)
+    void Requester::getResource(const QString& iApi, const HandleResponse& iHandleResponse)
     {
         if (!Session::getSession().Cookie().isValid())
             emit logout();
 
-        _handleResponse = handleResponse;
-
         _request->setToken(getToken());
-        _request->sendRequest(Requester::Type::GET, iApi);
+        _request->sendRequest(Requester::Type::GET, iApi, iHandleResponse);
     }
 
     void Requester::patchResource(const QString& iApi,
                                   const QByteArray& iData,
-                                  const HandleResponse& handleResponse)
+                                  const HandleResponse& iHandleResponse)
     {
         if (!Session::getSession().Cookie().isValid())
             emit logout();
 
-        _handleResponse = handleResponse;
-
         _request->setToken(getToken());
-        _request->sendRequest(Requester::Type::PATCH, iApi, iData);
+        _request->sendRequest(Requester::Type::PATCH, iApi, iHandleResponse, iData);
     }
 
     void Requester::postResource(const QString& iApi,
                                  const QByteArray& iData,
-                                 const HandleResponse& handleResponse)
+                                 const HandleResponse& iHandleResponse)
     {
         if (!Session::getSession().Cookie().isValid())
             emit logout();
 
-        _handleResponse = handleResponse;
-
         _request->setToken(getToken());
-        _request->sendRequest(Requester::Type::POST, iApi, iData);
+        _request->sendRequest(Requester::Type::POST, iApi, iHandleResponse, iData);
     }
 
     void Requester::deleteResource(const QString& iApi,
                                    const QByteArray& iData,
-                                   const HandleResponse& handleResponse)
+                                   const HandleResponse& iHandleResponse)
     {
         if (!Session::getSession().Cookie().isValid())
             emit logout();
 
-        _handleResponse = handleResponse;
-
         _request->setToken(getToken());
-        _request->sendRequest(Requester::Type::DELETE, iApi, iData);
+        _request->sendRequest(Requester::Type::DELETE, iApi, iHandleResponse, iData);
     }
 }

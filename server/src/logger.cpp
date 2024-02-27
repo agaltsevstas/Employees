@@ -4,13 +4,15 @@
 #include <QDir>
 #include <QThread>
 
-constinit const auto DIRECTORY = "../log/";
+constinit const auto SERVER_DIRECTORY = "../log/server/";
+constinit const auto CLIENT_DIRECTORY = "../log/client/";
 
 QString Logger::_infoBuffer;
 QString Logger::_warningBuffer;
 QString Logger::_errorBuffer;
 QString Logger::_allMessagesBuffer;
-QScopedPointer<QFile> Logger::_file;
+QScopedPointer<QFile> Logger::_serverFile;
+QScopedPointer<QFile> Logger::_clientFile;
 std::unique_ptr<Logger> Logger::_logger = nullptr;
 
 
@@ -21,15 +23,15 @@ void Logger::Instance()
 
     const QString fileName = Utils::LocalTime() + ".log";
 
-    QDir directory(DIRECTORY);
+    QDir directory(SERVER_DIRECTORY);
     if (!directory.exists())
         directory.mkpath(".");
 
-    const QString filePath = QString(DIRECTORY) + fileName;
-    _file.reset(new QFile(std::move(filePath)));
-    _file->open(QFile::Append | QFile::Text);
-    if (!_file->isOpen())
-        qWarning() << "Logger file is not open";
+    const QString filePath = QString(SERVER_DIRECTORY) + fileName;
+    _serverFile.reset(new QFile(std::move(filePath)));
+    _serverFile->open(QFile::Append | QFile::Text);
+    if (!_serverFile->isOpen())
+        qWarning() << "Logger Server file is not open";
 }
 
 void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext&, const QString& iMessage)
@@ -62,12 +64,34 @@ Logger::DebugLevel Logger::GetDebugLevel() noexcept
     return _debugLevel;
 }
 
+void Logger::WriteToClientFile(const QString& iMessage)
+{
+    if (iMessage.isEmpty())
+        return;
+
+    if (!_clientFile)
+    {
+        QDir directory(CLIENT_DIRECTORY);
+        if (!directory.exists())
+            directory.mkpath(".");
+
+        const QString fileName = Utils::LocalTime() + ".log";
+        const QString filePath = QString(CLIENT_DIRECTORY) + fileName;
+        _clientFile.reset(new QFile(std::move(filePath)));
+        _clientFile->open(QFile::Append | QFile::Text);
+        if (_clientFile->isOpen())
+            qWarning() << "Logger file is not open";
+    }
+
+    QTextStream(_clientFile.get()) << iMessage;
+}
+
 void Logger::WriteInfo(const QString& iMessage)
 {
     if (_debugLevel >= DEBUG_LEVEL_INFO)
     {
         const QString str = QString("[%1] %2\n").arg(Utils::LocalTime()).arg(iMessage);
-        std::thread thread = std::thread([&str]() { WriteToFile(str); });
+        std::thread thread = std::thread([&str]() { WriteToServerFile(str); });
         WriteToBuffer(QtMsgType::QtInfoMsg, str);
         thread.join();
     }
@@ -78,7 +102,7 @@ void Logger::WriteWarning(const QString& iMessage)
     if (_debugLevel >= DEBUG_LEVEL_WARNING)
     {
         const QString str = QString("[%1] [Warning] %2\n").arg(Utils::LocalTime()).arg(iMessage);
-        std::thread thread = std::thread([&str]() { WriteToFile(str); });
+        std::thread thread = std::thread([&str]() { WriteToServerFile(str); });
         WriteToBuffer(QtMsgType::QtWarningMsg, str);
         thread.join();
     }
@@ -89,7 +113,7 @@ void Logger::WriteCritical(const QString& iMessage)
     if (_debugLevel >= DEBUG_LEVEL_ERROR)
     {
         const QString str = QString("[%1] [Error] %2\n").arg(Utils::LocalTime()).arg(iMessage);
-        std::thread thread = std::thread([&str]() { WriteToFile(str); });
+        std::thread thread = std::thread([&str]() { WriteToServerFile(str); });
         WriteToBuffer(QtMsgType::QtCriticalMsg, str) ;
         thread.join();
     }
@@ -114,9 +138,12 @@ void Logger::WriteToBuffer(QtMsgType iMessageType, const QString& message)
     }
 }
 
-void Logger::WriteToFile(const QString& iMessage)
+void Logger::WriteToServerFile(const QString& iMessage)
 {
-    QTextStream(_file.get()) << iMessage;
+    if (iMessage.isEmpty())
+        return;
+
+    QTextStream(_serverFile.get()) << iMessage;
 }
 
 void Logger::PrintInfo()
@@ -141,6 +168,9 @@ void Logger::PrintAllMessages()
 
 Logger::~Logger()
 {
-    _file->flush();
-    _file->close();
+    _serverFile->flush();
+    _serverFile->close();
+
+    _clientFile->flush();
+    _clientFile->close();
 }

@@ -37,16 +37,16 @@ namespace Client
         ~Requester();
 
         void getResource(const QString& iApi,
-                         const HandleResponse& handleResponse = Q_NULLPTR);
+                         const HandleResponse& iHandleResponse = Q_NULLPTR);
         void patchResource(const QString& iApi,
                            const QByteArray& iData,
-                           const HandleResponse& handleResponse = Q_NULLPTR);
+                           const HandleResponse& iHandleResponse = Q_NULLPTR);
         void postResource(const QString& iApi,
                           const QByteArray& iData,
-                          const HandleResponse& handleResponse = Q_NULLPTR);
+                          const HandleResponse& iHandleResponse = Q_NULLPTR);
         void deleteResource(const QString& iApi,
                             const QByteArray& iData,
-                            const HandleResponse& handleResponse = Q_NULLPTR);
+                            const HandleResponse& iHandleResponse = Q_NULLPTR);
 
         /*!
          * \brief Устновить токен (access/refresh)
@@ -64,7 +64,6 @@ namespace Client
         const QString getToken();
 
     private:
-        Requester::HandleResponse _handleResponse;
         Request* _request;
         Answer* _answer;
         QThread* _thread;
@@ -89,6 +88,7 @@ namespace Client
 
         void sendRequest(const Type iType,
                          const QString& iApi,
+                         const HandleResponse& iHandleResponse = Q_NULLPTR,
                          const QByteArray& iData = {});
 
         /*!
@@ -107,7 +107,7 @@ namespace Client
         void customEvent(QEvent *event) override;
 
     Q_SIGNALS:
-        void finished(const bool iResult, const QVariant& iData);
+        void finished(const bool iResult, const QVariant& iData, const HandleResponse& iHandleResponse);
 
     private:
         QSslConfiguration *_sslConfig;
@@ -128,7 +128,7 @@ namespace Client
         explicit Answer(Requester* iRequester);
 
     public Q_SLOTS:
-        void replyFinished(const bool iResult, const QVariant& iData);
+        void replyFinished(const bool iResult, const QVariant& iData, const Requester::HandleResponse& iHandleResponse);
 
     private:
         Requester &_requester;

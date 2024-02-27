@@ -3,7 +3,9 @@
 
 #include <QDir>
 #include <QThread>
+#include <Requester>
 
+extern QScopedPointer<Client::Requester> requester;
 constinit const auto DIRECTORY = "../log/";
 
 QString Logger::_infoBuffer;
@@ -48,6 +50,7 @@ void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext&, c
             break;
         case QtFatalMsg:
         default:
+            WriteFatal(iMessage);
             abort();
     }
 }
@@ -68,7 +71,7 @@ void Logger::WriteInfo(const QString& iMessage)
     {
         const QString str = QString("[%1] %2\n").arg(Utils::LocalTime()).arg(iMessage);
         std::thread thread = std::thread([&str]() { WriteToFile(str); });
-        WriteToBuffer(QtMsgType::QtInfoMsg, str);
+        WriteToBuffer(QtMsgType::QtInfoMsg, str);;
         thread.join();
     }
 }
@@ -79,6 +82,7 @@ void Logger::WriteWarning(const QString& iMessage)
     {
         const QString str = QString("[%1] [Warning] %2\n").arg(Utils::LocalTime()).arg(iMessage);
         std::thread thread = std::thread([&str]() { WriteToFile(str); });
+        requester->postResource("log", str.toUtf8());
         WriteToBuffer(QtMsgType::QtWarningMsg, str);
         thread.join();
     }
@@ -90,9 +94,16 @@ void Logger::WriteCritical(const QString& iMessage)
     {
         const QString str = QString("[%1] [Error] %2\n").arg(Utils::LocalTime()).arg(iMessage);
         std::thread thread = std::thread([&str]() { WriteToFile(str); });
-        WriteToBuffer(QtMsgType::QtCriticalMsg, str) ;
+        requester->postResource("log", str.toUtf8());
+        WriteToBuffer(QtMsgType::QtCriticalMsg, str);
         thread.join();
     }
+}
+
+void Logger::WriteFatal(const QString& iMessage)
+{
+    const QString str = QString("[%1] [Fatal] %2\n").arg(Utils::LocalTime()).arg(iMessage);
+    requester->postResource("log", str.toUtf8());
 }
 
 void Logger::WriteToBuffer(QtMsgType iMessageType, const QString& message)

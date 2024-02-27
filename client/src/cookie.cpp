@@ -7,7 +7,7 @@
 
 constinit const auto FILENAME = "cookies.txt";
 constinit const auto DIRECTORY = "../settings/";
-constinit QMutex mutex;
+static constinit QMutex mutex; // static, потому что в request.cpp уже есть mutex
 
 Cookie::Cookie()
 {
@@ -42,6 +42,9 @@ Cookie::Cookie()
 
 Cookie::~Cookie()
 {
+    if (_data.empty())
+        return;
+
     QFile file(QString(DIRECTORY) + FILENAME);
     if (!file.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
     {

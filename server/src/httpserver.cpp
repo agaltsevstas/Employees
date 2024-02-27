@@ -1,6 +1,7 @@
 #include "httpserver.h"
-#include "database.h"
 #include "authenticationservice.h"
+#include "database.h"
+#include "logger.h"
 #include "server.h"
 
 #include <QHttpServer>
@@ -10,9 +11,12 @@
 #include <QJsonDocument>
 #include <QtConcurrent>
 
+
 #define INFO(object, str) qInfo() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
+#define CLIENT_LOG(id, username, role, str) "[" + id + " " + username + " " + role + "] " + str
+#define CLIENT(object, str) CLIENT_LOG(QString::number(object.getID()), object.getUserName(), object.getRole(), str)
 
 extern QScopedPointer<Server::DataBase> db;
 
@@ -654,6 +658,22 @@ namespace Server
                     return QHttpServerResponse(StatusCode::TooManyRequests);
 
                 return AuthorizationService(*this, request, &HttpServer::HttpServerImpl::_updateDatabase).checkAccess(Employee::databasePermissionTable().toUtf8());
+            });
+        });
+
+        _server.route("/log", QHttpServerRequest::Method::Post, [&](const QHttpServerRequest& request)
+        {
+            return QtConcurrent::run([&]()
+            {
+                if (!_authentication(request))
+                    return QHttpServerResponse("WWW-Authenticate", "Basic realm = Please login with any name and password", StatusCode::Unauthorized);
+
+                if (!_checkRequestID(request))
+                    return QHttpServerResponse(StatusCode::TooManyRequests);
+
+                QString message = CLIENT(_authenticationService, request.body());
+                Logger::WriteToClientFile(message);
+                return QHttpServerResponse(StatusCode::Ok);
             });
         });
 
