@@ -260,20 +260,20 @@ namespace Client
             Q_ASSERT(0);
     }
 
-    Answer::Answer(Requester* iRequester) :
+    Reply::Reply(Requester* iRequester) :
         QObject(iRequester),
         _requester(*iRequester)
     {
 
     }
 
-    Answer::~Answer()
+    Reply::~Reply()
     {
 
     }
 
-    /// Отправление ответа в текущем потоке
-    void Answer::replyFinished(const bool iResult, const QVariant& iData, const Requester::HandleResponse& iHandleResponse)
+    /// После обработки ответа в другом потоке, далее идет переброска ответа уже в главном потоке
+    void Reply::finished(const bool iResult, const QVariant& iData, const Requester::HandleResponse& iHandleResponse)
     {
         if (iHandleResponse)
             iHandleResponse(iResult, iData);
@@ -282,15 +282,15 @@ namespace Client
 
     Requester::Requester(QObject* parent) :
         QObject(parent),
-        _request(new Request()), // Не передавать родителя, иначе будет в текущем потоке работать
-        _answer(new Answer(this)),
+        _request(new Request()), // Не передавать родителя, иначе будет в главном потоке работать
+        _reply(new Reply(this)),
         _thread(new QThread(this))
     {
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setHorizontalStretch(10);
 
-        connect(_request, &Request::finished, _answer, &Answer::replyFinished); // Выполнение в текущем потоке
+        connect(_request, &Request::finished, _reply, &Reply::finished); // Выполнение в главном потоке
         // connect(_request, &Request::finished, _answer, &Answer::replyFinished, Qt::DirectConnection); // Выполнение в другом потоке
 
         _request->moveToThread(_thread);

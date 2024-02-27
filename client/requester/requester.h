@@ -12,7 +12,7 @@ class QSslConfiguration;
 namespace Client
 {
     class Request;
-    class Answer;
+    class Reply;
 
 
     class Requester final : public QObject
@@ -65,10 +65,10 @@ namespace Client
 
     private:
         Request* _request;
-        Answer* _answer;
+        Reply* _reply;
         QThread* _thread;
         friend class Request;
-        friend class Answer;
+        friend class Reply;
     };
 
     class Request final : public QObject
@@ -116,19 +116,19 @@ namespace Client
         friend class Requester;
     };
 
-    class Answer final : public QObject
+    class Reply final : public QObject
     {
         Q_OBJECT
-        Q_DISABLE_COPY_MOVE(Answer)
+        Q_DISABLE_COPY_MOVE(Reply)
 
     public:
-        ~Answer();
+        ~Reply();
 
     private:
-        explicit Answer(Requester* iRequester);
+        explicit Reply(Requester* iRequester);
 
     public Q_SLOTS:
-        void replyFinished(const bool iResult, const QVariant& iData, const Requester::HandleResponse& iHandleResponse);
+        void finished(const bool iResult, const QVariant& iData, const Requester::HandleResponse& iHandleResponse);
 
     private:
         Requester &_requester;
