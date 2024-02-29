@@ -4,6 +4,17 @@
 <img src="images/database.png"/>
 </p>
 
+# Оглавление
+- [База данных](#база-данных)
+- [Схема](#схема)
+- [Код](#код)
+- [Многопоточность](#многопоточность)
+- [Требования](#требования)
+- [Аутентификация](#аутентификация)
+- [Идемпотентность](#идемпотентность)
+- [Сайты](#сайты)
+ 
+
 # База данных
 Используется реляционная база данных PostgreSQL. Она хорошо применяется в клиент-сервер приложениях и позволяет использовать связи между таблицами.
 
@@ -99,7 +110,7 @@ namespace details
     concept TUpdatePersonalData = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
 
     template <typename T>
-    concept TUpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&), T>;
+    concept TUpdateDatabase = std::is_same_v<QHttpServerResponse(HttpServer::HttpServerImpl::*)(QQueue<Tree>&, QHttpServerRequest::Method), T>;
 }
 
 template <class TCallBack>
@@ -315,6 +326,7 @@ _server.route("/login", [this](const QHttpServerRequest& request)
 * C++20
 * cmake
 * qt6-qmake
+* 
 * Boost (не ниже версии 1.56)
 * PostgreSQL (не ниже версии 14.1)
 
