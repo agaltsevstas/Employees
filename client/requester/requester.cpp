@@ -1,4 +1,4 @@
-﻿#include "requester.h"
+#include "requester.h"
 #include "cookie.h"
 #include "session.h"
 
@@ -13,7 +13,7 @@
 #include <QNetworkCookie>
 
 
-constinit QMutex mutex;
+static constinit QMutex mutex;
 
 namespace Client
 {
