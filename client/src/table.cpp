@@ -380,7 +380,7 @@ namespace Client
 
     void Table::updatePersonalData(const QByteArray& iData, const HandleResponse& handleResponse)
     {
-        requester->patchResource("updatePersonalData", iData, handleResponse);
+        requester->patchResource("", iData, handleResponse);
     }
 
     void Table::createData(const QByteArray& iData, const HandleResponse& handleResponse)

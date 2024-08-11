@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <QDir>
+#include <QMutex>
 #include <QThread>
 #include <Requester>
 
@@ -14,6 +15,7 @@ QString Logger::_errorBuffer;
 QString Logger::_allMessagesBuffer;
 QScopedPointer<QFile> Logger::_file;
 std::unique_ptr<Logger> Logger::_logger = nullptr;
+QMutex Logger::_mutex;
 
 
 void Logger::Instance()
@@ -36,6 +38,7 @@ void Logger::Instance()
 
 void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext&, const QString& iMessage)
 {
+    QMutexLocker lock(&_mutex);
     switch (iMessageType)
     {
         case QtInfoMsg:
@@ -71,7 +74,7 @@ void Logger::WriteInfo(const QString& iMessage)
     {
         const QString str = QString("[%1] %2\n").arg(Utils::LocalTime()).arg(iMessage);
         std::thread thread = std::thread([&str]() { WriteToFile(str); });
-        WriteToBuffer(QtMsgType::QtInfoMsg, str);;
+        WriteToBuffer(QtMsgType::QtInfoMsg, str);
         thread.join();
     }
 }

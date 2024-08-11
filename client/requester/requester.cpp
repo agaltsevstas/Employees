@@ -13,7 +13,7 @@
 #include <QNetworkCookie>
 
 
-static constinit QMutex mutex; // static, потому что в cookie.cpp уже есть mutex
+constinit QMutex mutex;
 
 namespace Client
 {
@@ -236,7 +236,7 @@ namespace Client
                     }
                 }
 
-                if (api == "logout")
+                if (api == "y")
                     Session::getSession().Cookie().clear();
 
                 reply->close();
@@ -291,7 +291,7 @@ namespace Client
         sizePolicy.setHorizontalStretch(10);
 
         connect(_request, &Request::finished, _reply, &Reply::finished); // Выполнение в главном потоке
-        // connect(_request, &Request::finished, _answer, &Answer::replyFinished, Qt::DirectConnection); // Выполнение в другом потоке
+        // connect(_request, &Request::finished, _reply, &Reply::finished, Qt::DirectConnection); // Выполнение в другом потоке
 
         _request->moveToThread(_thread);
         _thread->start();

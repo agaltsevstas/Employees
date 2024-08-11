@@ -69,11 +69,20 @@ namespace Server
         [[nodiscard("getRefreshToken")]] const QByteArray getRefreshToken();
 
         /*!
-         * \brief Проверка аутентификации
-         * \param ioToken - access/refresh token
-         * \return
+         * \brief Аутентификация пользователя
+         * \param iUserName - Имя пользователя
+         * \param iPassword - Пароль
+         * \param oData - Получение данных пользователя
+         * \return true - успех, иначе false
          */
-        bool checkAuthentication(QByteArray& ioToken);
+        bool authentication(const QByteArray& iUserName, const QByteArray& iPassword, QByteArray& oData);
+
+        /*!
+         * \brief Идентификация пользователя
+         * \param ioToken - access/refresh token
+         * \return true - успех, иначе false
+         */
+        bool identification(QByteArray& ioToken);
 
     private:
         qint64 _id;

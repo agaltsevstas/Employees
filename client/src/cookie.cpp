@@ -2,12 +2,11 @@
 #include "qjsonwebtoken.h"
 
 #include <QDir>
-#include <QMutex>
 
 
 constinit const auto FILENAME = "cookies.txt";
 constinit const auto DIRECTORY = "../settings/";
-static constinit QMutex mutex; // static, потому что в request.cpp уже есть mutex
+
 
 Cookie::Cookie()
 {
@@ -68,7 +67,7 @@ Cookie& Cookie::Instance() noexcept
 
 bool Cookie::isValid() const
 {
-    QMutexLocker lock(&mutex);
+    QReadLocker lock(&_mutex);
     for (const auto& name : _data.keys())
     {
         if (QJsonWebToken token = QJsonWebToken::fromToken(_data.value(name)); token.isValid())
@@ -82,7 +81,7 @@ bool Cookie::isValid() const
 
 QString Cookie::getValidToken()
 {
-    QMutexLocker lock(&mutex);
+    QReadLocker lock(&_mutex);
     for (const auto& name : _data.keys())
     {
         if (QJsonWebToken token = QJsonWebToken::fromToken(_data.value(name)); token.isValid())
@@ -96,13 +95,13 @@ QString Cookie::getValidToken()
 
 void Cookie::addToken(const QString& iKey, const QString& iValue) noexcept
 {
-    QMutexLocker lock(&mutex);
+    QWriteLocker lock(&_mutex);
     _data[iKey] = iValue;
 }
 
 QString Cookie::getUserName() const
 {
-    QMutexLocker lock(&mutex);
+    QReadLocker lock(&_mutex);
     for (const auto& name : _data.keys())
     {
         if (QJsonWebToken token = QJsonWebToken::fromToken(_data.value(name)); token.isValid())
@@ -116,12 +115,12 @@ QString Cookie::getUserName() const
 
 void Cookie::clear() noexcept
 {
-    QMutexLocker lock(&mutex);
+    QWriteLocker lock(&_mutex);
     _data.clear();
 }
 
 bool Cookie::isEmpty() const noexcept
 {
-    QMutexLocker lock(&mutex);
+    QReadLocker lock(&_mutex);
     return _data.empty();
 }

@@ -2,6 +2,7 @@
 #define COOKIE_H
 
 #include <QMap>
+#include <QReadWriteLock>>
 
 
 class Cookie final
@@ -58,6 +59,7 @@ private:
     ~Cookie();
 
     QMap<QString, QString> _data;
+    mutable QReadWriteLock _mutex;
 };
 
 #endif // COOKIE_H

@@ -405,7 +405,7 @@ namespace Client
         QCheckBox* autoUpdate = new QCheckBox("Автоматическое обновление", verticalLayoutWidget);
         connect(autoUpdate, SIGNAL(clicked(bool)), parent, SLOT(onAutoUpdateClicked(bool)));
         autoUpdate->setObjectName("autoUpdate");
-        autoUpdate->setToolTip("Автоматически отправлять д1анные на сервер");
+        autoUpdate->setToolTip("Автоматически отправлять данные на сервер");
         autoUpdate->setSizePolicy(sizePolicy);
         buttonLayout->addWidget(autoUpdate, 0, 0, 1, 1);
 

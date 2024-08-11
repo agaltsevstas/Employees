@@ -1,10 +1,12 @@
 #include "authenticationservice.h"
+#include "database.h"
 #include "qjsonwebtoken.h"
 
 #define INFO(object, str) qInfo() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define WARNING(object, str) qWarning() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 #define CRITICAL(object, str) qCritical() << "[" + QString::number(object.getID()) + " " + object.getUserName() + " " + object.getRole() + "] " + str;
 
+extern QScopedPointer<Server::DataBase> db;
 
 namespace Server
 {
@@ -182,7 +184,20 @@ namespace Server
                           "Lax").toByteArray(*this);
     }
 
-    bool AuthenticationService::checkAuthentication(QByteArray& ioToken)
+    bool AuthenticationService::authentication(const QByteArray& iUserName, const QByteArray& iPassword, QByteArray& oData)
+    {
+        QString id, role;
+        if (!db->authentication(iUserName, iPassword, id, role, oData))
+            return false;
+
+        setID(id.toULongLong());
+        setUserName(iUserName);
+        setRole(role);
+        INFO((*this), "Аутентификации пройдена");
+        return true;
+    }
+
+    bool AuthenticationService::identification(QByteArray& ioToken)
     {
         if (QJsonWebToken accessToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_ACCESS_SECRET); accessToken.isValid())
         {
@@ -190,6 +205,7 @@ namespace Server
             _id = accessToken.getID();
             _userName = accessToken.getUserName();
             _role = accessToken.getRole();
+            INFO((*this), "Аутентификации пройдена");
             return true;
         }
         else if (QJsonWebToken refreshToken = QJsonWebToken::fromTokenAndSecret(ioToken, JWT_REFRESH_SECRET); refreshToken.isValid())
@@ -198,6 +214,7 @@ namespace Server
             _id = refreshToken.getID();
             _userName = refreshToken.getUserName();
             _role = refreshToken.getRole();
+            INFO((*this), "Аутентификации пройдена");
             return true;
         }
 

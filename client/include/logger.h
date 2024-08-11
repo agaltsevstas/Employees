@@ -5,6 +5,7 @@
 
 
 class QFile;
+class QMutex;
 
 /*!
  * @brief Класс-синглтон, предназначенный для сбора и сохранения информации о работе программы.
@@ -67,6 +68,7 @@ private:
     static QString _allMessagesBuffer; // Буфер для хранения всех видов сообщений
     static QScopedPointer<QFile> _file; // Выходной файловый поток
     static std::unique_ptr<Logger> _logger; // Объект-одиночка
+    static QMutex _mutex;
 
     /*!
      * @brief Запись информационных сообщений.

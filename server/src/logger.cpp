@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <QDir>
+#include <QMutex>
 #include <QThread>
 
 constinit const auto SERVER_DIRECTORY = "../log/server/";
@@ -14,6 +15,7 @@ QString Logger::_allMessagesBuffer;
 QScopedPointer<QFile> Logger::_serverFile;
 QScopedPointer<QFile> Logger::_clientFile;
 std::unique_ptr<Logger> Logger::_logger = nullptr;
+QMutex Logger::_mutex;
 
 
 void Logger::Instance()
@@ -36,6 +38,7 @@ void Logger::Instance()
 
 void Logger::messageHandler(QtMsgType iMessageType, const QMessageLogContext&, const QString& iMessage)
 {
+    QMutexLocker lock(&_mutex);
     switch (iMessageType)
     {
         case QtInfoMsg:
@@ -114,7 +117,7 @@ void Logger::WriteCritical(const QString& iMessage)
     {
         const QString str = QString("[%1] [Error] %2\n").arg(Utils::LocalTime()).arg(iMessage);
         std::thread thread = std::thread([&str]() { WriteToServerFile(str); });
-        WriteToBuffer(QtMsgType::QtCriticalMsg, str) ;
+        WriteToBuffer(QtMsgType::QtCriticalMsg, str);
         thread.join();
     }
 }

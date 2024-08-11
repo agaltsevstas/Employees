@@ -238,23 +238,15 @@ namespace Server
                 {
                     QByteArray userName = parts[0];
                     QByteArray password = parts[1];
-                    QString id, role;
-                    if (oData && db->authentication(userName, password, id, role, *oData))
-                    {
-                        _authenticationService.setID(id.toULongLong());
-                        _authenticationService.setUserName(userName);
-                        _authenticationService.setRole(role);
-                        INFO(_authenticationService, "Аутентификации пройдена");
+                    if (oData && _authenticationService.authentication(userName, password, *oData))
                         return true;
-                    }
                 }
             }
             else if (authentication.startsWith("Bearer"))
             {
                 QByteArray token = QByteArray::fromBase64(authentication.mid(7));
-                if (_authenticationService.checkAuthentication(token))
+                if (_authenticationService.identification(token))
                 {
-                    INFO(_authenticationService, "Аутентификации пройдена");
                     if (oData)
                     {
                         if (db->getPeronalData(_authenticationService.getID(), _authenticationService.getRole(), _authenticationService.getUserName(), *oData))

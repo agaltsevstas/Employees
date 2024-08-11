@@ -61,7 +61,7 @@ QWidget *Delegate::createEditor(QWidget* parent,
                     comboBox->installEventFilter(const_cast<Delegate*>(this));
                     comboBox->setSizePolicy(GetSizePolice());
                     comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
-//                    comboBox->setEditable(true); // Можно вводить текст с помощью подсказок
+                    // comboBox->setEditable(true); // Можно вводить текст с помощью подсказок
 
                     return comboBox;
                 }
