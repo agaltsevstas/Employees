@@ -89,6 +89,13 @@ namespace Client
             _model->submitAll();
     }
 
+    void TableView::revertAll()
+    {
+        if (_model)
+            _model->revertAll();
+        sortByColumn(0, Qt::SortOrder::AscendingOrder);
+    }
+
     bool TableView::addUser()
     {
         if (!_model)

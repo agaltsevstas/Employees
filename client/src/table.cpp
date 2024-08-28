@@ -232,26 +232,11 @@ namespace Client
 
     void Table::onRevertClicked()
     {
-        requester->getResource("showPersonalData", [this](const bool iResult, const QVariant& iData)
-        {
-            if (iResult)
-            {
-                qInfo() << "Данные успешно обновлены";
-                setPersonalData(iData.toJsonDocument());
-                if (_tableView && _tableView->getModel())
-                {
-                    Requester::HandleResponse handleResponse = std::bind(&Table::showDB, this, std::placeholders::_1, std::placeholders::_2);
-                    requester->getResource("showDatabase", handleResponse);
-                }
-            }
-            else
-            {
-                qWarning() << "Ошибка: " << iData.toString();
-                QMessageBox warning(QMessageBox::Icon::Warning, tr("Предупреждение"), iData.toString(), QMessageBox::NoButton, this);
-                QTimer::singleShot(1000, &warning, &QMessageBox::close);
-                warning.exec();
-            }
-        });
+        if (_personalData)
+            _personalData->revertAll();
+
+        if (_tableView)
+            _tableView->revertAll();
     }
 
     void Table::setEnabledDatabaseButtons(bool isEnable)

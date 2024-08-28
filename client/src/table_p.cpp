@@ -174,7 +174,7 @@ namespace Client
                     comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                     widget = comboBox;
 
-                    _dataCache.emplace_back(field, comboBox->currentText());
+                    _dataCache.emplace(field, comboBox->currentText());
                 }
                 else if (field == Client::Employee::salary())
                 {
@@ -198,7 +198,7 @@ namespace Client
                     spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                     widget = spinBox;
 
-                    _dataCache.emplace_back(field, spinBox->text());
+                    _dataCache.emplace(field, spinBox->text());
                 }
                 else
                 {
@@ -296,7 +296,7 @@ namespace Client
                     widget = lineEdit;
                     widget->clearFocus();
 
-                    _dataCache.emplace_back(field, lineEdit->text());
+                    _dataCache.emplace(field, lineEdit->text());
                 }
 
                 if (it_permissions != object_permissions.end() && it_permissions->isString())
@@ -515,7 +515,7 @@ namespace Client
                 comboBox->setStyleSheet(QString::fromUtf8("QComboBox {border: 1px solid gray; padding: 0px;} QComboBox::drop-down {border-color: transparent;}"));
                 dataLayout->addWidget(comboBox, i, 1, 1, 1);
 
-                _dataCache.emplace_back(field, comboBox->currentText());
+                _dataCache.emplace(field, comboBox->currentText());
             }
             else if (field == Client::Employee::salary())
             {
@@ -531,7 +531,7 @@ namespace Client
                 spinBox->setStyleSheet(QString::fromUtf8("QDoubleSpinBox {border: 1px solid gray;} QDoubleSpinBox:focus {border: 4px solid #a5cdff;}"));
                 dataLayout->addWidget(spinBox, i, 1, 1, 1);
 
-                _dataCache.emplace_back(field, spinBox->text());
+                _dataCache.emplace(field, spinBox->text());
             }
             else
             {
@@ -592,7 +592,7 @@ namespace Client
                 lineEdit->setClearButtonEnabled(true);
                 dataLayout->addWidget(lineEdit, i, 1, 1, 1);
 
-                _dataCache.emplace_back(field, lineEdit->text());
+                _dataCache.emplace(field, lineEdit->text());
             }
         }
 
@@ -647,9 +647,7 @@ namespace Client
         if (iStrategy != _strategy)
         {
             _strategy = iStrategy;
-            if (!_recordsCache)
-                _recordsCache.reset(new QJsonArray());
-            else if (_strategy == OnFieldChange)
+            if (_strategy == OnFieldChange)
                 submitAll();
         }
     }
@@ -701,37 +699,32 @@ namespace Client
             return;
 
         auto widget = qobject_cast<QWidget*>(sender());
-        const QString objectName = widget->objectName();
-        const auto fieldName = std::ranges::find_if(_dataCache, [&objectName](const auto& data) { return data.first == objectName; });
-        if (fieldName == _dataCache.constEnd())
-        {
-            Q_ASSERT(false);
-            return;
-        }
+        const QString field = widget->objectName();
+        const QString& value = _dataCache[field];
 
-        const auto& [field, value] = *fieldName;
         if (iValue == value)
         {
-            for (const auto i : std::views::iota(0, _recordsCache->size()))
+            for (const auto i : std::views::iota(0, _recordsCache.size()))
             {
-                if (_recordsCache->at(i).isObject())
+                if (_recordsCache.at(i).isObject())
                 {
-                    const QJsonObject object = _recordsCache->at(i).toObject();
+                    const QJsonObject object = _recordsCache.at(i).toObject();
                     if (object.contains("column"))
                     {
                         if (object.value("column") == field)
                         {
                             widget->setPalette(GetPaletteLight());
-                            _recordsCache->removeAt(i);
+                            _recordsCache.removeAt(i);
                             break;
                         }
                     }
                 }
             }
+
             return;
         }
 
-        if (objectName == Client::Employee::role())
+        if (field == Client::Employee::role())
         {
             QMessageBox::StandardButton reply = QMessageBox::question(this, "Изменение должности",
                                                                       "Вы хотите изменить свою должность (будет произведет выход из личного кабинета)?",
@@ -763,11 +756,11 @@ namespace Client
         record.insert("value", iValue);
 
         bool found = false;
-        for (const auto i : std::views::iota(0, _recordsCache->size()))
+        for (const auto i : std::views::iota(0, _recordsCache.size()))
         {
-            if (_recordsCache->at(i).isObject())
+            if (_recordsCache.at(i).isObject())
             {
-                const QJsonObject object = _recordsCache->at(i).toObject();
+                const QJsonObject object = _recordsCache.at(i).toObject();
                 if (object.contains("column") && object.contains("value"))
                 {
                     if (object.value("column") == field)
@@ -775,7 +768,7 @@ namespace Client
                         found = true;
                         if (object.value("value") != iValue)
                         {
-                            _recordsCache->replace(i, std::move(record));
+                            _recordsCache.replace(i, std::move(record));
                             break;
                         }
                     }
@@ -786,9 +779,9 @@ namespace Client
         if (!found)
         {
             if (_isRoleChanged)
-                _recordsCache->push_front(std::move(record));
+                _recordsCache.push_front(std::move(record));
             else
-                _recordsCache->push_back(std::move(record));
+                _recordsCache.push_back(std::move(record));
         }
 
         if (_strategy == OnFieldChange)
@@ -799,9 +792,9 @@ namespace Client
 
     void TablePrivate::submitAll()
     {
-        if (_recordsCache && !_recordsCache->empty())
+        if (!_recordsCache.empty())
         {
-            sendRequest(QJsonDocument(QJsonObject{{_name, *_recordsCache}}).toJson(), [&](const bool iResult, const QVariant& error)
+            sendRequest(QJsonDocument(QJsonObject{{_name, _recordsCache}}).toJson(), [&](const bool iResult, const QVariant& error)
             {
                 if (iResult)
                 {
@@ -814,30 +807,21 @@ namespace Client
                     }
                     else
                     {
-                        while (_recordsCache->count())
+                        while (!_recordsCache.empty())
                         {
-                            if (_recordsCache->last().isObject())
+                            if (_recordsCache.last().isObject())
                             {
-                                const QJsonObject objectCache = _recordsCache->last().toObject();
+                                const QJsonObject objectCache = _recordsCache.last().toObject();
                                 if (objectCache.contains("column") && objectCache.contains("value"))
                                 {
-                                    auto fieldName = std::ranges::find_if(_dataCache.begin(), _dataCache.end(), [&objectCache](const auto& data)
-                                    {
-                                        return data.first == objectCache.value("column").toString();
-                                    });
-                                    if (fieldName == _dataCache.end())
-                                    {
-                                        Q_ASSERT(false);
-                                        return;
-                                    }
-
-                                    if (auto widget = findChild<QWidget*>(fieldName->first))
+                                    QString field = objectCache.value("column").toString();
+                                    if (auto widget = findChild<QWidget*>(field))
                                     {
                                         widget->setPalette(GetPaletteLight());
                                     }
 
-                                    fieldName->second = objectCache.value("value").toString();
-                                    _recordsCache->pop_back();
+                                    _dataCache[field] = objectCache.value("value").toString();
+                                    _recordsCache.pop_back();
                                 }
                             }
                         }
@@ -845,34 +829,30 @@ namespace Client
                 }
                 else
                 {
-                    for (const auto i : std::views::iota(0, _recordsCache->size()))
+                    for (const auto i : std::views::iota(0, _recordsCache.size()))
                     {
-                        if (_recordsCache->at(i).isObject())
+                        if (_recordsCache.at(i).isObject())
                         {
-                            const QJsonObject objectCache = _recordsCache->at(i).toObject();
+                            const QJsonObject objectCache = _recordsCache.at(i).toObject();
                             if (objectCache.contains("column") && objectCache.contains("value"))
                             {
-                                auto fieldName = std::find_if(_dataCache.begin(), _dataCache.end(), [&objectCache](const auto& data) { return data.first == objectCache.value("column").toString(); });
-                                if (fieldName == _dataCache.end())
-                                {
-                                    Q_ASSERT(false);
-                                    return;
-                                }
+                                QString field = objectCache.value("column").toString();
+                                QString& value = _dataCache[field];
 
-                                if (auto widget = findChild<QWidget*>(fieldName->first))
+                                if (auto widget = findChild<QWidget*>(field))
                                 {
                                     widget->blockSignals(true);
                                     if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
                                     {
-                                        lineEdit->setText(fieldName->second);
+                                        lineEdit->setText(value);
                                     }
                                     else if (auto comboBox = qobject_cast<QComboBox*>(widget))
                                     {
-                                        comboBox->setCurrentText(fieldName->second);
+                                        comboBox->setCurrentText(value);
                                     }
                                     else if (QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(widget))
                                     {
-                                        spinBox->setValue(fieldName->second.toDouble());
+                                        spinBox->setValue(spinBox->valueFromText(value));
                                     }
                                     widget->blockSignals(false);
                                 }
@@ -891,16 +871,54 @@ namespace Client
             qInfo() << "Пустые персональные данные для обновления ";
     }
 
+    void TablePrivate::revertAll()
+    {
+        while (!_recordsCache.empty())
+        {
+            if (_recordsCache.last().isObject())
+            {
+                const QJsonObject objectCache = _recordsCache.last().toObject();
+                if (objectCache.contains("column") && objectCache.contains("value"))
+                {
+                    QString field = objectCache.value("column").toString();
+                    QString& value = _dataCache[field];
+
+                    if (auto widget = findChild<QWidget*>(field))
+                    {
+                        widget->blockSignals(true);
+                        if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
+                        {
+                            lineEdit->setText(value);
+                        }
+                        else if (auto comboBox = qobject_cast<QComboBox*>(widget))
+                        {
+                            comboBox->setCurrentText(value);
+                        }
+                        else if (QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(widget))
+                        {
+                            spinBox->setValue(spinBox->valueFromText(value));
+                        }
+                        widget->blockSignals(false);
+                    }
+
+                    _recordsCache.pop_back();
+                }
+            }
+        }
+
+        qInfo() << "Персональные данные откатились";
+    }
+
     bool TablePrivate::checkChanges() const noexcept
     {
-        return _recordsCache && !_recordsCache->empty();
+        return !_recordsCache.empty();
     }
 
     void TablePrivate::onResetDataClicked()
     {
-        for (const auto i : std::views::iota(0, _dataCache.size()))
+        for (auto it = _dataCache.cbegin(), end = _dataCache.cend(); it != end; ++it)
         {
-            if (auto widget = findChild<QWidget*>(_dataCache[i].first))
+            if (auto widget = findChild<QWidget*>(it.key()))
             {
                 if (auto lineEdit = qobject_cast<QLineEdit*>(widget))
                 {

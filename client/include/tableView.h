@@ -63,6 +63,11 @@ namespace Client
         void submitAll();
 
         /*!
+         * \brief Откатить все изменения
+         */
+        void revertAll();
+
+        /*!
          * \brief Добавить нового пользователя
          * \return true - Пользователь успешно добавлен, иначе false
          */

@@ -45,6 +45,11 @@ public:
     void submitAll();
 
     /*!
+     * \brief Откатить все изменения
+     */
+    void revertAll();
+
+    /*!
      * \brief Проверить поле на дубликат/валидность
      * \param row - Строка
      * \param column - Столбец
@@ -163,7 +168,7 @@ private:
 private:
     QString _name;
     EditStrategy _strategy = OnFieldChange;
-    QList<QPair<QPair<QString, QString>, bool>> _headers;
+    QVector<QPair<QPair<QString, QString>, bool>> _headers;
     QJsonArray _array;
     QJsonArray _recordsCache, _recordsCreatedCache, _recordsDeletedCache, _recordsUpdatedCache;
 

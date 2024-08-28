@@ -50,8 +50,8 @@ private:
         switch (role)
         {
             case Qt::FontRole:
-//        case Qt::BackgroundRole:
-//        case Qt::ForegroundRole:
+            // case Qt::BackgroundRole:
+            // case Qt::ForegroundRole:
             return QColor(Qt::red);
             [[fallthrough]];
             case Qt::EditRole:
@@ -159,6 +159,7 @@ bool QJsonTableModel::setPermissions(const QJsonObject& iPermissions)
         return false;
 
     const auto fieldNames = Client::Employee::getFieldNames();
+    _headers.reserve(fieldNames.size());
     _headers.append({{fieldNames.front().first, fieldNames.front().second}, false});
     for (const auto i : std::views::iota(1, fieldNames.size()))
     {
@@ -292,76 +293,18 @@ void QJsonTableModel::submitAll()
             if (iResult)
             {
                 while (!_recordsUpdatedCache.empty())
-                {
-                    if (_recordsUpdatedCache.last().isObject())
-                    {
-                        const QJsonObject recordsUpdated = _recordsUpdatedCache.last().toObject();
-                        if (recordsUpdated.contains(Client::Employee::id()) &&
-                            recordsUpdated.contains("column") &&
-                            recordsUpdated.contains("value"))
-                        {
-                            const auto id = recordsUpdated.value(Client::Employee::id());
-                            const auto column = recordsUpdated.value("column").toString();
-                            const auto value = recordsUpdated.value("value");
+                    _recordsUpdatedCache.pop_back();
 
-                            for (const auto i : std::views::iota(0, _recordsCache.size()))
-                            {
-                                if (_recordsCache[i].isObject())
-                                {
-                                    QJsonObject objectCache = _recordsCache[i].toObject();
-                                    if (objectCache.contains(Client::Employee::id()) &&
-                                        objectCache.contains(column) &&
-                                        objectCache.value(Client::Employee::id()) == id)
-                                    {
-                                        objectCache[column] = std::move(value);
-                                        _recordsCache[i] = std::move(objectCache);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            _recordsUpdatedCache.pop_back();
-                        }
-                    }
-                }
+                _recordsCache = _array;
 
                 qInfo() << "Данные БД успешно обновлены";
             }
             else
             {
                 while (!_recordsUpdatedCache.empty())
-                {
-                    if (_recordsUpdatedCache.last().isObject())
-                    {
-                        const QJsonObject recordsUpdated = _recordsUpdatedCache.last().toObject();
-                        if (recordsUpdated.contains(Client::Employee::id()) &&
-                            recordsUpdated.contains("column") &&
-                            recordsUpdated.contains("value"))
-                        {
-                            const auto id = recordsUpdated.value(Client::Employee::id());
-                            const auto column = recordsUpdated.value("column").toString();
-                            const auto value = recordsUpdated.value("value");
+                    _recordsUpdatedCache.pop_back();
 
-                            for (const auto i : std::views::iota(0, _recordsCache.size()))
-                            {
-                                if (_recordsCache[i].isObject())
-                                {
-                                    QJsonObject objectCache = _recordsCache[i].toObject();
-                                    if (objectCache.contains(Client::Employee::id()) &&
-                                        objectCache.contains(column) &&
-                                        objectCache.value(Client::Employee::id()) == id)
-                                    {
-                                        objectCache[column] = std::move(value);
-                                        setJsonObject(i, std::move(objectCache));
-                                        break;
-                                    }
-                                }
-                            }
-
-                            _recordsUpdatedCache.pop_back();
-                        }
-                    }
-                }
+                _array = _recordsCache;
 
                 QWidget* tableView = qobject_cast<QWidget*>(parent());
                 if (!tableView)
@@ -378,6 +321,23 @@ void QJsonTableModel::submitAll()
     }
     else
         qInfo() << "Пустые данные БД для обновления";
+}
+
+void QJsonTableModel::revertAll()
+{
+    while (!_recordsDeletedCache.empty())
+        _recordsDeletedCache.pop_back();
+
+    while (!_recordsCreatedCache.empty())
+        _recordsCreatedCache.pop_back();
+
+    while (!_recordsUpdatedCache.empty())
+        _recordsUpdatedCache.pop_back();
+
+    _array = _recordsCache;
+
+    qInfo() << "Данные БД откатились";
+    emit layoutChanged();
 }
 
 bool QJsonTableModel::checkField(int row, int column, const QString& value) const
@@ -825,16 +785,18 @@ void QJsonTableModel::updateRecord(int row, const QString& iColumnName, const QS
             const QJsonObject object = _recordsUpdatedCache[i].toObject();
             if (object.contains(Client::Employee::id()) && object.contains("column") && object.contains("value"))
             {
-                if (iValue == value)
+                if (object.value(Client::Employee::id()) == id && object.value("column") == iColumnName)
                 {
-                    if (object.value(Client::Employee::id()) == id && object.value("column") == iColumnName)
+                    found = true;
+                    if (iValue == value)
                     {
-                        found = true;
-                        if (object.value("value") != iValue)
-                        {
-                            _recordsUpdatedCache.replace(i, std::move(record));
-                            break;
-                        }
+                        _recordsUpdatedCache.removeAt(i);
+                        break;
+                    }
+                    else if (object.value("value") != iValue)
+                    {
+                        _recordsUpdatedCache.replace(i, std::move(record));
+                        break;
                     }
                 }
             }

@@ -2,6 +2,8 @@
 #define TABLE_P_H
 
 #include <QWidget>
+#include <QJsonArray>
+#include <QHash>
 
 
 class QJsonArray;
@@ -43,6 +45,11 @@ namespace Client
          * \brief Отправка изменений на сервер
          */
         void submitAll();
+
+        /*!
+         * \brief Откатить все изменения
+         */
+        void revertAll();
 
         /*!
          * \brief Проверка на какие-либо изменения
@@ -106,8 +113,8 @@ namespace Client
         bool _isRoleChanged = false;
         QString _name;
         EditStrategy _strategy = OnFieldChange;
-        QList<QPair<QString, QString>> _dataCache;
-        QScopedPointer<QJsonArray> _recordsCache;
+        QHash<QString, QString> _dataCache;
+        QJsonArray _recordsCache;
     };
 }
 
