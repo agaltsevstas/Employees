@@ -183,6 +183,7 @@ namespace Client
                 }
                 case Type::PATCH:
                 {
+                    request->setRawHeader("Content-Length", QByteArray::number(event->data.size()));
                     reply = sendCustomRequest(request, "PATCH", event->data);
                     break;
                 }

@@ -6,9 +6,6 @@
 #include <QHash>
 
 
-class QJsonArray;
-
-
 namespace Client
 {
     class TablePrivate final : public QWidget
