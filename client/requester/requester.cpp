@@ -13,51 +13,53 @@
 #include <QNetworkCookie>
 
 
-static constinit QMutex mutex;
-
 namespace Client
 {
-    constinit const auto CLIENT_HOSTNAME = "127.0.0.1"; // Хост
-    constinit const auto CLIENT_PORT = 5433; // Порт
-
-    QJsonDocument parseReply(QNetworkReply* iReply)
+    namespace
     {
-        QByteArray replyData = iReply->readAll();
-        if (replyData.isEmpty())
-        {
-            qWarning() << "Пришли пустые данные!";
-            return {};
-        }
+        constexpr auto CLIENT_HOSTNAME = "127.0.0.1"; // Хост
+        constexpr auto CLIENT_PORT = 5433; // Порт
+        constinit QMutex mutex;
 
-        // TODO: Сделать вывод в отдельном потоке, иначе зависает из-за большого вывода информации
-        //  qInfo() << "Получены данные: " + QString::fromUtf8(replyData);
-        QJsonDocument jsonDocument = QJsonDocument::fromJson(replyData);
-        if (jsonDocument.isEmpty())
+        QJsonDocument parseReply(QNetworkReply* iReply)
         {
-            QJsonArray records;
-
-            while (!replyData.isEmpty())
+            QByteArray replyData = iReply->readAll();
+            if (replyData.isEmpty())
             {
-                QJsonParseError parseError;
-                auto index = replyData.indexOf("\n}\n") + 3;
-                QJsonDocument json = QJsonDocument::fromJson(replyData.left(index), &parseError);
-                if (parseError.error != QJsonParseError::NoError)
-                {
-                    qWarning() << "Json parse error: " << parseError.errorString();
-                    continue;
-                }
-                if (json.isObject())
-                {
-                    records.push_back(json.object());
-                }
-
-                replyData = replyData.mid(index);
+                qWarning() << "Пришли пустые данные!";
+                return {};
             }
 
-            return QJsonDocument(std::move(records));
-        }
+            // TODO: Сделать вывод в отдельном потоке, иначе зависает из-за большого вывода информации
+            //  qInfo() << "Получены данные: " + QString::fromUtf8(replyData);
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(replyData);
+            if (jsonDocument.isEmpty())
+            {
+                QJsonArray records;
 
-        return jsonDocument;
+                while (!replyData.isEmpty())
+                {
+                    QJsonParseError parseError;
+                    auto index = replyData.indexOf("\n}\n") + 3;
+                    QJsonDocument json = QJsonDocument::fromJson(replyData.left(index), &parseError);
+                    if (parseError.error != QJsonParseError::NoError)
+                    {
+                        qWarning() << "Json parse error: " << parseError.errorString();
+                        continue;
+                    }
+                    if (json.isObject())
+                    {
+                        records.push_back(json.object());
+                    }
+
+                    replyData = replyData.mid(index);
+                }
+
+                return QJsonDocument(std::move(records));
+            }
+
+            return jsonDocument;
+        }
     }
 
     struct HttpRequestEvent : public QEvent

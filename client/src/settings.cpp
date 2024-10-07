@@ -1,6 +1,10 @@
 #include "settings.h"
 
-constinit const auto DIRECTORY = "../settings/";
+
+namespace
+{
+    constexpr auto DIRECTORY = "../settings/";
+}
 
 
 Settings::Settings(const QString& fileName, const Format& format, QObject* parent) :

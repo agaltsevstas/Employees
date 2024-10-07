@@ -25,25 +25,28 @@ extern QScopedPointer<Client::Requester> requester;
 
 namespace Client
 {
-    [[nodiscard]] auto findTableInJson(const QJsonDocument& iJson, const QString& iTable)->int
+    namespace
     {
-        if (iJson.isArray())
+        [[nodiscard]] int findTableInJson(const QJsonDocument& iJson, const QString& iTable)
         {
-            for (const auto i : std::views::iota(0, iJson.array().size()))
+            if (iJson.isArray())
             {
-                if (iJson.array()[i].isObject())
+                for (const auto i : std::views::iota(0, iJson.array().size()))
                 {
-                    const QJsonObject subobject = iJson.array()[i].toObject();
-                    if (subobject.contains(iTable))
+                    if (iJson.array()[i].isObject())
                     {
-                        return i;
+                        const QJsonObject subobject = iJson.array()[i].toObject();
+                        if (subobject.contains(iTable))
+                        {
+                            return i;
+                        }
                     }
                 }
             }
-        }
 
-        return -1;
-    };
+            return -1;
+        };
+    }
 
     Table::Table(const QJsonDocument iData, QWidget* parent) :
         QWidget(parent),

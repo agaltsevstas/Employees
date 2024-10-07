@@ -11,13 +11,16 @@
 #include <Validator>
 
 
-constinit QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-
-static constexpr QSizePolicy GetSizePolice() noexcept
+namespace
 {
-    sizePolicy.setHorizontalStretch(0);
-    sizePolicy.setVerticalStretch(0);
-    return sizePolicy;
+    constinit QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+
+    inline constexpr QSizePolicy GetSizePolice() noexcept
+    {
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        return sizePolicy;
+    }
 }
 
 Delegate::Delegate(QObject* parent) noexcept : QStyledItemDelegate(parent)

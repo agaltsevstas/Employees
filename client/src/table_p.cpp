@@ -27,55 +27,60 @@
 
 namespace Client
 {
-    static QString pushButtonStyle(":enabled {\n"
-                                    "border-left:20px solid qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
-                                    "border-right:20px solid qlineargradient(spread:pad, x1:1, y1:0, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
-                                    "border-top:10px solid qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
-                                    "border-bottom:10px solid qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
-                                    "color:rgba(255, 255, 255, 210);\n"
-                                    "}\n"
-                                    ":disabled { \n"
-                                    "background-color:rgba(255, 255, 255, 0); "
-                                    "color:rgba(255, 255, 255, 100);"
-                                    "}\n"
-                                    ":hover{\n"
-                                    "background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(40, 67, 98, 219), stop:1 rgba(105, 118, 132, 226));\n"
-                                    "}\n"
-                                    ":pressed{\n"
-                                    "padding-left:5px;\n"
-                                    "padding-top:5px;\n"
-                                    "background-color:rgba(105, 118, 132, 200);\n"
-                                    "}");
-
-    static QPalette palette;
-
-    static consteval const QSizePolicy GetSizePolice() noexcept
+    namespace
     {
-        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        return sizePolicy;
-    }
+        constexpr auto pushButtonStyle(":enabled {\n"
+                                       "border-left:20px solid qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                       "border-right:20px solid qlineargradient(spread:pad, x1:1, y1:0, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                       "border-top:10px solid qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                       "border-bottom:10px solid qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(32, 180, 214,150), stop:1 rgba(0, 0, 0, 0));\n"
+                                       "color:rgba(255, 255, 255, 210);\n"
+                                       "}\n"
+                                       ":disabled { \n"
+                                       "background-color:rgba(255, 255, 255, 0); "
+                                       "color:rgba(255, 255, 255, 100);"
+                                       "}\n"
+                                       ":hover{\n"
+                                       "background-color: qlineargradient(spread:pad, x1:0, y1:0.505682, x2:1, y2:0.477, stop:0 rgba(40, 67, 98, 219), stop:1 rgba(105, 118, 132, 226));\n"
+                                       "}\n"
+                                       ":pressed{\n"
+                                       "padding-left:5px;\n"
+                                       "padding-top:5px;\n"
+                                       "background-color:rgba(105, 118, 132, 200);\n"
+                                       "}");
 
-    static const QPalette GetPaletteLight() noexcept
-    {
-        palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
-        palette.setColor(QPalette::Text, Qt::black);
-        return palette;
-    }
+        constinit QSizePolicy sizePolicy;
 
-    static const QPalette GetPaletteGreen() noexcept
-    {
-        palette.setColor(QPalette::PlaceholderText, Qt::green);
-        palette.setColor(QPalette::Text, Qt::green);
-        return palette;
-    }
+        constexpr QSizePolicy GetSizePolice() noexcept
+        {
+            sizePolicy.setHorizontalStretch(0);
+            sizePolicy.setVerticalStretch(0);
+            return sizePolicy;
+        }
 
-    static const QPalette GetPaletteRed() noexcept
-    {
-        palette.setColor(QPalette::PlaceholderText, Qt::red);
-        palette.setColor(QPalette::Text, Qt::red);
-        return palette;
+        const QPalette& GetPaletteLight() noexcept
+        {
+            static QPalette palette;
+            palette.setColor(QPalette::PlaceholderText, Qt::lightGray);
+            palette.setColor(QPalette::Text, Qt::black);
+            return palette;
+        }
+
+        const QPalette& GetPaletteGreen() noexcept
+        {
+            static QPalette palette;
+            palette.setColor(QPalette::PlaceholderText, Qt::green);
+            palette.setColor(QPalette::Text, Qt::green);
+            return palette;
+        }
+
+        const QPalette& GetPaletteRed() noexcept
+        {
+            static QPalette palette;
+            palette.setColor(QPalette::PlaceholderText, Qt::red);
+            palette.setColor(QPalette::Text, Qt::red);
+            return palette;
+        }
     }
 
     TablePrivate::TablePrivate(const QString& iName,

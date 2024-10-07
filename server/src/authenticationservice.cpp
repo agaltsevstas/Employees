@@ -10,8 +10,11 @@ extern QScopedPointer<Server::DataBase> db;
 
 namespace Server
 {
-    constinit const auto JWT_ACCESS_SECRET = "jwt-access-secret-key";
-    constinit const auto JWT_REFRESH_SECRET = "jwt-refresh-secret-key";
+    namespace
+    {
+        constexpr auto JWT_ACCESS_SECRET = "jwt-access-secret-key";
+        constexpr auto JWT_REFRESH_SECRET = "jwt-refresh-secret-key";
+    }
 
     class HttpCookie
     {

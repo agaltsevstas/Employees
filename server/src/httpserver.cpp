@@ -22,8 +22,11 @@ extern QScopedPointer<Server::DataBase> db;
 
 namespace Server
 {
-    constinit const auto SERVER_HOSTNAME = "127.0.0.1"; // Хост
-    constinit const auto SERVER_PORT = 5433; // Порт
+    namespace
+    {
+        constexpr auto SERVER_HOSTNAME = "127.0.0.1"; // Хост
+        constexpr auto SERVER_PORT = 5433; // Порт
+    }
 
     struct Tree
     {

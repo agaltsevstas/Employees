@@ -6,9 +6,13 @@
 #include <QThread>
 #include <Requester>
 
-extern QScopedPointer<Client::Requester> requester;
-constinit const auto DIRECTORY = "../log/";
 
+namespace
+{
+    constexpr auto DIRECTORY = "../log/";
+}
+
+extern QScopedPointer<Client::Requester> requester;
 QString Logger::_infoBuffer;
 QString Logger::_warningBuffer;
 QString Logger::_errorBuffer;
@@ -29,7 +33,7 @@ void Logger::Instance()
     if (!directory.exists())
         directory.mkpath(".");
 
-    const QString filePath = QString(DIRECTORY) + fileName;
+    QString filePath = QString(DIRECTORY) + fileName;
     _file.reset(new QFile(std::move(filePath)));
     _file->open(QFile::Append | QFile::Text);
     if (!_file->isOpen())

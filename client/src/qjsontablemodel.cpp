@@ -12,11 +12,14 @@
 #include <ranges>
 
 
-inline void swap(QJsonValueRef first, QJsonValueRef second) noexcept
+namespace
 {
-    QJsonValue temp(std::move(first));
-    first = QJsonValue(std::move(second));
-    second = std::move(temp);
+    inline void swap(QJsonValueRef first, QJsonValueRef second) noexcept
+    {
+        QJsonValue temp(std::move(first));
+        first = QJsonValue(std::move(second));
+        second = std::move(temp);
+    }
 }
 
 class JsonTableModel : public QAbstractTableModel

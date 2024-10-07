@@ -18,10 +18,13 @@
 
 namespace Server
 {
-    constinit const auto DATABASE_POSTGRES = "QPSQL"; // Тип базы данных
-    constinit const auto DATABASE_HOSTNAME = "127.0.0.1"; // Хост
-    constinit const auto DATABASE_PORT = 5432; // Порт
-    constinit const auto DATABASE_NAME = "employees"; // Название базы данных
+    namespace
+    {
+        constexpr auto DATABASE_POSTGRES = "QPSQL"; // Тип базы данных
+        constexpr auto DATABASE_HOSTNAME = "127.0.0.1"; // Хост
+        constexpr auto DATABASE_PORT = 5432; // Порт
+        constexpr auto DATABASE_NAME = "employees"; // Название базы данных
+    }
 
     DataBase::DataBase(QWidget *parent) : QWidget(parent)
     {

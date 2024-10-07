@@ -7,8 +7,11 @@
 
 #include <ranges>
 
-constinit const auto FILENAME = "cache.json";
-constinit const auto DIRECTORY = "../settings/";
+namespace
+{
+    constexpr auto FILENAME = "cache.json";
+    constexpr auto DIRECTORY = "../settings/";
+}
 
 
 Cache::Cache() : _cache(new QJsonDocument())

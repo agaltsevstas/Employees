@@ -5,8 +5,12 @@
 #include <QMutex>
 #include <QThread>
 
-constinit const auto SERVER_DIRECTORY = "../log/server/";
-constinit const auto CLIENT_DIRECTORY = "../log/client/";
+
+namespace
+{
+    constexpr auto SERVER_DIRECTORY = "../log/server/";
+    constexpr auto CLIENT_DIRECTORY = "../log/client/";
+}
 
 QString Logger::_infoBuffer;
 QString Logger::_warningBuffer;
